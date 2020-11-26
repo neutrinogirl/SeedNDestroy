@@ -1,0 +1,3 @@
+[submodule "wRATter"]
+	path = wRATter
+	url = git@github.com:P3tru/wRATter.git
