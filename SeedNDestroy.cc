@@ -64,7 +64,7 @@ int Recon(const char* filename, const char* pdfname,
 	  ds.vHits.clear();
 	  ds.vHits = vHits;
 
-	  auto x = ReconPosTime(ds, PosTSeed.Pos, 0);
+	  auto x = ReconPosTime(ds, PosTSeed.Pos, PosTSeed.T);
 	  std::cout << x[0] << "mm "
 				<< x[1] << "mm "
 				<< x[2] << "mm "
