@@ -2,8 +2,8 @@
 // Created by zsoldos on 9/15/20.
 //
 
-#ifndef ANTINUEANALYSIS_INCLUDE_PATHFIT_HH_
-#define ANTINUEANALYSIS_INCLUDE_PATHFIT_HH_
+#ifndef _PATHFIT_HH_
+#define _PATHFIT_HH_
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -155,4 +155,4 @@ double fDir(const std::vector<double> &x, std::vector<double> &grad, void *data)
 
 
 
-#endif //ANTINUEANALYSIS_INCLUDE_PATHFIT_HH_
+#endif //_PATHFIT_HH_

@@ -22,14 +22,6 @@
 #define SOL_VACUUM 299.792
 #define SOL SOL_VACUUM/RINDEX_WATER
 
-static double rad2deg(double angrad){
-  return angrad*180/PI;
-}
-
-static double deg2rad(double angdeg){
-  return angdeg*PI/180;
-}
-
 static double EvalLL(double nObs, double nPred){
   return nObs*TMath::Log(nPred);
 }

@@ -231,6 +231,99 @@ static std::vector<TVector3> GetVSeeds(std::vector<Hit>& vHits,
 
 }
 
+typedef struct PosTSeed{
+  TVector3 Pos;
+  double T;
+} PosTSeed;
+
+static PosTSeed GetSeed(std::vector<Hit>& vHits,
+						TH1D* hPDF, const int& wPower = 1){
+
+  // Get vector of seeds
+  std::vector<TVector3> vSeeds;
+  vSeeds.emplace_back(GetCentroidSeed(vHits, 2));
+  auto DTSeed = GetDTSeed(vHits);
+  if(DTSeed.Mag() < 8000.)
+	vSeeds.emplace_back(DTSeed);
+
+  auto M = GetDMatrix(vHits);
+  auto nHits = vHits.size();
+
+  for(auto i=0; i<nHits; i++) {
+	auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
+
+	for(auto &ivSeed:vSubSeeds){
+
+	  if(ivSeed.empty() || ivSeed.size() < 5)
+		continue;
+
+	  auto PosSeed = GetDTSeed(ivSeed);
+
+	  if(PosSeed.Mag() < 8000.)
+		vSeeds.emplace_back(PosSeed);
+
+	}
+
+  }
+
+  auto PrintSeeds = [&vSeeds]() {
+	for(auto& s:vSeeds) {
+	  s.Print();
+	  CylVec(s).Print();
+	}
+  };
+
+  // PrintSeeds();
+  // std::cout << "nSeeds = " << vSeeds.size() << std::endl;
+
+  // Clear vector of seeds for duplicates
+  for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
+	vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
+  }
+
+  // PrintSeeds();
+  // std::cout << "nSeeds = " << vSeeds.size() << std::endl;
+
+  // Sort by magnitude
+  std::sort(vSeeds.begin(), vSeeds.end(), [](const TVector3& v1, const TVector3& v2){
+	return CylVec(v1).GetMag2()<CylVec(v2).GetMag2();
+  });
+
+  // Remove seed guess if less than a few cm between them
+  for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
+	auto diffInf = CylVec(vSeeds[iSeed])-CylVec(vSeeds[iSeed-1]);
+	const double lim = SQRT2*500.; // 50cm
+	const double lim2 = std::pow(lim, 2); // 50cm
+	if(diffInf.GetMag2() < lim2)
+	  vSeeds.erase(vSeeds.begin()+iSeed);
+
+  }
+
+  // PrintSeeds();
+  // std::cout << "nSeeds = " << vSeeds.size() << std::endl;
+
+  TVector3 PosBestSeed;
+  double TBestSeed;
+  double NLL = HUGE_VAL;
+
+  // Sort seeds by flat NLL value
+  std::vector<double> vTGuess = {-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25};
+  for(const auto& T:vTGuess){
+	std::sort(vSeeds.begin(), vSeeds.end(), [&](const TVector3& v1, const TVector3& v2){
+	  return flatf(v1, T, vHits, hPDF, wPower) < flatf(v2, T, vHits, hPDF, wPower);
+	});
+	double CandidateNLL = flatf(vSeeds[0], T, vHits, hPDF, wPower);
+	if(CandidateNLL < NLL){
+	  NLL = CandidateNLL;
+	  PosBestSeed = vSeeds[0];
+	  TBestSeed = T;
+	}
+  }
+
+  return {PosBestSeed, TBestSeed};
+
+}
+
 typedef struct SubGuess {
   TVector3 PosGuess;
   double TGuess;

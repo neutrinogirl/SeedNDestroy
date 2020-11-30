@@ -31,6 +31,12 @@ include_directories(
 )
 
 #----------------------------------------------------------------------------
+# Locate RATROOT Libs
+#
+LINK_DIRECTORIES($ENV{RATROOT}/lib)
+LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/lib)
+
+#----------------------------------------------------------------------------
 # Locate sources and headers for this project
 # NB: headers are included so they will show up in IDEs
 #
@@ -38,6 +44,8 @@ file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
 add_executable(SeedNDestroy SeedNDestroy.cc)
+
+add_executable(CreatePDF CreatePDF.cc)
 
 #add_library(Hit SHARED include/Hit.hh)
 #set_target_properties(Hit PROPERTIES LINKER_LANGUAGE CXX)

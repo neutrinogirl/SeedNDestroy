@@ -2,8 +2,8 @@
 // Created by zsoldos on 7/30/20.
 //
 
-#ifndef WRAT_MACROS_SVD_HH_
-#define WRAT_MACROS_SVD_HH_
+#ifndef _SVD_HH_
+#define _SVD_HH_
 
 #include "MathUtils.hh"
 
@@ -368,4 +368,4 @@ double SVD::pythag(const double a, const double b) {
 typedef struct SVD SVD;
 
 
-#endif //WRAT_MACROS_SVD_HH_
+#endif //_SVD_HH_
