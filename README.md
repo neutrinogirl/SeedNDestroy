@@ -10,7 +10,7 @@ An example ROOT macro (SeedNDestroy.cc) perform the reconstruction per event on 
 ```C
 typedef struct Hit{
  TVector3 PMTPos;
-  double Q, T;
+ double Q, T;
 } Hit;
 ```
 
