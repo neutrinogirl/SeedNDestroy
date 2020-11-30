@@ -35,3 +35,13 @@ cmake .
 make
 ```
 
+## Example
+```bash
+source SetROOTEnv.sh
+cd wRATter
+source SetROOTEnv.sh
+cd -
+root -l
+root [0] .L SeedNDestroy.cc
+root [1] Recon("inputs/wm_20pct_wbls_3pct/reactorSignal_10.root", "PDFs/wm_20pct_wbls_3pct/reactorSignal_PromptOnly_wbls_3pct_Gd_QWeight_NOTCut_TrigTimeCor.root", "", 10, 1, true)
+```
