@@ -25,17 +25,19 @@ RATLIBS  := -L$(RATROOT)/lib -lRATEvent
 ### BOOST
 BOOSTCFLAGS := -I/data/snoplus/home/zsoldos/.local/boost-1.71.0
 BOOSTLIBS   := -L/data/snoplus/home/zsoldos/.local/boost-1.71.0/lib -lboost_system -lboost_filesystem
-### Python
-PYTHONCFLAGS := $(shell python-config --cflags)
-PYTHONLIBS   := $(shell python-config --ldflags)
+
+### NLOPT
+NLOPTCFLAGS := -I/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/include
+NLOPTLIBS   := -L/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/lib -lnlopt -lm
 
 CPPFLAGS  += -I$(INCDIR) $(ROOTCFLAGS) -I$(RATROOT)/include
 CPPFLAGS  +=  $(BOOSTCFLAGS)
-# CPPFLAGS  +=  $(PYTHONCFLAGS)
+CPPFLAGS  +=  $(NLOPTCFLAGS)
+
 EXTRALIBS  = $(ROOTLIBS)
 EXTRALIBS += $(RATLIBS)
 EXTRALIBS += $(BOOSTLIBS)
-# EXTRALIBS += $(PYTHONLIBS)
+EXTRALIBS += $(NLOPTLIBS)
 
 SRCS = $(wildcard $(SRCDIR)/*.cc)
 OBJS = $(subst .cc,.o,$(SRCS))
@@ -50,7 +52,9 @@ all: CreatePDF
 
 CreatePDF: 
 	$(CXX) $(CPPFLAGS) -o CreatePDF CreatePDF.cc $(OBJS) $(EXTRALIBS)
-	$(RM) FlattenHits.o $(OBJS)
+
+SeedNDestroy: 
+	$(CXX) $(CPPFLAGS) -o SeedNDestroy SeedNDestroy.cc $(OBJS) $(EXTRALIBS)
 
 clean:
-	$(RM) $(OBJS) CreatePDF
+	$(RM) $(OBJS) CreatePDF SeedNDestroy

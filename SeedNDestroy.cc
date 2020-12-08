@@ -11,13 +11,14 @@
 
 #include <ProgressBar.hpp>
 
-R__LOAD_LIBRARY(libnlopt.so)
+int main(int argc, char *argv){
 
-int Recon(const char* filename, const char* pdfname,
-		  const char* cOutname = "fRecon",
-		  unsigned int nEvts = 0,
-		  int wPower = 1,
-		  bool isVerbose = false){
+  const char* filename;
+  const char* pdfname;
+  const char* cOutname = "fRecon";
+  unsigned int nEvts = 0;
+  int wPower = 1;
+  bool isVerbose = false;
 
   // #################################################### //
   // #### #### #### OPEN FILE / READ TTREE #### #### #### //
@@ -44,41 +45,41 @@ int Recon(const char* filename, const char* pdfname,
   ProgressBar progress_bar(nEvts, 70);
 
   for(int iEvt=0; iEvt<nEvts; iEvt++) {
-	++progress_bar;
-	w_rat.SetEvt(iEvt);
+    ++progress_bar;
+    w_rat.SetEvt(iEvt);
 
-	auto nTriggers = w_rat.GetNTriggers();
+    auto nTriggers = w_rat.GetNTriggers();
 
-	for (auto iTrigger = 0; iTrigger < nTriggers; iTrigger++) {
+    for (auto iTrigger = 0; iTrigger < nTriggers; iTrigger++) {
 
-	  auto vHits = w_rat.GetVHits(iTrigger);
-	  std::sort(vHits.begin(), vHits.end());
+      auto vHits = w_rat.GetVHits(iTrigger);
+      std::sort(vHits.begin(), vHits.end());
 
-	  // Get Seed
-	  auto PosTSeed = GetSeed(vHits, PDF_TRes, wPower);
+      // Get Seed
+      auto PosTSeed = GetSeed(vHits, PDF_TRes, wPower);
 
-	  //
-	  // ####
-	  //
+      //
+      // ####
+      //
 
-	  ds.vHits.clear();
-	  ds.vHits = vHits;
+      ds.vHits.clear();
+      ds.vHits = vHits;
 
-	  auto x = ReconPosTime(ds, PosTSeed.Pos, PosTSeed.T);
-	  std::cout << x[0] << "mm "
-				<< x[1] << "mm "
-				<< x[2] << "mm "
-				<< x[3]*1.e-2 << "ns " << std::endl;
+      auto x = ReconPosTime(ds, PosTSeed.Pos, PosTSeed.T);
+      std::cout << x[0] << "mm "
+		<< x[1] << "mm "
+		<< x[2] << "mm "
+		<< x[3]*1.e-2 << "ns " << std::endl;
 
-	}
+    }
 
-	if(isVerbose)
-	  progress_bar.display();
+    if(isVerbose)
+      progress_bar.display();
 
   }
 
   if(isVerbose)
-	progress_bar.done();
+    progress_bar.done();
 
   return EXIT_SUCCESS;
 
