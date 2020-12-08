@@ -6,7 +6,7 @@
 
 #include "wRATter/include/Wrapper.hh"
 #include "wRATter/include/Hit.hh"
-#include "PathFit.hh"
+#include "include/PathFit.hh"
 
 #include <ProgressBar.hpp>
 
@@ -14,10 +14,15 @@
 #include <TH2D.h>
 #include <TFile.h>
 
-int CreatePDF(const char* filename, unsigned int nEvts=0,
-			  const char* foutname="fout.root",
-			  int wPower = 1, double(*fW)(const Hit&, int) = fweight){
+int main(int argc, char *argv){
 
+  const char* filename="/data/snoplus/home/zara/Jul_2020/ANNIEratpac/ANNIE_test_Stefi.root";
+  unsigned int nEvts=0;
+  const char* foutname="fout.root";
+  int wPower = 1;
+  double(*fW)(const Hit&, int) = fweight;
+
+    
   // #################################################### //
   // #### #### #### OPEN FILE / READ TTREE #### #### #### //
   // #################################################### //
@@ -38,47 +43,48 @@ int CreatePDF(const char* filename, unsigned int nEvts=0,
 
   for(auto iEvt=0; iEvt<nEvts; iEvt++){
 
-	++progressBar;
+    ++progressBar;
 
-	w_rat.SetEvt(iEvt);
+    w_rat.SetEvt(iEvt);
 
-	auto nTriggers = w_rat.GetNTriggers();
+    auto nTriggers = w_rat.GetNTriggers();
 
-	for (auto iTrigger = 0; iTrigger < nTriggers; iTrigger++) {
+    for (auto iTrigger = 0; iTrigger < nTriggers; iTrigger++) {
 
-	  const auto TrigTime = w_rat.GetTriggerTime(0);
+      // const auto TrigTime = w_rat.GetTriggerTime(0);
+      const auto TrigTime = 0;
 
-	  auto nParticle = w_rat.GetNPrimaryParticle();
-	  auto iParticle = nParticle > 1 ? (TrigTime > 1e3 ? 1 : 0) : 0;
+      auto nParticle = w_rat.GetNPrimaryParticle();
+      auto iParticle = nParticle > 1 ? (TrigTime > 1e3 ? 1 : 0) : 0;
 
-	  if(iParticle>0)
-		continue;
+      if(iParticle>0)
+	continue;
 
-	  if(iTrigger>0)
-		continue;
+      if(iTrigger>0)
+	continue;
 
-	  const auto PosTrue = w_rat.GetPosTrue(iParticle);
-	  const auto DirTrue = w_rat.GetDirTrue(iParticle);
-	  const auto TTrue = w_rat.GetTTrue(iParticle);
+      const auto PosTrue = w_rat.GetPosTrue(iParticle) - TVector3(0., -133.3, 1724.);
+      const auto DirTrue = w_rat.GetDirTrue(iParticle);
+      const auto TTrue = w_rat.GetTTrue(iParticle);
 
-	  auto vHits = w_rat.GetVHits(iTrigger);
-	  std::sort(vHits.begin(), vHits.end());
+      auto vHits = w_rat.GetVHits(iTrigger);
+      std::sort(vHits.begin(), vHits.end());
 
-	  for(auto& hit: vHits){
+      for(auto& hit: vHits){
 
-		const double TCor = TTrue - TrigTime;
+	const double TCor = TTrue - TrigTime;
 
-		h_pdf.hTResVSCT->Fill(hit.GetTRes(PosTrue, TCor),
-							  hit.GetCosTheta(PosTrue, DirTrue),
-							  fweight(hit));
-
-
-	  }
-
-	}
+	h_pdf.hTResVSCT->Fill(hit.GetTRes(PosTrue, TCor),
+			      hit.GetCosTheta(PosTrue, DirTrue),
+			      fweight(hit));
 
 
-	progressBar.display();
+      }
+
+    }
+
+
+    progressBar.display();
 
   }
 
