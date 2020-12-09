@@ -13,8 +13,8 @@
 
 int main(int argc, char *argv){
 
-  const char* filename;
-  const char* pdfname;
+  const char* filename="ANNIE_test_Stefi.root";
+  const char* pdfname="fout.root";
   const char* cOutname = "fRecon";
   unsigned int nEvts = 0;
   int wPower = 1;
@@ -53,6 +53,14 @@ int main(int argc, char *argv){
     for (auto iTrigger = 0; iTrigger < nTriggers; iTrigger++) {
 
       auto vHits = w_rat.GetVHits(iTrigger);
+      auto NHits = w_rat.GetNHits(iTrigger);
+
+//std::cout<<"Hits"<<NHits<<"   "<<vHits.empty()<<std::endl;
+if (vHits.empty()==1){
+std::cout<<"Hits 0 "<<std::endl;
+continue;
+}
+
       std::sort(vHits.begin(), vHits.end());
 
       // Get Seed
