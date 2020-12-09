@@ -63,8 +63,22 @@ int main(int argc, char *argv){
       if(iTrigger>0)
 	continue;
 
-      const auto PosTrue = w_rat.GetPosTrue(iParticle) - TVector3(0., -133.3, 1724.);
-      const auto DirTrue = w_rat.GetDirTrue(iParticle);
+      const auto DefPosTrue = w_rat.GetPosTrue(iParticle);
+      //const auto PosTrue = w_rat.GetPosTrue(iParticle);
+// - TVector3(0., -133.3, 1724.);
+	TVector3 NewPosTrue;
+	NewPosTrue.SetX(DefPosTrue.X());
+	NewPosTrue.SetY(-1*(DefPosTrue.Z()-1724));
+	NewPosTrue.SetZ(DefPosTrue.Y()+133.3);
+
+      //const auto DirTrue = w_rat.GetDirTrue(iParticle);
+      const auto DefDirTrue = w_rat.GetDirTrue(iParticle);
+
+TVector3 NewDirTrue;
+NewDirTrue.SetX(DefDirTrue.X());
+NewDirTrue.SetY(-1*DefDirTrue.Z());
+NewDirTrue.SetZ(DefDirTrue.Y());
+
       const auto TTrue = w_rat.GetTTrue(iParticle);
 
       auto vHits = w_rat.GetVHits(iTrigger);
@@ -74,8 +88,8 @@ int main(int argc, char *argv){
 
 	const double TCor = TTrue - TrigTime;
 
-	h_pdf.hTResVSCT->Fill(hit.GetTRes(PosTrue, TCor),
-			      hit.GetCosTheta(PosTrue, DirTrue),
+	h_pdf.hTResVSCT->Fill(hit.GetTRes(NewPosTrue, TCor),
+			      hit.GetCosTheta(NewPosTrue, NewDirTrue),
 			      fweight(hit));
 
 
