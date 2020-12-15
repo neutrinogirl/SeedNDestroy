@@ -16,12 +16,36 @@ typedef struct Hit{
 
 ## Description
 
+### Recon.hh
+
+The functions which minimize and output the results. The boundaries are defaulted to the typical value for WM, but parametrable through the FitBounds struct. The DatasStruct* are C-style struct containing the PDF and event info to be passed to the fiter. See definition in PathFit.hh
+```C++
+typedef struct FitBounds{
+  double Pos = 8.e3;
+  double T   = 10.e2;
+} FitBounds;
+std::vector<double> ReconPosTime(DataStruct1D& DS, const TVector3& PosSeed, const double& TSeed = 0., const FitBounds& FP = FitBounds())
+std::vector<double> ReconDir(DataStructDir& DS, const TVector3& DirSeed)
+std::vector<double> ReconPosTimeDir(DataStruct& DS, const TVector3& PosSeed, const double& TSeed, const TVector3& DirSeed, const FitBounds& FP = FitBounds())
+```
+
 ### Centroid.hh
 
 Main function which output a TVector3 of the seed position calculated with a user-defined weight. 
 A safety option check if the seed is found within some boundaries, MaxAxis: || seed || < MaxAxis.
 ```C++
 TVector3 GetCentroidSeed(std::vector<Hit>& vHits, const int& weightPower = 2, const double& MaxAxis = 8.e3)
+```
+
+### Multilateration.hh
+
+Seeding algorithm based on the dT between hits. Can do either Pos or Pos/T seeding.
+```C++
+typedef struct PosTSeed{
+  TVector3 Pos;
+  double T;
+} PosTSeed;
+PosTSeed GetSeed(std::vector<Hit>& vHits,TH1D* hPDF, const int& wPower = 1)
 ```
 
 ### MathUtils.hh
@@ -40,19 +64,6 @@ template<typename T>
 double CalculateChi2WUW(T const *hPDF, T const *hExp, T *hResiduals = nullptr){
 ```
 
-### Recon.hh
-
-The functions which minimize and output the results. The boundaries are defaulted to the typical value for WM, but parametrable through the FitBounds struct. The DatasStruct* are C-style struct containing the PDF and event info to be passed to the fiter. See definition in PathFit.hh
-```C++
-typedef struct FitBounds{
-  double Pos = 8.e3;
-  double T   = 10.e2;
-} FitBounds;
-std::vector<double> ReconPosTime(DataStruct1D& DS, const TVector3& PosSeed, const double& TSeed = 0., const FitBounds& FP = FitBounds())
-std::vector<double> ReconDir(DataStructDir& DS, const TVector3& DirSeed)
-std::vector<double> ReconPosTimeDir(DataStruct& DS, const TVector3& PosSeed, const double& TSeed, const TVector3& DirSeed, const FitBounds& FP = FitBounds())
-```
-
 ### PathFit.hh
 
 The minimizable objects which feeds the NLOPT minimizer. There is also a "flat" function, which evaluates the NLL of a guess (useful when seeding for example).
@@ -61,17 +72,6 @@ Available are the simultaneous Pos, Dir, T fit and also the staged Pos/T and Dir
 double fPosTDir(const std::vector<double> &x, std::vector<double> &grad, void *data)
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data)
 double fDir(const std::vector<double> &x, std::vector<double> &grad, void *data)
-```
-
-### Multilateration.hh
-
-Seeding algorithm based on the dT between hits. Can do either Pos or Pos/T seeding.
-```C++
-typedef struct PosTSeed{
-  TVector3 Pos;
-  double T;
-} PosTSeed;
-PosTSeed GetSeed(std::vector<Hit>& vHits,TH1D* hPDF, const int& wPower = 1)
 ```
 
 ## Dependencies
@@ -89,10 +89,13 @@ First set the ROOT_INCLUDE_PATH env variable to locate the headers:
 cd wRATter
 source SetROOTEnv.sh
 ```
+
 OPTIONAL: You can also compile it as a shared lib:
 ```bash
-cmake .
+mkdir build; cd build
+cmake ../ .
 make
+make install
 ```
 
 ## Example
