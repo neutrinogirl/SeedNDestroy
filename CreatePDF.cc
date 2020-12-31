@@ -16,9 +16,9 @@
 
 int main(int argc, char *argv){
 
-  const char* filename="/data/snoplus/home/zara/Jul_2020/ANNIEratpac/ANNIE_test_Stefi.root";
+  const char* filename="test_Z.root";
   unsigned int nEvts=0;
-  const char* foutname="fout.root";
+  const char* foutname="fout_Z.root";
   int wPower = 1;
   double(*fW)(const Hit&, int) = fweight;
 
