@@ -78,7 +78,7 @@ static TVector3 GetCentroidSeed(std::vector<Hit>& vHits,
   // RESCALE seed vector if outside boundaries //
   // ######################################### //
 
-  const double MaxAxis = 8.e3;
+  const double MaxAxis = 2.e3;
   auto isFV = [&MaxAxis](const TVector3& Pos){
 	return abs(Pos.x()) < MaxAxis && abs(Pos.y()) < MaxAxis && abs(Pos.z()) < MaxAxis;
   };
