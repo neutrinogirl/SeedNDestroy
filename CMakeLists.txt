@@ -1,25 +1,23 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.5)
 project(SeedNDestroy)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-# You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
-#   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
-#   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
-list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
+## You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
+##   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROOTSYS}/etc/cmake)
+###   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
+#list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
 find_package(ROOT REQUIRED COMPONENTS RIO Net)
-#find_package(ROOT CONFIG REQUIRED)
 if(NOT ROOT_FOUND)
     message(STATUS "ROOT package not found.")
     return()
 endif()
 
-#---Define useful ROOT functions and macros (e.g. ROOT_GENERATE_DICTIONARY)
-#include(${ROOT_USE_FILE})
-
-find_package(Boost 1.57.0 COMPONENTS system filesystem REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
@@ -28,6 +26,8 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/include
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
+        $ENV{RATROOT}/include
+        /usr/include/c++/4.9
 )
 
 #----------------------------------------------------------------------------
@@ -43,12 +43,5 @@ LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/lib)
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
-add_executable(SeedNDestroy SeedNDestroy.cc)
-
 add_executable(CreatePDF CreatePDF.cc)
-
-#add_library(Hit SHARED include/Hit.hh)
-#set_target_properties(Hit PROPERTIES LINKER_LANGUAGE CXX)
-
-#add_library(SeedNDestroy SHARED include/Hit.hh include/Recon.hh include/MathUtils.hh include/Multilateration.hh include/PathFit.hh include/SVD.hh)
-#set_target_properties(SeedNDestroy PROPERTIES LINKER_LANGUAGE CXX)
+#add_executable(SeedNDestroy SeedNDestroy.cc)
