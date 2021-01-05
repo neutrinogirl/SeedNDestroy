@@ -124,7 +124,7 @@ double fPosTDir(const std::vector<double> &x, std::vector<double> &grad, void *d
   // Create object to calculate TRes histogram
   TVector3 PosGuess(x[0], x[1], x[2]);
   TVector3 DirGuess(x[3], x[4], x[5]);
-  double TGuess = x[6]/100.;
+  double TGuess = x[6];
 
   return GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, DirGuess.Unit(), fweight, d->wPower);
 
@@ -135,7 +135,7 @@ double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data
 
   // Create object to calculate TRes histogram
   TVector3 PosGuess(x[0], x[1], x[2]);
-  double TGuess = x[3]/100.;
+  double TGuess = x[3];
 
   return GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower);
 

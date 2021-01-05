@@ -11,7 +11,7 @@ typedef struct hPDF {
 
   TH2D* hTResVSCT;
 
-  explicit hPDF(unsigned nTRes=600, double minTRes=-200, double maxTRes=400.,
+  explicit hPDF(unsigned nTRes=400, double minTRes=0, double maxTRes=400.,
 				unsigned nCT=24, double minCT=-1., double maxCT=1.){
 
 	hTResVSCT = new TH2D("hCTVSTResPDF", "T_{Res} VS Cos(#theta)",
