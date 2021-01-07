@@ -4,8 +4,11 @@
 CC  = gcc
 CXX = g++
 
+### Machine name
+NAME = $(shell uname -n)
+
 DEBUG_LEVEL    = -g
-EXTRA_CCFLAGS  = -W -Wall -std=c++11
+EXTRA_CCFLAGS  = -std=c++11 -Wall
 CPPFLAGS       = $(DEBUG_LEVEL) $(EXTRA_CCFLAGS)
 CCFLAGS        = $(CPPFLAGS)
 
@@ -20,12 +23,22 @@ ROOTLIBS   := $(shell root-config --libs)
 RATLIBS  := -L$(RATROOT)/lib -lRATEvent
 
 ### BOOST
+ifeq ($(NAME), nino)
 BOOSTCFLAGS := -I/data/snoplus/home/zsoldos/.local/boost-1.71.0
 BOOSTLIBS   := -L/data/snoplus/home/zsoldos/.local/boost-1.71.0/lib -lboost_system -lboost_filesystem
+else
+BOOSTCFLAGS := -I/usr/include/boost
+BOOSTLIBS   := -lboost_system -lboost_filesystem
+endif
 
 ### NLOPT
+ifeq ($(NAME), nino)
 NLOPTCFLAGS := -I/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/include
 NLOPTLIBS   := -L/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/lib -lnlopt -lm
+else
+# NLOPTCFLAGS := -I/usr/include # No need to add it, g++ will find it
+NLOPTLIBS   := -lnlopt -lm
+endif
 
 CPPFLAGS  += -Iinclude -IwRATter/include $(ROOTCFLAGS) -I$(RATROOT)/include
 CPPFLAGS  +=  $(BOOSTCFLAGS)
@@ -52,6 +65,9 @@ CreatePDF:
 
 SeedNDestroy: 
 	$(CXX) $(CPPFLAGS) -o SeedNDestroy SeedNDestroy.cc $(OBJS) $(EXTRALIBS)
+
+DebugRecon: 
+	$(CXX) $(CPPFLAGS) -o DebugRecon DebugRecon.cc $(OBJS) $(EXTRALIBS)
 
 clean:
 	$(RM) $(OBJS) CreatePDF SeedNDestroy
