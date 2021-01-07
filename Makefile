@@ -12,9 +12,6 @@ CCFLAGS        = $(CPPFLAGS)
 RM = rm -f
 MV = mv
 
-SRCDIR := src
-INCDIR := include
-
 ### ROOT
 ROOTCFLAGS := $(shell root-config --cflags)
 ROOTLIBS   := $(shell root-config --libs)
@@ -30,7 +27,7 @@ BOOSTLIBS   := -L/data/snoplus/home/zsoldos/.local/boost-1.71.0/lib -lboost_syst
 NLOPTCFLAGS := -I/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/include
 NLOPTLIBS   := -L/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/lib -lnlopt -lm
 
-CPPFLAGS  += -I$(INCDIR) $(ROOTCFLAGS) -I$(RATROOT)/include
+CPPFLAGS  += -Iinclude -IwRATter/include $(ROOTCFLAGS) -I$(RATROOT)/include
 CPPFLAGS  +=  $(BOOSTCFLAGS)
 CPPFLAGS  +=  $(NLOPTCFLAGS)
 

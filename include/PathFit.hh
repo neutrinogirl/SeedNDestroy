@@ -51,10 +51,6 @@ double flatf(const TVector3& PosGuess, const double& TGuess,
 
 }
 
-double fweight(const Hit& hit, int wPower = 1){
-  return wPower > 0 ? std::pow(hit.Q, wPower) : 1;
-}
-
 double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
 			  const TVector3& Pos, const double& T, const TVector3& Dir,
 			  double(*fW)(const Hit&, int) = fweight, int wPower = 1){

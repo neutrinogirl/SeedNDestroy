@@ -1,121 +1,134 @@
 //
-// Created by zsoldos on 11/25/20.
+// Created by zsoldos on 1/5/21.
 //
 
-#include "CreatePDF.hh"
-
-#include "wRATter/include/Wrapper.hh"
-#include "wRATter/include/Hit.hh"
-#include "include/PathFit.hh"
-
-#include <ProgressBar.hpp>
+#include <iostream>
 
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TFile.h>
 
-int main(int argc, char *argv){
+#include "CreatePDF.hh"
+#include <Wrapper.hh>
+#include <Hit.hh>
+#include <ProgressBar.hpp>
 
-  const char* filename="test_Z.root";
-  unsigned int nEvts=0;
-  const char* foutname="fout_Z.root";
-  int wPower = 1;
-  double(*fW)(const Hit&, int) = fweight;
+int main(int argc, char *argv[]){
 
-    
-  // #################################################### //
-  // #### #### #### OPEN FILE / READ TTREE #### #### #### //
-  // #################################################### //
+  // ######################################## //
+  // Create TApp
+  TApplication theApp("App", &argc, argv);
 
-  wRAT w_rat(filename);
-  nEvts = nEvts > 0 ? nEvts : w_rat.GetNEvts();
-  ProgressBar progressBar(nEvts, 70);
 
+  // ######################################## //
+  // Parse arguments
+  // Simple struct containing filename and verbosity level
+  Args args;
+  ProcessArgs(theApp, args);
+  const bool isVerbose = args.isVerbose;
+  const std::string input = args.filename;
+  const std::string output = args.outname;
+
+
+  // ######################################## //
+  // Create wrapper object
+  wRAT w_rat(input);
+  const unsigned long int nEvts = args.nEvts > 0 ? args.nEvts : w_rat.GetNEvts();
+  const unsigned int wPower = args.wPower;
+
+  
   // ######################################## //
   // #### #### #### HISTOGRAMS #### #### #### //
   // ######################################## //
 
-  hPDF h_pdf;
+  TH1D* hNHits = new TH1D("hNHits", "NHits per event ; NHits ; ",
+			  1000, 0., 1000.);
+  hNHits->SetDirectory(nullptr);
 
-  // ################################## //
-  // #### #### #### LOOP #### #### #### //
-  // ################################## //
+  TH2D* hTResVSCosT = new TH2D("hCTVSTResPDF", "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
+			       600, -200., 400.,
+			       24, -1., 1.);
+  hTResVSCosT->SetDirectory(nullptr);
 
+  
+  // ######################################## //
+  // Handle gen shift of ANNIE
+  auto ANNIEShift = [](const TVector3 v){
+    TVector3 vShifted;
+    vShifted.SetX(v.X());
+    vShifted.SetY(-1*(v.Z()-1724));
+    vShifted.SetZ(v.Y()+133.3);
+    return vShifted;
+  };
+  auto ANNIEDirShift = [](const TVector3 v){
+    TVector3 vShifted;
+    vShifted.SetX(v.X());
+    vShifted.SetY(-1*v.Z());
+    vShifted.SetZ(v.Y());
+    return vShifted;
+  };
+  
+
+  // ######################################## //
+  // Loop and get vector of NHits
+  ProgressBar progress_bar(nEvts, 70);
   for(auto iEvt=0; iEvt<nEvts; iEvt++){
 
-    ++progressBar;
+    // Record the tick
+    ++progress_bar;
 
+    // Point to evt
     w_rat.SetEvt(iEvt);
 
+    // Get True info to build PDFs
+    const auto PosTrue = ANNIEShift(w_rat.GetPosTrue(0));
+    const auto DirTrue = ANNIEDirShift(w_rat.GetDirTrue(0));
+    const auto TTrue = w_rat.GetTTrue(0);
+
+    // Get number of trigger associated with an event
+    // i.e, number of EV inside the rat DS
     auto nTriggers = w_rat.GetNTriggers();
 
-    for (auto iTrigger = 0; iTrigger < nTriggers; iTrigger++) {
+    for(auto iTrigger=0; iTrigger<nTriggers; iTrigger++){
 
-      // const auto TrigTime = w_rat.GetTriggerTime(0);
-      const auto TrigTime = 0;
+      // Get vector of hits
+      std::vector<Hit> vHits = w_rat.GetVHits(iTrigger);
 
-      auto nParticle = w_rat.GetNPrimaryParticle();
-      auto iParticle = nParticle > 1 ? (TrigTime > 1e3 ? 1 : 0) : 0;
+      // DO STUFF
 
-      if(iParticle>0)
-	continue;
+      hNHits->Fill(GetNHits(vHits));
 
-      if(iTrigger>0)
-	continue;
-
-      const auto DefPosTrue = w_rat.GetPosTrue(iParticle);
-      //const auto PosTrue = w_rat.GetPosTrue(iParticle);
-// - TVector3(0., -133.3, 1724.);
-	TVector3 NewPosTrue;
-	NewPosTrue.SetX(DefPosTrue.X());
-	NewPosTrue.SetY(-1*(DefPosTrue.Z()-1724));
-	NewPosTrue.SetZ(DefPosTrue.Y()+133.3);
-
-      //const auto DirTrue = w_rat.GetDirTrue(iParticle);
-      const auto DefDirTrue = w_rat.GetDirTrue(iParticle);
-
-TVector3 NewDirTrue;
-NewDirTrue.SetX(DefDirTrue.X());
-NewDirTrue.SetY(-1*DefDirTrue.Z());
-NewDirTrue.SetZ(DefDirTrue.Y());
-
-      const auto TTrue = w_rat.GetTTrue(iParticle);
-
-      auto vHits = w_rat.GetVHits(iTrigger);
-      std::sort(vHits.begin(), vHits.end());
-
-      for(auto& hit: vHits){
-
-	const double TCor = TTrue - TrigTime;
-
-	h_pdf.hTResVSCT->Fill(hit.GetTRes(NewPosTrue, TCor),
-			      hit.GetCosTheta(NewPosTrue, NewDirTrue),
-			      fweight(hit));
-
-
+      for(auto& hit: vHits){	
+	hTResVSCosT->Fill(hit.GetTRes(PosTrue, TTrue),
+			  hit.GetCosTheta(PosTrue, DirTrue),
+			  fweight(hit, wPower));
       }
+
+      // ...
 
     }
 
-
-    progressBar.display();
+    if(isVerbose)
+      progress_bar.display();
 
   }
 
-  progressBar.done();
-
+  if(isVerbose)
+    progress_bar.done();
+  
   // #################################### //
   // #### #### #### FINISH #### #### #### //
   // #################################### //
 
-  h_pdf.hTResVSCT->Scale(1./static_cast<double>(nEvts));
+  hTResVSCosT->Scale(1./static_cast<double>(nEvts));
 
-  TFile fOut(foutname, "RECREATE");
-  h_pdf.hTResVSCT->Write();
-  h_pdf.hTResVSCT->ProjectionX()->Write();
-  h_pdf.hTResVSCT->ProjectionY()->Write();
+  TFile fOut(output.c_str(), "RECREATE");
+  hNHits->Write();
+  hTResVSCosT->Write();
+  hTResVSCosT->ProjectionX()->Write();
+  hTResVSCosT->ProjectionY()->Write();
   fOut.Close();
 
-  return EXIT_SUCCESS;
 
+  return EXIT_SUCCESS;
 }
