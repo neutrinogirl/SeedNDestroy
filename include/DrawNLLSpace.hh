@@ -94,7 +94,7 @@ TCanvas *DrawNLLSpace(std::vector<Hit>& vHits, TH1D* hPDF,
   std::vector<TMarker*> vMSeed(nSeeds);
   for(auto iSeed=0; iSeed<nSeeds; iSeed++){
 	CylVec CylPosSeed(vSeeds[iSeed]);
-	vMSeed[iSeed] = new TMarker(CylPosSeed.rho, CylPosSeed.z, kOpenCrossX);
+	vMSeed[iSeed] = new TMarker(CylPosSeed.rho, CylPosSeed.z, kOpenCross);
 	vMSeed[iSeed]->SetMarkerSize(2);
 	if(iSeed == 0)
 	  vMSeed[iSeed]->SetMarkerSize(3);
@@ -105,7 +105,7 @@ TCanvas *DrawNLLSpace(std::vector<Hit>& vHits, TH1D* hPDF,
   CentroidSeed.Print();
   CylVec CylCentroidSeed(CentroidSeed);
   CylCentroidSeed.Print();
-  auto *mCentroid = new TMarker(CylCentroidSeed.rho, CylCentroidSeed.z, kOpenCrossX);
+  auto *mCentroid = new TMarker(CylCentroidSeed.rho, CylCentroidSeed.z, kOpenCross);
   mCentroid->SetMarkerSize(2);
   mCentroid->SetMarkerColor(kBlack);
 
