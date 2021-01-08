@@ -98,7 +98,7 @@ int main(int argc, char *argv[]){
 					   TTrue, PosTrue,
 					   wPower,
 					   Form("Evt%dTrig%d", iEvt, iTrigger),
-					   10., 2000.)
+					   100./*mm*/, 2000./*mm*/)
 	  );
 	  std::cout << vHits.size() << std::endl;
 	  // ...
