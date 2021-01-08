@@ -37,7 +37,7 @@ int main(int argc, char *argv[]){
 
   // ######################################## //
   // Load PDF
-  auto hPDF = GetRootHisto<TH2D>(output.c_str(), "hCTVSTResPDF");
+  auto hPDF = GetRootHisto<TH2D>(pdf.c_str(), "hCTVSTResPDF");
   TH1D *hPDF_TRes = hPDF->ProjectionX();
 
 

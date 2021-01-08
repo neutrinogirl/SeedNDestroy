@@ -38,7 +38,7 @@ typedef struct Args{
 
 static void ShowUsage(const std::string& name){
 
-  std::cerr << "Usage: " << name << " <option(s)> -i (--input) IN.root -p (--pdf) PDF.root -o (--output) PDF.root" << std::endl
+  std::cerr << "Usage: " << name << " <option(s)> -i (--input) IN.root -p (--pdf) PDF.root -o (--output) OUT.root" << std::endl
 	    << "Options:\n"
 
 	    << "\t-h\tShow this help message\n"
