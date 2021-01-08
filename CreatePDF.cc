@@ -53,14 +53,14 @@ int main(int argc, char *argv[]){
   
   // ######################################## //
   // Handle gen shift of ANNIE
-  auto ANNIEShift = [](const TVector3 v){
+  auto ANNIEShift = [](const TVector3& v){
     TVector3 vShifted;
     vShifted.SetX(v.X());
     vShifted.SetY(-1*(v.Z()-1724));
     vShifted.SetZ(v.Y()+133.3);
     return vShifted;
   };
-  auto ANNIEDirShift = [](const TVector3 v){
+  auto ANNIEDirShift = [](const TVector3& v){
     TVector3 vShifted;
     vShifted.SetX(v.X());
     vShifted.SetY(-1*v.Z());

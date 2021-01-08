@@ -17,6 +17,7 @@
 
 TCanvas *DrawNLLSpace(std::vector<Hit>& vHits, TH1D* hPDF,
 					  const double& TTrue, const TVector3& PosTrue,
+					  const unsigned int& wPower,
 					  const std::string& tag,
 					  const double& WidthBinsGrid = 500., const double HalfDetSize = 8000.){
 
@@ -78,7 +79,7 @@ TCanvas *DrawNLLSpace(std::vector<Hit>& vHits, TH1D* hPDF,
 
 		// Convert to cartesian
 		TVector3 PosGuess(R*cos(t), R*sin(t), Z);
-		AvNLL+=flatf(PosGuess, TTrue, vHits, hPDF, 1);
+		AvNLL+=flatf(PosGuess, TTrue, vHits, hPDF, wPower);
 
 	  }
 
@@ -88,7 +89,7 @@ TCanvas *DrawNLLSpace(std::vector<Hit>& vHits, TH1D* hPDF,
 
   }
 
-  auto vSeeds = GetVSeeds(vHits, TTrue, 0, hPDF, 1);
+  auto vSeeds = GetVSeeds(vHits, TTrue, 0, hPDF, wPower);
   auto nSeeds = vSeeds.size();
   nSeeds = nSeeds > 10 ? 10 : nSeeds;
   std::vector<TMarker*> vMSeed(nSeeds);

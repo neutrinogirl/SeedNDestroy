@@ -44,20 +44,21 @@ int main(int argc, char *argv[]){
   // ######################################## //
   // Create wrapper object
   wRAT w_rat(input);
-  const unsigned long int nEvts = w_rat.GetNEvts();
+  const unsigned long int nEvts = args.nEvts > 0 ? args.nEvts : w_rat.GetNEvts();
+  const unsigned int wPower = args.wPower;
   std::vector<TCanvas*> vNLLSpace; vNLLSpace.reserve(nEvts);
 
 
   // ######################################## //
   // Handle gen shift of ANNIE
-  auto ANNIEShift = [](const TVector3 v){
+  auto ANNIEShift = [](const TVector3& v){
 	TVector3 vShifted;
 	vShifted.SetX(v.X());
 	vShifted.SetY(-1*(v.Z()-1724));
 	vShifted.SetZ(v.Y()+133.3);
 	return vShifted;
   };
-  auto ANNIEDirShift = [](const TVector3 v){
+  auto ANNIEDirShift = [](const TVector3& v){
 	TVector3 vShifted;
 	vShifted.SetX(v.X());
 	vShifted.SetY(-1*v.Z());
@@ -95,6 +96,7 @@ int main(int argc, char *argv[]){
 	  vNLLSpace.emplace_back(
 		  DrawNLLSpace(vHits, hPDF_TRes,
 					   TTrue, PosTrue,
+					   wPower,
 					   Form("Evt%dTrig%d", iEvt, iTrigger),
 					   10., 200.)
 	  );
