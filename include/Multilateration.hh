@@ -13,7 +13,7 @@
 #include "MathUtils.hh"
 #include "PathFit.hh"
 
-static Matrix GetDMatrix(std::vector<Hit>& vHits){
+Matrix GetDMatrix(std::vector<Hit>& vHits){
 
   auto nHits = vHits.size();
   Matrix M(nHits, nHits);
@@ -40,7 +40,7 @@ static Matrix GetDMatrix(std::vector<Hit>& vHits){
 typedef std::vector<Hit> vHits;
 typedef std::vector<vHits> vvHits;
 
-static vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
+vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
 
   static int dVBins = 50;
   static double dVMin = 1.e-2;
@@ -75,7 +75,7 @@ static vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
 
 }
 
-static TVector3 GetDTSeed(std::vector<Hit>& vHits){
+TVector3 GetDTSeed(std::vector<Hit>& vHits){
 
   std::sort(vHits.begin(), vHits.end());
   auto itHit0 = std::lower_bound(vHits.begin(), vHits.end(), vHits[0]);
@@ -155,9 +155,9 @@ static TVector3 GetDTSeed(std::vector<Hit>& vHits){
 
 }
 
-static std::vector<TVector3> GetVSeeds(std::vector<Hit>& vHits,
-									   const double& TTrue, const double& TriggerTime,
-									   TH1D* hPDF, const int& wPower = 1){
+std::vector<TVector3> GetVSeeds(std::vector<Hit>& vHits,
+								const double& TTrue, const double& TriggerTime,
+								TH1D* hPDF, const int& wPower = 1){
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
@@ -236,8 +236,8 @@ typedef struct PosTSeed{
   double T;
 } PosTSeed;
 
-static PosTSeed GetSeed(std::vector<Hit>& vHits,
-						TH1D* hPDF, const int& wPower = 1){
+PosTSeed GetSeed(std::vector<Hit>& vHits,
+				 TH1D* hPDF, const int& wPower = 1){
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
@@ -334,9 +334,9 @@ bool operator==(const SubGuess& s1, const SubGuess& s2){
   return s1.PosGuess == s2.PosGuess;
 }
 
-static std::vector<SubGuess> GetVSeedsAndVHits(std::vector<Hit>& vHits,
-											   const double& TTrue, const double& TriggerTime,
-											   TH1D* hPDF, const int& wPower = 1) {
+std::vector<SubGuess> GetVSeedsAndVHits(std::vector<Hit>& vHits,
+										const double& TTrue, const double& TriggerTime,
+										TH1D* hPDF, const int& wPower = 1) {
   std::vector<SubGuess> vSubGuess;
 
   auto M = GetDMatrix(vHits);
@@ -363,9 +363,9 @@ static std::vector<SubGuess> GetVSeedsAndVHits(std::vector<Hit>& vHits,
   vSubGuess.emplace_back(SubGuess {GetDTSeed(vHits), TTrue-TriggerTime, vHits});
 
   auto PrintSubGuess = [&vSubGuess]() {
-    for(auto& s:vSubGuess) {
-      s.PosGuess.Print();
-      CylVec(s.PosGuess).Print();
+	for(auto& s:vSubGuess) {
+	  s.PosGuess.Print();
+	  CylVec(s.PosGuess).Print();
 	}
   };
 

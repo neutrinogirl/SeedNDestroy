@@ -24,10 +24,12 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 # ## NOT NEEDED FOR DICT
 include_directories(
         ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/wRATter/include
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         $ENV{RATROOT}/include
         /usr/include/c++/4.9
+        /usr/include/x86_64-linux-gnu/c++/4.9
 )
 
 #----------------------------------------------------------------------------
@@ -44,4 +46,4 @@ file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
 add_executable(CreatePDF CreatePDF.cc)
-#add_executable(SeedNDestroy SeedNDestroy.cc)
+add_executable(DebugRecon DebugRecon.cc)

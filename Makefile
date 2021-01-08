@@ -70,4 +70,4 @@ DebugRecon:
 	$(CXX) $(CPPFLAGS) -o DebugRecon DebugRecon.cc $(OBJS) $(EXTRALIBS)
 
 clean:
-	$(RM) $(OBJS) CreatePDF SeedNDestroy
+	$(RM) $(OBJS) CreatePDF SeedNDestroy DebugRecon
