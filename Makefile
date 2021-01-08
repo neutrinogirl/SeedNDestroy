@@ -69,5 +69,8 @@ SeedNDestroy:
 DebugRecon: 
 	$(CXX) $(CPPFLAGS) -o DebugRecon DebugRecon.cc $(OBJS) $(EXTRALIBS)
 
+Recon:
+	$(CXX) $(CPPFLAGS) -o Recon Recon.cc $(OBJS) $(EXTRALIBS)
+
 clean:
-	$(RM) $(OBJS) CreatePDF SeedNDestroy DebugRecon
+	$(RM) $(OBJS) CreatePDF SeedNDestroy DebugRecon Recon

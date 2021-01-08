@@ -39,6 +39,7 @@
 
 # CMake
 cmake-build-*/
+nino/
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
@@ -83,7 +84,8 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-# User
+# User EXE
 CreatePDF
 DebugRecon
 SeedNDestroy
+Recon

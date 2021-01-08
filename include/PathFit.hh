@@ -15,26 +15,26 @@
 typedef struct{
   TH2D* hPDF;
   std::vector<Hit> vHits;
-  int wPower;
+  unsigned int wPower;
 } DataStruct;
 
 typedef struct{
   TH1D* hPDF;
   std::vector<Hit> vHits;
-  int wPower;
+  unsigned int wPower;
 } DataStruct1D;
 
 typedef struct{
   TH1D* hPDF;
   std::vector<Hit> vHits;
-  int wPower;
+  unsigned int wPower;
   std::vector<double> PosTGuess;
 } DataStructDir;
 
 double flatf(const TVector3& PosGuess, const double& TGuess,
 			 const std::vector<Hit>& vHits,
 			 TH1D* hPDF,
-			 const double& weightPower){
+			 const unsigned int& weightPower){
 
   TH1D hGuess("", "", hPDF->GetNbinsX(), hPDF->GetXaxis()->GetXmin(), hPDF->GetXaxis()->GetXmax());
 
@@ -53,7 +53,7 @@ double flatf(const TVector3& PosGuess, const double& TGuess,
 
 double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
 			  const TVector3& Pos, const double& T, const TVector3& Dir,
-			  double(*fW)(const Hit&, int) = fweight, int wPower = 1){
+			  double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1){
 
   // Get hPDF info to create hExp with same parameters
   zAxis xa(hPDF->GetXaxis());
@@ -73,7 +73,7 @@ double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
 
 double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 			  const TVector3& Pos, const double& T,
-			  double(*fW)(const Hit&, int) = fweight, int wPower = 1){
+			  double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1){
 
   // Get hPDF info to create hExp with same parameters
   zAxis xa(hPDF->GetXaxis());
@@ -91,7 +91,7 @@ double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 
 double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 			  const TVector3& Pos, const TVector3& Dir,
-			  double(*fW)(const Hit&, int) = fweight, int wPower = 1,
+			  double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1,
 			  bool OnlyCher = false){
 
   // Get hPDF info to create hExp with same parameters
@@ -120,7 +120,7 @@ double fPosTDir(const std::vector<double> &x, std::vector<double> &grad, void *d
   // Create object to calculate TRes histogram
   TVector3 PosGuess(x[0], x[1], x[2]);
   TVector3 DirGuess(x[3], x[4], x[5]);
-  double TGuess = x[6];
+  double TGuess = x[6]*1.e-2;
 
   return GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, DirGuess.Unit(), fweight, d->wPower);
 
@@ -131,7 +131,7 @@ double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data
 
   // Create object to calculate TRes histogram
   TVector3 PosGuess(x[0], x[1], x[2]);
-  double TGuess = x[3];
+  double TGuess = x[3]*1.e-2;
 
   return GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower);
 

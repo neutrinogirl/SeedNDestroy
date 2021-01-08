@@ -2,8 +2,8 @@
 // Created by zsoldos on 1/5/21.
 //
 
-#ifndef _DEBUGRECON_HH_
-#define _DEBUGRECON_HH_
+#ifndef _RECONTEMPLATE_HH_
+#define _RECONTEMPLATE_HH_
 
 // ####################################### //
 // #### #### ####   C/C++   #### #### #### //
@@ -26,6 +26,39 @@
 // #### #### ####   USER    #### #### #### //
 // ####################################### //
 #include <Utils.hh>
+
+typedef struct Vec{
+  double x=0., y=0., z=0.;
+  Vec() = default;
+  explicit Vec(const TVector3& v) : x(v.x()), y(v.y()), z(v.z()) { };
+  explicit Vec(const std::vector<double>& v) : x(v[0]), y(v[1]), z(v[2]) { };
+} Vec;
+
+typedef struct Event{
+  Vec MCPos;
+  Vec MCDir;
+  double MCT=0.;
+  Vec RecPos;
+  double RecT=0.;
+  Event() = default;
+  Event(const TVector3& mcpos, const TVector3& mcdir, const double& mct,
+		const TVector3& recpos, const double& recT)
+	  : MCPos(mcpos), MCDir(mcdir), MCT(mct), RecPos(recpos), RecT(recT) { };
+} Event;
+
+void SetTTree(TTree& Tree, Event& Event){
+  Tree.Branch("mcx", &Event.MCPos.x, "mcx/D");
+  Tree.Branch("mcy", &Event.MCPos.y, "mcy/D");
+  Tree.Branch("mcz", &Event.MCPos.z, "mcz/D");
+  Tree.Branch("mcT", &Event.MCT, "mcT/D");
+  Tree.Branch("mcdx", &Event.MCDir.x, "mcdx/D");
+  Tree.Branch("mcdy", &Event.MCDir.y, "mcdy/D");
+  Tree.Branch("mcdz", &Event.MCDir.z, "mcdz/D");
+  Tree.Branch("recx", &Event.RecPos.x, "recx/D");
+  Tree.Branch("recy", &Event.RecPos.y, "recy/D");
+  Tree.Branch("recz", &Event.RecPos.z, "recz/D");
+  Tree.Branch("recT", &Event.RecT, "recT/D");
+}
 
 typedef struct Args{
   bool isVerbose = false;
@@ -69,9 +102,9 @@ static void ProcessArgs(TApplication &theApp,
     } else if (boost::iequals(arg, "-v")) {
       args.isVerbose=true;
     } else if (boost::iequals(arg, "-n")) {
-      args.nEvts=std::stoi(theApp.Argv(++i));
+      args.nEvts=std::stoul(theApp.Argv(++i));
     } else if (boost::iequals(arg, "-w")) {
-      args.wPower=std::stoi(theApp.Argv(++i));
+      args.wPower=std::stoul(theApp.Argv(++i));
     } else if (boost::iequals(arg,"-i") || boost::iequals(arg,"--input")) {
       args.filename=theApp.Argv(++i);
     } else if (boost::iequals(arg,"-p") || boost::iequals(arg,"--pdf")) {
@@ -107,4 +140,4 @@ T* GetRootHisto(const char* filename, const char* histname){
   return hist;
 }
 
-#endif //_DEBUGRECON_HH_
+#endif //_RECONTEMPLATE_HH_

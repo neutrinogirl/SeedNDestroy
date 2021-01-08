@@ -47,3 +47,4 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
 add_executable(CreatePDF CreatePDF.cc)
 add_executable(DebugRecon DebugRecon.cc)
+add_executable(Recon Recon.cc)

@@ -7,7 +7,8 @@
 
 #include <numeric>
 
-#include "../wRATter/include/Hit.hh"
+#include <Hit.hh>
+
 #include "Centroid.hh"
 #include "SVD.hh"
 #include "MathUtils.hh"
@@ -75,7 +76,7 @@ vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
 
 }
 
-TVector3 GetDTSeed(std::vector<Hit>& vHits){
+TVector3 GetDTSeed(std::vector<Hit>& vHits, const double& bnds){
 
   std::sort(vHits.begin(), vHits.end());
   auto itHit0 = std::lower_bound(vHits.begin(), vHits.end(), vHits[0]);
@@ -148,7 +149,7 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits){
 
   }
 
-  if(TVector3(X[0], X[1], X[2]).Mag() > 8000.)
+  if(TVector3(X[0], X[1], X[2]).Mag() > bnds)
 	return TVector3(HUGE_VAL, HUGE_VAL, HUGE_VAL);
 
   return TVector3(X[0], X[1], X[2]);
@@ -157,13 +158,13 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits){
 
 std::vector<TVector3> GetVSeeds(std::vector<Hit>& vHits,
 								const double& TTrue, const double& TriggerTime,
-								TH1D* hPDF, const int& wPower = 1){
+								TH1D* hPDF, const double& bnds, const unsigned int& wPower = 1){
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
   vSeeds.emplace_back(GetCentroidSeed(vHits, 2));
-  auto DTSeed = GetDTSeed(vHits);
-  if(DTSeed.Mag() < 8000.)
+  auto DTSeed = GetDTSeed(vHits, bnds);
+  if(DTSeed.Mag() < bnds)
 	vSeeds.emplace_back(DTSeed);
 
   auto M = GetDMatrix(vHits);
@@ -177,9 +178,9 @@ std::vector<TVector3> GetVSeeds(std::vector<Hit>& vHits,
 	  if(ivSeed.empty() || ivSeed.size() < 5)
 		continue;
 
-	  auto PosSeed = GetDTSeed(ivSeed);
+	  auto PosSeed = GetDTSeed(ivSeed, bnds);
 
-	  if(PosSeed.Mag() < 8000.)
+	  if(PosSeed.Mag() < bnds)
 		vSeeds.emplace_back(PosSeed);
 
 	}
@@ -237,13 +238,13 @@ typedef struct PosTSeed{
 } PosTSeed;
 
 PosTSeed GetSeed(std::vector<Hit>& vHits,
-				 TH1D* hPDF, const int& wPower = 1){
+				 TH1D* hPDF, const double& bnds, const unsigned int& wPower = 1){
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
   vSeeds.emplace_back(GetCentroidSeed(vHits, 2));
-  auto DTSeed = GetDTSeed(vHits);
-  if(DTSeed.Mag() < 8000.)
+  auto DTSeed = GetDTSeed(vHits, bnds);
+  if(DTSeed.Mag() < bnds)
 	vSeeds.emplace_back(DTSeed);
 
   auto M = GetDMatrix(vHits);
@@ -257,9 +258,9 @@ PosTSeed GetSeed(std::vector<Hit>& vHits,
 	  if(ivSeed.empty() || ivSeed.size() < 5)
 		continue;
 
-	  auto PosSeed = GetDTSeed(ivSeed);
+	  auto PosSeed = GetDTSeed(ivSeed, bnds);
 
-	  if(PosSeed.Mag() < 8000.)
+	  if(PosSeed.Mag() < bnds)
 		vSeeds.emplace_back(PosSeed);
 
 	}
@@ -307,7 +308,7 @@ PosTSeed GetSeed(std::vector<Hit>& vHits,
   double NLL = HUGE_VAL;
 
   // Sort seeds by flat NLL value
-  std::vector<double> vTGuess = {-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25};
+  std::vector<double> vTGuess = {-15, -10, -5, 0, 5, 10, 15};
   for(const auto& T:vTGuess){
 	std::sort(vSeeds.begin(), vSeeds.end(), [&](const TVector3& v1, const TVector3& v2){
 	  return flatf(v1, T, vHits, hPDF, wPower) < flatf(v2, T, vHits, hPDF, wPower);
@@ -336,7 +337,7 @@ bool operator==(const SubGuess& s1, const SubGuess& s2){
 
 std::vector<SubGuess> GetVSeedsAndVHits(std::vector<Hit>& vHits,
 										const double& TTrue, const double& TriggerTime,
-										TH1D* hPDF, const int& wPower = 1) {
+										TH1D* hPDF, const double& bnds, const unsigned int& wPower = 1) {
   std::vector<SubGuess> vSubGuess;
 
   auto M = GetDMatrix(vHits);
@@ -350,9 +351,9 @@ std::vector<SubGuess> GetVSeedsAndVHits(std::vector<Hit>& vHits,
 	  if(ivSeed.empty() || ivSeed.size() < 5)
 		continue;
 
-	  auto PosSeed = GetDTSeed(ivSeed);
+	  auto PosSeed = GetDTSeed(ivSeed, bnds);
 
-	  if(PosSeed.Mag() < 8000.)
+	  if(PosSeed.Mag() < bnds)
 		vSubGuess.emplace_back(SubGuess{PosSeed, TTrue-TriggerTime, ivSeed});
 
 	}
@@ -360,7 +361,7 @@ std::vector<SubGuess> GetVSeedsAndVHits(std::vector<Hit>& vHits,
   }
 
   vSubGuess.emplace_back(SubGuess {GetCentroidSeed(vHits, 2), TTrue-TriggerTime, vHits});
-  vSubGuess.emplace_back(SubGuess {GetDTSeed(vHits), TTrue-TriggerTime, vHits});
+  vSubGuess.emplace_back(SubGuess {GetDTSeed(vHits, bnds), TTrue-TriggerTime, vHits});
 
   auto PrintSubGuess = [&vSubGuess]() {
 	for(auto& s:vSubGuess) {

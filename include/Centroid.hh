@@ -15,8 +15,14 @@ static double GetTotQ(const std::vector<Hit>& vHits){
   return Q;
 }
 
+static double GetTotQ2(const std::vector<Hit>& vHits){
+  double Q2=0.;
+  for(const auto& hit:vHits)
+	Q2+=hit.Q*hit.Q;
+  return Q2;
+}
 
-static TVector3 GetCentroidSeed(std::vector<Hit>& vHits,
+TVector3 GetCentroidSeed(std::vector<Hit>& vHits, const double& bnds,
 								const int& weightPower = 2){
 
   TVector3 Seed(0.,0.,0.);
@@ -31,7 +37,7 @@ static TVector3 GetCentroidSeed(std::vector<Hit>& vHits,
   };
 
   auto QNorm = GetTotQ(vHits);
-  auto Q2Norm = std::pow(QNorm,2);
+  auto Q2Norm = GetTotQ2(vHits);
 
   Hit hCut;
   hCut.T = 0;
@@ -78,15 +84,14 @@ static TVector3 GetCentroidSeed(std::vector<Hit>& vHits,
   // RESCALE seed vector if outside boundaries //
   // ######################################### //
 
-  const double MaxAxis = 2.e3;
-  auto isFV = [&MaxAxis](const TVector3& Pos){
-	return abs(Pos.x()) < MaxAxis && abs(Pos.y()) < MaxAxis && abs(Pos.z()) < MaxAxis;
+  auto isFV = [&bnds](const TVector3& Pos){
+	return abs(Pos.x()) < bnds && abs(Pos.y()) < bnds && abs(Pos.z()) < bnds;
   };
 
   if(isFV(Seed)){
 	return Seed;
   } else {
-	Seed.SetMag(MaxAxis);
+	Seed.SetMag(bnds);
 	return Seed;
   }
 }

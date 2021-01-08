@@ -14,13 +14,18 @@
 #include "PathFit.hh"
 #include "MathUtils.hh"
 
-std::vector<double> ReconPosTime(DataStruct1D& DS,
+typedef struct Bnds {
+  double Pos;
+  double T;
+} Bnds;
+
+std::vector<double> ReconPosTime(DataStruct1D& DS, const Bnds& bnds,
 								 const TVector3& PosSeed, const double& TSeed = 0.){
 
   const unsigned nDimf = 4;
   std::vector<double> x = {
 	  PosSeed.x(), PosSeed.y(), PosSeed.z(),
-	  TSeed
+	  TSeed*1.e2 /* Get same dimensionality as space */
   };
   double minf;
 
@@ -32,8 +37,8 @@ std::vector<double> ReconPosTime(DataStruct1D& DS,
 
   // ######################################## //
   // Create fitter boundaries
-  std::vector<double> lb(nDimf, -2.e3); lb[3] = - 10;
-  std::vector<double> ub(nDimf, 2.e3);  ub[3] = + 10;
+  std::vector<double> lb(nDimf, -bnds.Pos); lb[3] = - bnds.T * 1.e2;
+  std::vector<double> ub(nDimf, bnds.Pos);  ub[3] = + bnds.T * 1.e2;
 
   // Set boundaries
   opt_local.set_lower_bounds(lb);
@@ -49,7 +54,7 @@ std::vector<double> ReconPosTime(DataStruct1D& DS,
   opt_local.get_initial_step_(
 	  {
 		  1.e2, 1.e2, 1.e2,
-		  1
+		  1.e2
 	  }
   );
 
