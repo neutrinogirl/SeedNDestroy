@@ -10,6 +10,7 @@
 // ####################################### //
 #include <iostream>
 #include <string>
+#include <csignal>
 
 // ####################################### //
 // #### #### ####   BOOST   #### #### #### //
@@ -62,10 +63,10 @@ void SetTTree(TTree& Tree, Event& Event){
 
 typedef struct Args{
   bool isVerbose = false;
-  std::string filename;
+  std::vector<std::string> filename;
   std::string pdfname;
   std::string outname = "fRecon.root";
-  unsigned int nEvts;
+  unsigned int nEvts = 0;
   unsigned int wPower = 1;
 } Args;
 
@@ -106,7 +107,7 @@ static void ProcessArgs(TApplication &theApp,
     } else if (boost::iequals(arg, "-w")) {
       args.wPower=std::stoul(theApp.Argv(++i));
     } else if (boost::iequals(arg,"-i") || boost::iequals(arg,"--input")) {
-      args.filename=theApp.Argv(++i);
+      args.filename.emplace_back(theApp.Argv(++i));
     } else if (boost::iequals(arg,"-p") || boost::iequals(arg,"--pdf")) {
       args.pdfname=theApp.Argv(++i);
     } else if (boost::iequals(arg,"-o") || boost::iequals(arg,"--output")) {
@@ -117,11 +118,18 @@ static void ProcessArgs(TApplication &theApp,
     }
   }
 
+  auto RemoveEmptyFile = [](std::vector<std::string>& v){
+    for(auto itFile=v.begin(); itFile!=v.end(); itFile++){
+	  if(!IsFileExist((*itFile).c_str())){
+		v.erase(itFile);
+	  }
+	}
+  };
+
+  RemoveEmptyFile(args.filename);
+
   if(args.filename.empty() || args.pdfname.empty()){
     std::cerr << "ERROR: No input file provided!" << std::endl;
-    exit(EXIT_FAILURE);
-  } else if(!IsFileExist(args.filename.c_str())){
-    std::cerr << "ERROR: input file doesn't exist!" << std::endl;
     exit(EXIT_FAILURE);
   }
 
@@ -139,5 +147,17 @@ T* GetRootHisto(const char* filename, const char* histname){
   delete f;
   return hist;
 }
+
+namespace {
+volatile std::sig_atomic_t gSignalStatus;
+}
+
+void signal_handler(int signal) {
+  std::cout << std::endl;
+  std::cout << "Receive Ctrl+C" << std::endl;
+  std::cout << "Will process the last threads and then exit" << std::endl;
+  gSignalStatus = signal;
+}
+
 
 #endif //_RECONTEMPLATE_HH_

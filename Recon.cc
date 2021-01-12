@@ -31,7 +31,6 @@ int main(int argc, char *argv[]){
   Args args;
   ProcessArgs(theApp, args);
   const bool isVerbose = args.isVerbose;
-  const std::string input = args.filename;
   const std::string pdf = args.pdfname;
   const std::string output = args.outname;
 
@@ -44,7 +43,7 @@ int main(int argc, char *argv[]){
 
   // ######################################## //
   // Create wrapper object
-  wRAT w_rat(input);
+  wRAT w_rat(args.filename);
   const unsigned long int nEvts = args.nEvts > 0 ? args.nEvts : w_rat.GetNEvts();
   const unsigned int wPower = args.wPower;
 
@@ -52,36 +51,24 @@ int main(int argc, char *argv[]){
   // ######################################## //
   // Create structure holding data
   DataStruct1D ds = {hPDF_TRes, std::vector<Hit>(), wPower};
-  TTree tree("T", "A zara tree");
+  TTree tree("T", "A flat tree");
   Event evt;
   SetTTree(tree, evt);
 
 
-  // ######################################## //
-  // Handle gen shift of ANNIE
-  auto ANNIEShift = [](const TVector3& v){
-	TVector3 vShifted;
-	vShifted.SetX(v.X());
-	vShifted.SetY(-1*(v.Z()-1724));
-	vShifted.SetZ(v.Y()+133.3);
-	return vShifted;
-  };
-  auto ANNIEDirShift = [](const TVector3& v){
-	TVector3 vShifted;
-	vShifted.SetX(v.X());
-	vShifted.SetY(-1*v.Z());
-	vShifted.SetZ(v.Y());
-	return vShifted;
-  };
-
-  // ANNIE Boundaries
-  Bnds ANNIEBnds = {2.e3/*mm*/, 10./*ns*/};
+  // WM Boundaries
+  Bnds WMBnds = {8.e3/*mm*/, 10./*ns*/};
 
 
   // ######################################## //
   // Loop and get vector of NHits
   ProgressBar progress_bar(nEvts, 70);
+  signal(SIGINT, signal_handler);
   for(auto iEvt=0; iEvt<nEvts; iEvt++){
+
+    // if ctrl+c exit loop
+	if(gSignalStatus > 0)
+	  break;
 
 	// Record the tick
 	++progress_bar;
@@ -89,31 +76,43 @@ int main(int argc, char *argv[]){
 	// Point to evt
 	w_rat.SetEvt(iEvt);
 
-	// Get True info to build PDFs
-	const auto PosTrue = ANNIEShift(w_rat.GetPosTrue(0));
-	const auto DirTrue = ANNIEDirShift(w_rat.GetDirTrue(0));
-	const auto TTrue = w_rat.GetTTrue(0);
-
-	evt.MCPos = Vec(PosTrue);
-	evt.MCDir = Vec(DirTrue);
-	evt.MCT = TTrue;
-
 	// Get number of trigger associated with an event
 	// i.e, number of EV inside the rat DS
 	auto nTriggers = w_rat.GetNTriggers();
 
 	for(auto iTrigger=0; iTrigger<nTriggers; iTrigger++){
 
+	  // IF USE SPLITEVDAQ
+	  // Get EV TrigTime
+	  const auto TrigTime = w_rat.GetTriggerTime(iTrigger);
+
+	  // Try to guess which particle is attached to this trigger
+	  // Make sense only for IBD gen, when n capture will be >> in T that prompt event
+	  // Note that also e+ is always first particle generated
+	  auto nParticle = w_rat.GetNPrimaryParticle();
+	  auto iParticle = nParticle > 1 ? (TrigTime > 1e3 ? 1 : 0) : 0;
+
+	  // Get True info to record
+	  const auto PosTrue = w_rat.GetPosTrue(iParticle);
+	  const auto DirTrue = w_rat.GetDirTrue(iParticle);
+	  const auto TTrue = w_rat.GetTTrue(iParticle);
+
+	  evt.MCPos = Vec(PosTrue);
+	  evt.MCDir = Vec(DirTrue);
+	  evt.MCT = TTrue;
+
+	  const double TCor = TTrue - TrigTime;
+
 	  // Get vector of hits
 	  std::vector<Hit> vHits = w_rat.GetVHits(iTrigger);
 
 	  // DO STUFF
-	  auto PosTSeed = GetSeed(vHits, hPDF_TRes, ANNIEBnds.Pos, wPower);
+	  auto PosTSeed = GetSeed(vHits, hPDF_TRes, 0., WMBnds.Pos, wPower);
 
 	  ds.vHits.clear();
 	  ds.vHits = vHits;
 
-	  auto x = ReconPosTime(ds, ANNIEBnds, PosTSeed.Pos, PosTSeed.T);
+	  auto x = ReconPosTime(ds, WMBnds, PosTSeed.Pos, PosTSeed.T);
 
 	  evt.RecPos = Vec(x);
 	  evt.RecT = x[3]*1.e-2;
