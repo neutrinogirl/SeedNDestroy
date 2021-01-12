@@ -326,4 +326,9 @@ typedef struct zAxis {
 
 } zAxis ;
 
+std::vector<double> GetIntSpace(const unsigned int& nSteps, const double& min=-1, const double& max=1.){
+  const double step = (max-min) / (double)(nSteps);
+  std::vector<double> v;
+}
+
 #endif //_MATHUTILS_HH_

@@ -238,7 +238,9 @@ typedef struct PosTSeed{
 } PosTSeed;
 
 PosTSeed GetSeed(std::vector<Hit>& vHits,
-				 TH1D* hPDF, const double& bnds, const unsigned int& wPower = 1){
+				 TH1D* hPDF,
+				 const double& TGuess,
+				 const double& bnds, const unsigned int& wPower = 1){
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
@@ -308,17 +310,14 @@ PosTSeed GetSeed(std::vector<Hit>& vHits,
   double NLL = HUGE_VAL;
 
   // Sort seeds by flat NLL value
-  std::vector<double> vTGuess = {-15, -10, -5, 0, 5, 10, 15};
-  for(const auto& T:vTGuess){
-	std::sort(vSeeds.begin(), vSeeds.end(), [&](const TVector3& v1, const TVector3& v2){
-	  return flatf(v1, T, vHits, hPDF, wPower) < flatf(v2, T, vHits, hPDF, wPower);
-	});
-	double CandidateNLL = flatf(vSeeds[0], T, vHits, hPDF, wPower);
-	if(CandidateNLL < NLL){
-	  NLL = CandidateNLL;
-	  PosBestSeed = vSeeds[0];
-	  TBestSeed = T;
-	}
+  std::sort(vSeeds.begin(), vSeeds.end(), [&](const TVector3& v1, const TVector3& v2){
+	return flatf(v1, TGuess, vHits, hPDF, wPower) < flatf(v2, TGuess, vHits, hPDF, wPower);
+  });
+  double CandidateNLL = flatf(vSeeds[0], TGuess, vHits, hPDF, wPower);
+  if(CandidateNLL < NLL){
+	NLL = CandidateNLL;
+	PosBestSeed = vSeeds[0];
+	TBestSeed = TGuess;
   }
 
   return {PosBestSeed, TBestSeed};

@@ -37,8 +37,8 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const Bnds& bnds,
 
   // ######################################## //
   // Create fitter boundaries
-  std::vector<double> lb(nDimf, -bnds.Pos); lb[3] = - bnds.T * 1.e2;
-  std::vector<double> ub(nDimf, bnds.Pos);  ub[3] = + bnds.T * 1.e2;
+  std::vector<double> lb(nDimf, -bnds.Pos); lb[3] = (TSeed - bnds.T) * 1.e2;
+  std::vector<double> ub(nDimf, bnds.Pos);  ub[3] = (TSeed + bnds.T) * 1.e2;
 
   // Set boundaries
   opt_local.set_lower_bounds(lb);
