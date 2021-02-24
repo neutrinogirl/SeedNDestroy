@@ -6,6 +6,9 @@
 #define _MATHUTILS_HH_
 
 #include <iostream>
+#include <vector>
+#include <numeric>
+#include <algorithm>
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -14,9 +17,9 @@
 
 #include <boost/range/combine.hpp>
 #include <boost/foreach.hpp>
+#include <utility>
 
 #define PI 3.14159265359
-#define SQRT5 2.2360679775
 #define SQRT2 1.41421356237
 #define RINDEX_WATER 1.33
 #define SOL_VACUUM 299.792
@@ -48,8 +51,8 @@ double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
   auto normPDF = 1.;
   auto normExp = 1.;
   if(!isNormalized){
-	normPDF = hPDF->Integral("width");
-	normExp = hExp->Integral("width");
+	normPDF = hPDF->Integral();
+	normExp = hExp->Integral();
   }
 
   auto Chi2 = 0.;
@@ -334,5 +337,46 @@ std::vector<double> GetIntSpace(const unsigned int& nSteps, const double& min=-1
   v.emplace_back(max);
   return v;
 }
+
+template<typename T>
+void ScaleHist(T *hist, const double& norm = 0){
+  if(norm > 0){
+	hist->Scale(1./norm);
+  } else {
+	hist->Scale(1./hist->Integral());
+  }
+}
+
+typedef struct Bnds {
+  std::vector<double> Pos;
+  std::vector<double> T;
+
+  Bnds() = default;
+
+  double GetMin() const {
+	return *std::min_element(Pos.begin(), Pos.end());
+  }
+  double GetMax() const {
+	return *std::max_element(Pos.begin(), Pos.end());
+  }
+
+  bool IsIn(const std::vector<double>& x) const{
+    return std::abs(x[0]) < Pos[0] && std::abs(x[1]) < Pos[1] && std::abs(x[2]) < Pos[2];
+  }
+
+  bool IsIn(const TVector3& v) const{
+	return std::abs(v[0]) < Pos[0] && std::abs(v[1]) < Pos[1] && std::abs(v[2]) < Pos[2];
+  }
+
+  TVector3 GetTVector3() const{
+	return TVector3(Pos[0], Pos[1], Pos[2]);
+  }
+
+  bool IsIn(const double& TGuess) const {
+    return TGuess > T[0] && TGuess < T[1];
+  }
+
+} Bnds;
+
 
 #endif //_MATHUTILS_HH_

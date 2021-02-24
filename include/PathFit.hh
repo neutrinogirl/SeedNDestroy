@@ -8,114 +8,38 @@
 #include <TH1D.h>
 #include <TH2D.h>
 
-#include "../wRATter/include/Hit.hh"
+#include <Hit.hh>
+#include <TRandom3.h>
 #include "MathUtils.hh"
+#include "Recorder.hh"
+#include "NLL.hh"
 
-
-typedef struct{
-  TH2D* hPDF;
+typedef struct DataStruct{
   std::vector<Hit> vHits;
   unsigned int wPower;
+  explicit DataStruct(unsigned int w_power)
+	  : wPower(w_power) {}
 } DataStruct;
 
-typedef struct{
+typedef struct DataStruct1D : public DataStruct, Recorder {
   TH1D* hPDF;
-  std::vector<Hit> vHits;
-  unsigned int wPower;
+  DataStruct1D(TH1D *h_pdf, unsigned int w_power)
+	  : hPDF(h_pdf), DataStruct(w_power), Recorder() {}
 } DataStruct1D;
 
-typedef struct{
-  TH1D* hPDF;
-  std::vector<Hit> vHits;
-  unsigned int wPower;
+typedef struct DataStructDir : public DataStruct1D {
   std::vector<double> PosTGuess;
 } DataStructDir;
 
-double flatf(const TVector3& PosGuess, const double& TGuess,
-			 const std::vector<Hit>& vHits,
-			 TH1D* hPDF,
-			 const unsigned int& weightPower){
+typedef struct DataStruct2D : public DataStruct {
+  TH2D* hPDF;
+  DataStruct2D(TH2D *h_pdf, unsigned int w_power)
+	  : hPDF(h_pdf), DataStruct(w_power) {}
+} DataStruct2D;
 
-  TH1D hGuess("", "", hPDF->GetNbinsX(), hPDF->GetXaxis()->GetXmin(), hPDF->GetXaxis()->GetXmax());
-
-  auto fweight = [&weightPower](const Hit& h){
-	return weightPower > 0 ? std::pow(h.Q, weightPower) : 1;
-	// return weightPower > 0 ? 1 - exp(-std::pow(hit.Q, weightPower)) : 1;
-  };
-
-  for(auto& hit:vHits){
-	hGuess.Fill(hit.GetTRes(PosGuess, TGuess), fweight(hit));
-  }
-
-  return -CalculateLL(hPDF, &hGuess, false);
-
-}
-
-double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
-			  const TVector3& Pos, const double& T, const TVector3& Dir,
-			  double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1){
-
-  // Get hPDF info to create hExp with same parameters
-  zAxis xa(hPDF->GetXaxis());
-  zAxis ya(hPDF->GetYaxis());
-
-  TH2D hExp("hExp", "",
-			xa.nBins, xa.min, xa.max,
-			ya.nBins, ya.min, ya.max);
-
-  // Fill histogram to calculate NLL TRes
-  for(auto& hit:vHits){
-	hExp.Fill(hit.GetTRes(Pos, T), hit.GetCosTheta(Pos, Dir), fW(hit, wPower));
-  }
-
-  return -CalculateLL(hPDF, &hExp, false);
-}
-
-double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
-			  const TVector3& Pos, const double& T,
-			  double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1){
-
-  // Get hPDF info to create hExp with same parameters
-  zAxis xa(hPDF->GetXaxis());
-
-  TH1D hExp("hExp", "",
-			xa.nBins, xa.min, xa.max);
-
-  // Fill histogram to calculate NLL TRes
-  for(auto& hit:vHits){
-	hExp.Fill(hit.GetTRes(Pos, T), fW(hit, wPower));
-  }
-
-  return -CalculateLL(hPDF, &hExp, false);
-}
-
-double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
-			  const TVector3& Pos, const TVector3& Dir,
-			  double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1,
-			  bool OnlyCher = false){
-
-  // Get hPDF info to create hExp with same parameters
-  zAxis xa(hPDF->GetXaxis());
-
-  TH1D hExp("hExp", "",
-			xa.nBins, xa.min, xa.max);
-
-  // Fill histogram to calculate NLL TRes
-  for(auto& hit:vHits){
-    if(OnlyCher){
-	  if(hit.IsCerHit(Pos, Dir)) {
-		hExp.Fill(hit.GetCosTheta(Pos, Dir), fW(hit, wPower));
-	  }
-	} else{
-	  hExp.Fill(hit.GetCosTheta(Pos, Dir), fW(hit, wPower));
-    }
-  }
-
-  return -CalculateLL(hPDF, &hExp, false);
-}
 
 double fPosTDir(const std::vector<double> &x, std::vector<double> &grad, void *data){
-  auto d = static_cast<DataStruct*>(data);
+  auto d = static_cast<DataStruct2D*>(data);
 
   // Create object to calculate TRes histogram
   TVector3 PosGuess(x[0], x[1], x[2]);
@@ -126,29 +50,74 @@ double fPosTDir(const std::vector<double> &x, std::vector<double> &grad, void *d
 
 }
 
+static std::vector<TVector3> GetVSpml(const TVector3& orig = TVector3(0.,0.,0.),
+									  const double& radius = 10. /*mm*/,
+									  const unsigned& nPts = 10){
+
+  std::vector<TVector3> vSmpl(nPts);
+
+  TRandom3 r(0);
+
+  for(auto& v:vSmpl){
+	v = TVector3(r.Gaus(), r.Gaus(), r.Gaus());
+	v.SetMag(r.Uniform(radius));
+  }
+
+  return vSmpl;
+
+}
+
+// static void TranslateVVec(std::vector<TVector3>& vVev, const TVector3& orig = TVector3(0.,0.,0.)){
+//   for(auto&v:vVev)
+//     v+=orig;
+// }
+
+double fPosTSmear(const std::vector<double> &x, std::vector<double> &grad, void *data){
+  auto d = static_cast<DataStruct1D*>(data);
+
+  // Create object to calculate TRes histogram
+  std::vector<TVector3> vPosGuess = GetVSpml(TVector3(x[0], x[1], x[2]));
+  double TGuess = x[3]*1.e-2;
+
+  // Calculate NLL
+  double NLL = 0.;
+  for(const auto& PosGuess:vPosGuess)
+    NLL += GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower) / (double)(vPosGuess.size());
+
+  // Record
+  d->iCall++;
+  d->vPosGuess.emplace_back(TVector3(x[0], x[1], x[2]));
+  d->vTGuess.emplace_back(TGuess);
+  d->vNLL.emplace_back(NLL);
+
+  return NLL;
+
+}
+
+
+const double PosScale = 1.e-1;
+const double TScale   = 1.e1;
+
+
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data){
   auto d = static_cast<DataStruct1D*>(data);
 
   // Create object to calculate TRes histogram
-  TVector3 PosGuess(x[0], x[1], x[2]);
-  double TGuess = x[3]*1.e-2;
+  TVector3 PosGuess(x[0] / PosScale, x[1] / PosScale, x[2] / PosScale);
+  double TGuess = x[3] / TScale;
 
-  return GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower);
+  // Calculate NLL
+  double NLL = GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower);
 
-}
+  // Record
+  d->iCall++;
+  d->vPosGuess.emplace_back(PosGuess);
+  d->vTGuess.emplace_back(TGuess);
+  d->vNLL.emplace_back(NLL);
 
-double fDir(const std::vector<double> &x, std::vector<double> &grad, void *data){
-  auto d = static_cast<DataStructDir*>(data);
-
-  // Create object to calculate TRes histogram
-  TVector3 PosGuess(d->PosTGuess[0], d->PosTGuess[0], d->PosTGuess[0]);
-  TVector3 DirGuess(1., 0., 0.);
-  DirGuess.SetMag(1.); DirGuess.SetTheta(x[0]); DirGuess.SetPhi(x[1]);
-
-  return GetNLL(d->vHits, d->hPDF, PosGuess, DirGuess.Unit(), fweight, d->wPower, true);
+  return NLL;
 
 }
-
 
 
 #endif //_PATHFIT_HH_
