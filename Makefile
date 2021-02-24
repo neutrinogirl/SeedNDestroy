@@ -35,6 +35,9 @@ endif
 ifeq ($(NAME), nino)
 NLOPTCFLAGS := -I/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/include
 NLOPTLIBS   := -L/data/snoplus/home/zsoldos/.local/nlopt-2.6.2-install/lib -lnlopt -lm
+else ($(findstring brc,$(NAME)))
+NLOPTCFLAGS := -I/global/scratch/maskins/PathBWbls/off_recon_nlopt/nlopt-install/include
+NLOPTLIBS   := -L/global/scratch/maskins/PathBWbls/off_recon_nlopt/nlopt-install/lib64 -lnlopt -lm
 else
 # NLOPTCFLAGS := -I/usr/include # No need to add it, g++ will find it
 NLOPTLIBS   := -lnlopt -lm
