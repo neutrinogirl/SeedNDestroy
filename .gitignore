@@ -89,3 +89,9 @@ CreatePDF
 DebugRecon
 SeedNDestroy
 Recon
+macros/*
+
+# USER OUT
+*.png
+*.root
+*.pdf
