@@ -2,16 +2,23 @@
 // Created by zsoldos on 1/5/21.
 //
 
+#include <EventDisplay.hh>
+
 #include <iostream>
 
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TFile.h>
+#include <TF1.h>
+#include <TRandom3.h>
 
-#include "CreatePDF.hh"
 #include <Wrapper.hh>
 #include <Hit.hh>
 #include <ProgressBar.hpp>
+
+#include "CreatePDF.hh"
+#include "MathUtils.hh"
+#include "TriggerTimeMap.hh"
 
 int main(int argc, char *argv[]){
 
@@ -33,21 +40,52 @@ int main(int argc, char *argv[]){
   // Create wrapper object
   wRAT w_rat(args.filename);
   const unsigned long int nEvts = args.nEvts > 0 ? args.nEvts : w_rat.GetNEvts();
-  const unsigned int wPower = args.wPower;
+
+
+  // ######################################## //
+  // Make PDFs for different weight
+  std::vector<unsigned int> vPower = {0, 1, 2};
 
 
   // ######################################## //
   // #### #### #### HISTOGRAMS #### #### #### //
   // ######################################## //
 
-  TH1D* hNHits = new TH1D("hNHits", "NHits per event ; NHits ; ",
-						  1000, 0., 1000.);
-  hNHits->SetDirectory(nullptr);
+  const zAxis axTRes(150, -50., 100.);
+  const zAxis axCosT(24, -1., 1.);
+  const zAxis axNHits(1000, 0., 2000.);
 
-  TH2D* hTResVSCosT = new TH2D("hCTVSTResPDF", "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
-									 600, -200., 400.,
-									 24, -1., 1.);
-  hTResVSCosT->SetDirectory(nullptr);
+  TH1D* hNHits = new TH1D("hNHits", "NHits per event ; NHits ; ",
+						  axNHits.nBins, axNHits.min, axNHits.max);
+
+  enum { kTHIT, kTOF };
+  std::vector< std::vector<TH2D*> > vvHPDFs;
+  vvHPDFs.reserve(vPower.size());
+
+  for(const auto& wP : vPower){
+	vvHPDFs.push_back(
+		{
+			new TH2D(Form("hCTVSTResPDF_THit_QW%d", wP), "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
+					 axTRes.nBins, axTRes.min, axTRes.max,
+					 axCosT.nBins, axCosT.min, axCosT.max),
+			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d", wP), "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
+					 axTRes.nBins, axTRes.min, axTRes.max,
+					 axCosT.nBins, axCosT.min, axCosT.max)
+		}
+	);
+  }
+
+
+  const std::vector<double> DetBnds = {args.bnds.x(), args.bnds.y(), args.bnds.z()};
+  const std::vector<double> TBnds = {-10., args.bnds.Mag() / SOL};
+  Bnds bnds = {DetBnds, TBnds};
+
+  const int MaxRho = std::ceil(args.bnds.Perp()*1.e-3)*1.e3;
+  const int MaxZ   = args.bnds.z();
+  AxisGrid<int> agRho({0, MaxRho}, MaxRho/10);
+  AxisGrid<int> agZ({0, MaxZ}, MaxZ/10);
+
+  TrigTimePDF TTPDF(agRho.GetVCenters(), agZ.GetVCenters());
 
 
   // ######################################## //
@@ -64,6 +102,7 @@ int main(int argc, char *argv[]){
 	// Get number of trigger associated with an event
 	// i.e, number of EV inside the rat DS
 	auto nTriggers = w_rat.GetNTriggers();
+	nTriggers = nTriggers > 1 ? 1 : nTriggers;
 
 	for(auto iTrigger=0; iTrigger<nTriggers; iTrigger++){
 
@@ -85,25 +124,40 @@ int main(int argc, char *argv[]){
 	  const auto DirTrue = w_rat.GetDirTrue(iParticle);
 	  const auto TTrue = w_rat.GetTTrue(iParticle);
 
-	  const double TCor = TTrue - TrigTime;
-
 	  // Get vector of hits
 	  std::vector<Hit> vHits = w_rat.GetVHits(iTrigger);
+	  if(vHits.empty())
+		continue;
 
+	  std::sort(vHits.begin(), vHits.end());
+
+	  //
 	  // DO STUFF
+	  //
 
-	  hNHits->Fill(GetNHits(vHits));
-	  double AvgHits = 0;
-	  unsigned int nPrompts = 0;
-	  const double PromptCut = 4.0; //ns
-	  auto IsPrompt = [&PromptCut](const Hit& hit){return hit.T < PromptCut;};
+	  // GetNHits per evt
+	  hNHits->Fill(GetNPrompts(vHits, 400));
 
-	  for(auto& hit: vHits){
+	  for(auto iPower = 0; iPower<vPower.size(); iPower++){
 
-		hTResVSCosT->Fill(hit.GetTRes(PosTrue, TTrue),
-								hit.GetCosTheta(PosTrue, DirTrue),
-								fweight(hit, wPower));
+		// Get PDF
+		for(auto& hit: vHits){
+
+		  const double QW = fweight(hit, vPower[iPower]);
+
+		  vvHPDFs[iPower][kTHIT]->Fill(hit.GetTRes(PosTrue, TTrue),
+									   hit.GetCosTheta(PosTrue, DirTrue),
+									   QW);
+		  vvHPDFs[iPower][kTOF]->Fill(hit.GetTRes(PosTrue, TTrue-TrigTime),
+									  hit.GetCosTheta(PosTrue, DirTrue),
+									  QW);
+
+		}
+
 	  }
+
+
+	  TTPDF.Fill(PosTrue, TrigTime);
 
 	  // ...
 
@@ -121,13 +175,34 @@ int main(int argc, char *argv[]){
   // #### #### #### FINISH #### #### #### //
   // #################################### //
 
-  hTResVSCosT->Scale(1./static_cast<double>(nEvts));
 
   TFile fOut(output.c_str(), "RECREATE");
+
+  ScaleHist(hNHits, static_cast<double>(nEvts));
   hNHits->Write();
-  hTResVSCosT->Write();
-  hTResVSCosT->ProjectionX()->Write();
-  hTResVSCosT->ProjectionY()->Write();
+
+  for(auto& vHPDFs:vvHPDFs){
+
+	ScaleHist(vHPDFs[kTHIT], static_cast<double>(nEvts));
+	vHPDFs[kTHIT]->Write();
+	vHPDFs[kTHIT]->ProjectionX()->Write();
+	vHPDFs[kTHIT]->ProjectionY()->Write();
+
+	ScaleHist(vHPDFs[kTOF], static_cast<double>(nEvts));
+	vHPDFs[kTOF]->Write();
+	vHPDFs[kTOF]->ProjectionX()->Write();
+	vHPDFs[kTOF]->ProjectionY()->Write();
+
+  }
+
+  for(auto& m : TTPDF.GetMT()){
+	for(auto & mm : m.second){
+	  mm.second->Write();
+	}
+  }
+
+  TTPDF.Save();
+
   fOut.Close();
 
   return EXIT_SUCCESS;
