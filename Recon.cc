@@ -183,8 +183,7 @@ int main(int argc, char *argv[]){
 
 	}
 
-	if(nTriggers>0)
-	  wratcp.FillTree();
+	wratcp.FillTree();
 
 	if(isVerbose)
 	  progress_bar.display();
