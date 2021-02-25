@@ -87,8 +87,8 @@ _deps
 # User EXE
 CreatePDF
 DebugRecon
-SeedNDestroy
 Recon
+ReconFlat
 macros/*
 
 # USER OUT

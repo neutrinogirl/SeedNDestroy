@@ -120,16 +120,16 @@ int main(int argc, char *argv[]){
 	auto nTriggers = w_rat.GetNTriggers();
 	// nTriggers = nTriggers > 1 ? 1 : nTriggers;
 
-	for(auto iTrigger=0; iTrigger<nTriggers; iTrigger++){
+	for(auto iTrig=0; iTrig<nTriggers; iTrig++){
 
 	  // Get ID tag
-	  const std::string tag = Form("Evt%dTrig%d", iEvt, iTrigger);
+	  const std::string tag = Form("Evt%dTrig%d", iEvt, iTrig);
 	  evt.iEvt = iEvt;
-	  evt.iTrig = iTrigger;
+	  evt.iTrig = iTrig;
 
 	  // IF USE SPLITEVDAQ
 	  // Get EV TrigTime
-	  const auto TrigTime = w_rat.GetTriggerTime(iTrigger);
+	  const auto TrigTime = w_rat.GetTriggerTime(iTrig);
 
 	  // Try to guess which particle is attached to this trigger
 	  // Make sense only for IBD gen, when n capture will be >> in T that prompt event
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]){
 	  const std::vector<double> xTrue = {PosTrue[0], PosTrue[1], PosTrue[2], -TrigTime};
 
 	  // Get vector of hits
-	  std::vector<Hit> vHits = w_rat.GetVHits(iTrigger);
+	  std::vector<Hit> vHits = w_rat.GetVHits(iTrig);
 	  if(vHits.empty())
 	    continue;
 	  std::sort(vHits.begin(), vHits.end());
@@ -224,8 +224,8 @@ int main(int argc, char *argv[]){
 		// EV DISPLAY
 		//
 
-		auto m_hits = w_rat.GetMHits(iTrigger);
-		Save2ROOT( GetEventDisplay(w_rat.GetMHits(iTrigger), pmt_grid, tag, 4.0),
+		auto m_hits = w_rat.GetMHits(iTrig);
+		Save2ROOT( GetEventDisplay(w_rat.GetMHits(iTrig), pmt_grid, tag, 4.0),
 				   output );
 
 		//

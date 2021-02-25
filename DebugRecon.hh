@@ -27,6 +27,8 @@
 // #### #### ####   USER    #### #### #### //
 // ####################################### //
 #include <Utils.hh>
+#include <Wrapper.hh>
+#include "Output.hh"
 
 std::vector<std::string> GetFilesInDir(const boost::filesystem::path& dir, const std::string& ext = ".root"){
   std::vector<std::string> vPaths;
@@ -151,6 +153,32 @@ T* GetRootHisto(const char* filename, const char* histname){
   f->Close();
   delete f;
   return hist;
+}
+
+void LoadMCInfo2Evt(wRAT& w_rat, Event& evt){
+
+  // IF USE SPLITEVDAQ
+  // Get EV TrigTime
+  const auto TrigTime = w_rat.GetTriggerTime(evt.iTrig);
+
+  // Try to guess which particle is attached to this trigger
+  // Make sense only for IBD gen, when n capture will be >> in T that prompt event
+  // Note that also e+ is always first particle generated
+  auto nParticle = w_rat.GetNPrimaryParticle();
+  auto iParticle = nParticle > 1 ? (TrigTime > 1e3 ? 1 : 0) : 0;
+  // Skip if it is not prompt
+  // if(iParticle>0)
+  // continue;
+
+  // Get True info to record
+  const auto PosTrue = w_rat.GetPosTrue(iParticle);
+  const auto DirTrue = w_rat.GetDirTrue(iParticle);
+
+  evt.MCPos = Vec(PosTrue);
+  evt.MCDir = Vec(DirTrue);
+  evt.MCT   = -TrigTime;
+  evt.ETrue = w_rat.GetETrue(iParticle);
+
 }
 
 #endif //_DEBUGRECON_HH_

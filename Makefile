@@ -66,14 +66,14 @@ all: CreatePDF
 CreatePDF: 
 	$(CXX) $(CPPFLAGS) -o CreatePDF CreatePDF.cc $(OBJS) $(EXTRALIBS)
 
-SeedNDestroy: 
-	$(CXX) $(CPPFLAGS) -o SeedNDestroy SeedNDestroy.cc $(OBJS) $(EXTRALIBS)
-
 DebugRecon: 
 	$(CXX) $(CPPFLAGS) -o DebugRecon DebugRecon.cc $(OBJS) $(EXTRALIBS)
 
 Recon:
 	$(CXX) $(CPPFLAGS) -o Recon Recon.cc $(OBJS) $(EXTRALIBS)
 
+ReconFlat:
+	$(CXX) $(CPPFLAGS) -o ReconFlat ReconFlat.cc $(OBJS) $(EXTRALIBS)
+
 clean:
-	$(RM) $(OBJS) CreatePDF SeedNDestroy DebugRecon Recon
+	$(RM) $(OBJS) CreatePDF DebugRecon Recon ReconFlat
