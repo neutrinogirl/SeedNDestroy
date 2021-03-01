@@ -46,9 +46,11 @@ file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
 add_executable(CreatePDF CreatePDF.cc)
+add_executable(CreatePDF_LetterBox CreatePDF_LetterBox.cc)
 add_executable(DebugRecon DebugRecon.cc)
 add_executable(Recon Recon.cc)
 add_executable(ReconFlat ReconFlat.cc)
+add_executable(ReconThread ReconThread.cc)
 
 add_executable(Dev include/Recorder.hh)
 set_target_properties(Dev PROPERTIES LINKER_LANGUAGE CXX)

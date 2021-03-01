@@ -6,6 +6,7 @@
 #define SEEDNDESTROY_INCLUDE_TRIGGERTIMEMAP_HH_
 
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <numeric>
 #include <algorithm>
@@ -70,7 +71,7 @@ class TrigTimePDF{
   std::vector<int> vZ;
   std::map< int , std::map< int , TH1D*> > mT;
 
-  int FindNearest(const std::vector<int>& v, const int val){
+  static int FindNearest(const std::vector<int>& v, const int val){
 
 	auto itLb = std::lower_bound(v.begin(), v.end(), val);
 
@@ -205,6 +206,168 @@ class TrigTimePDF{
   const std::vector<int> &GetVZ() const { return vZ; }
   std::map<int, std::map<int, TH1D *>> &GetMT() { return mT; }
 
+};
+
+class TrigTimePDFLetterBox{
+
+ private:
+
+  std::vector<int> vX;
+  std::vector<int> vY;
+  std::vector<int> vZ;
+  std::map< int , std::map< int , std::map< int , TH1D*> > > mT;
+
+  static int FindNearest(const std::vector<int>& v, const int val){
+
+	auto itLb = std::lower_bound(v.begin(), v.end(), val);
+
+	if(itLb == v.begin()){
+	  return v[0];
+	}
+
+	if(itLb != v.end()){
+
+	  const auto idx = std::distance(v.begin(), itLb);
+
+	  if(idx>0){
+
+		const auto lb = val - v[idx-1];
+		const auto ub = v[idx] - val;
+
+		return lb > ub ? v[idx] : v[idx-1];
+
+	  }
+
+	}
+
+	return -1;
+
+  }
+
+  template <typename T>
+  T* GetRootHisto(TFile* f, const char* histname){
+	// Check if key exist
+	if(!f->GetListOfKeys()->Contains(histname))
+	  return nullptr;
+	auto hist = dynamic_cast<T *>(f->Get(histname)->Clone());
+	hist->SetDirectory(nullptr);
+	return hist;
+  }
+
+
+ public:
+
+  //
+  // #### #### #### CONSTRUCTORS / DESTRUCTORS #### #### #### //
+  //
+
+  TrigTimePDFLetterBox() = default;
+
+  TrigTimePDFLetterBox(std::vector<int> v_x, std::vector<int> v_y, std::vector<int> v_z)
+	  : vX(std::move(v_x)), vY(std::move(v_y)), vZ(std::move(v_z)) {
+	for(auto& X:vX) {
+	  for (auto &Y:vY) {
+		for (auto &Z:vZ) {
+		  mT.insert(std::make_pair(X, std::map<int, std::map<int, TH1D *> >()));
+		  mT[X].insert(std::make_pair(X, std::map<int, TH1D *>()));
+		  mT[X][Y].insert(std::make_pair(Z, new TH1D(Form("hX%dY%dZ%d", X, Y, Z),
+													 "",
+													 100, -10., 90.)));
+		  mT[X][Y][Z]->SetDirectory(nullptr);
+		}
+	  }
+	}
+  }
+
+  //
+  // #### #### #### METHODS #### #### #### //
+  //
+
+  void Fill(const TVector3& v, const double& TrigTime){
+
+	int X = std::round(std::abs(v.x()));
+	int Y = std::round(std::abs(v.y()));
+	int Z = std::round(std::abs(v.z()));
+
+	X = FindNearest(vX, X);
+	Y = FindNearest(vY, Y);
+	Z = FindNearest(vZ, Z);
+
+	if(X>-1 && Y>-1 && Z>-1)
+	  mT[X][Y][Z]->Fill(TrigTime);
+
+  }
+
+  void Save(){
+	TTree T("TTriggerTimeMap", "Tree with trigger map bins");
+	T.Branch("vX", &vX);
+	T.Branch("vY", &vY);
+	T.Branch("vZ", &vZ);
+	T.Fill();
+	T.Write();
+  }
+
+  void Load(const std::string& filename){
+	TFile f(filename.c_str(), "READ");
+
+	TTree *T;
+	f.GetObject("TTriggerTimeMap", T);
+	std::vector<int> *pvX=nullptr, *pvY=nullptr, *pvZ=nullptr;
+
+	TBranch *bvpX=nullptr, *bvpY=nullptr, *bvpZ=nullptr;
+	T->SetBranchAddress("vX", &pvX, &bvpX);
+	T->SetBranchAddress("vY", &pvY, &bvpY);
+	T->SetBranchAddress("vZ", &pvZ, &bvpZ);
+
+	auto tentry = T->LoadTree(0);
+	bvpX->GetEntry(tentry);
+	bvpY->GetEntry(tentry);
+	bvpZ->GetEntry(tentry);
+	delete T;
+
+	vX = *pvX;
+	vY = *pvY;
+	vZ = *pvZ;
+
+	for(auto& X:vX) {
+	  for (auto &Y:vY) {
+		for (auto &Z:vZ) {
+		  mT.insert(std::make_pair(X, std::map<int, std::map<int, TH1D *> >()));
+		  mT[X].insert(std::make_pair(X, std::map<int, TH1D *>()));
+		  mT[X][Y].insert(std::make_pair(Z, GetRootHisto<TH1D>(&f, Form("hX%dY%dZ%d", X, Y, Z))));
+		  mT[X][Y][Z]->SetDirectory(nullptr);
+		}
+	  }
+	}
+
+  }
+
+  double GetTrigTime(const TVector3& v, std::vector<double>& vBnds){
+	int X = std::round(std::abs(v.x()));
+	int Y = std::round(std::abs(v.y()));
+	int Z = std::round(std::abs(v.z()));
+
+	X = FindNearest(vX, X);
+	Y = FindNearest(vY, Y);
+	Z = FindNearest(vZ, Z);
+
+	if(Z>-1 && Y>-1 && Z>-1){
+	  vBnds = {mT[X][Y][Z]->GetMean() - std::abs(mT[X][Y][Z]->GetRMS()), mT[X][Y][Z]->GetMean() + std::abs(mT[X][Y][Z]->GetRMS())};
+	  return mT[X][Y][Z]->GetMean();
+	}
+
+	return 0.;
+
+  }
+
+  //
+  // #### #### #### GETTERS / SETTERS #### #### #### //
+  //
+
+  const std::vector<int> &GetVX() const { return vX; }
+  const std::vector<int> &GetVY() const { return vY; }
+  const std::vector<int> &GetVZ() const { return vZ; }
+  const std::map<int, std::map<int, std::map<int, TH1D *>>> &GetMT() { return mT; }
 };
 
 

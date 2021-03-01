@@ -66,6 +66,9 @@ all: CreatePDF
 CreatePDF: 
 	$(CXX) $(CPPFLAGS) -o CreatePDF CreatePDF.cc $(OBJS) $(EXTRALIBS)
 
+CreatePDF_LetterBox: 
+	$(CXX) $(CPPFLAGS) -o CreatePDF_LetterBox CreatePDF_LetterBox.cc $(OBJS) $(EXTRALIBS)
+
 DebugRecon: 
 	$(CXX) $(CPPFLAGS) -o DebugRecon DebugRecon.cc $(OBJS) $(EXTRALIBS)
 
@@ -75,5 +78,8 @@ Recon:
 ReconFlat:
 	$(CXX) $(CPPFLAGS) -o ReconFlat ReconFlat.cc $(OBJS) $(EXTRALIBS)
 
+ReconThread:
+	$(CXX) $(CPPFLAGS) -o ReconThread ReconThread.cc $(OBJS) $(EXTRALIBS)
+
 clean:
-	$(RM) $(OBJS) CreatePDF DebugRecon Recon ReconFlat
+	$(RM) $(OBJS) CreatePDF DebugRecon Recon ReconFlat ReconThread
