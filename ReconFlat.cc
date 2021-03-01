@@ -135,8 +135,10 @@ int main(int argc, char *argv[]){
 	  //
 
 	  auto CentroidSeed = GetCentroidSeed(vHits, bnds, 2);
-	  if(!bnds.IsIn(CentroidSeed))
+	  if(!bnds.IsIn(CentroidSeed)){
 		std::cerr << "NASTY Centroid seed" << std::endl;
+		continue;
+	  }
 
 	  std::vector<double> TBounds(2);
 	  const double TSeed = TimePDF.GetTrigTime(CentroidSeed, TBounds);
