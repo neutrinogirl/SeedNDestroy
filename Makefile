@@ -75,6 +75,9 @@ DebugRecon:
 Recon:
 	$(CXX) $(CPPFLAGS) -o Recon Recon.cc $(OBJS) $(EXTRALIBS)
 
+Recon_LetterBox:
+	$(CXX) $(CPPFLAGS) -o Recon_LetterBox Recon_LetterBox.cc $(OBJS) $(EXTRALIBS)
+
 ReconFlat:
 	$(CXX) $(CPPFLAGS) -o ReconFlat ReconFlat.cc $(OBJS) $(EXTRALIBS)
 
