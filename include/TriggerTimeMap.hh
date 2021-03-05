@@ -15,6 +15,8 @@
 #include <TH1D.h>
 #include <TH2D.h>
 
+#include "MathUtils.hh"
+
 template<typename T>
 class AxisGrid {
 
@@ -108,6 +110,23 @@ class TrigTimePDF{
 	return hist;
   }
 
+  static void GetNonEmptyBins(TH1D* h, std::vector<double>& vT,
+							  const std::vector<double>& vCuts = {1.e-2, 99.e-2}){
+
+    for(auto iBin=1; iBin<h->GetNbinsX()+1; iBin++){
+      double frac = h->Integral(1, iBin) / h->Integral();
+      if(frac > vCuts[0]){
+        if(h->GetBinLowEdge(iBin) < vT[0])
+          vT[0] = h->GetBinLowEdge(iBin);
+      }
+      if(frac < vCuts[1]){
+        if(h->GetBinLowEdge(iBin) > vT[1])
+		  vT[1] = h->GetBinLowEdge(iBin);
+      }
+    }
+
+  };
+
 
  public:
 
@@ -190,7 +209,11 @@ class TrigTimePDF{
 	Z = FindNearest(vZ, Z);
 
 	if(R>-1 && Z>-1){
-	  vBnds = {mT[R][Z]->GetMean() - std::abs(mT[R][Z]->GetRMS()), mT[R][Z]->GetMean() + std::abs(mT[R][Z]->GetRMS())};
+	  // vBnds = {
+	  // 	mT[R][Z]->GetMean() - std::abs(mT[R][Z]->GetRMS()),
+		// mT[R][Z]->GetMean() + std::abs(mT[R][Z]->GetRMS())
+	  // };
+	  GetNonEmptyBins(mT[R][Z], vBnds);
 	  return mT[R][Z]->GetMean();
 	}
 
