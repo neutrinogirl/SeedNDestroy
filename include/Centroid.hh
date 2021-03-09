@@ -16,7 +16,6 @@ TVector3 GetCentroidSeed(const std::vector<Hit>& vHits, const Bnds& bnds,
   TVector3 Seed(0.,0.,0.);
   double xMean=0; double yMean=0; double zMean=0;
 
-  const double NHits = vHits.size();
   double NormQ = 0.;
   for(const auto& hit:vHits)
     NormQ += fweight(hit, wPower);
