@@ -214,7 +214,7 @@ class TrigTimePDF{
 		// mT[R][Z]->GetMean() + std::abs(mT[R][Z]->GetRMS())
 	  // };
 	  GetNonEmptyBins(mT[R][Z], vBnds);
-	  return mT[R][Z]->GetMean();
+	  return mT[R][Z]->GetRandom();
 	}
 
 	return 0.;

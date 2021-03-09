@@ -19,7 +19,6 @@
 #include "CreatePDF.hh"
 #include "MathUtils.hh"
 #include "TriggerTimeMap.hh"
-#include "Centroid.hh"
 
 int main(int argc, char *argv[]){
 
@@ -83,8 +82,8 @@ int main(int argc, char *argv[]){
 
   const int MaxRho = std::ceil(args.bnds.Perp()*1.e-3)*1.e3;
   const int MaxZ   = args.bnds.z();
-  AxisGrid<int> agRho({0, MaxRho}, MaxRho/20);
-  AxisGrid<int> agZ({0, MaxZ}, MaxZ/20);
+  AxisGrid<int> agRho({0, MaxRho}, MaxRho/10);
+  AxisGrid<int> agZ({0, MaxZ}, MaxZ/10);
 
   TrigTimePDF TTPDF(agRho.GetVCenters(), agZ.GetVCenters());
 
@@ -158,8 +157,7 @@ int main(int argc, char *argv[]){
 	  }
 
 
-	  // TTPDF.Fill(PosTrue, TrigTime);
-	  TTPDF.Fill(GetCentroidSeed(vHits, bnds, 2), TrigTime);
+	  TTPDF.Fill(PosTrue, TrigTime);
 
 	  // ...
 
