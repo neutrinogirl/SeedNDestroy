@@ -50,7 +50,7 @@ typedef struct Args{
   std::string outname = "PDF.root";
   unsigned int nEvts = 0;
   TVector3 bnds = TVector3(10.e3, 10.e3, 10.e3);
-
+  bool isBox = false;
 } Args;
 
 static void ShowUsage(const std::string& name){
@@ -60,8 +60,9 @@ static void ShowUsage(const std::string& name){
 
 			<< "\t-h\tShow this help message\n"
 			<< "\t-v\tSet verbose mode (display progress bar)\n"
-			<< "\t-n\tSet #Evts to process\n"
-			<< "\t-b\tSet boundaries for geom (in mm) \n"
+			<< "\t-n <nEvts>\tSet nEvts to process\n"
+			<< "\t-b <XX YY ZZ>\tSet boundaries for box geom (in mm) \n"
+			<< "\t-c <R H>\tSet boundaries for cylinder geom (in mm) \n"
 
 			<< "\t--dir\tRead all .root files in directory \n"
 
@@ -92,8 +93,20 @@ static void ProcessArgs(TApplication &theApp,
       args.bnds.SetX(std::stod(theApp.Argv(++i)));
       args.bnds.SetY(std::stod(theApp.Argv(++i)));
       args.bnds.SetZ(std::stod(theApp.Argv(++i)));
-      std::cout << "Setting geom boundaries" << std::endl;
+      std::cout << "Setting box geom boundaries" << std::endl;
       args.bnds.Print();
+      args.isBox = true;
+	} else if (boost::iequals(arg, "-c")) {
+	  const double R = std::stod(theApp.Argv(++i));
+	  const double Z = std::stod(theApp.Argv(++i));
+	  args.bnds.SetX(1);
+	  args.bnds.SetY(0);
+	  args.bnds.SetZ(0);
+	  std::cout << "Setting cylinder geom boundaries" << std::endl;
+	  args.bnds.SetPerp(R);
+	  args.bnds.SetZ(Z);
+	  args.bnds.Print();
+	  args.isBox = false;
 
 	} else if (boost::iequals(arg,"-i") || boost::iequals(arg,"--input")) {
 	  args.filename.emplace_back(theApp.Argv(++i));

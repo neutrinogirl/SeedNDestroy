@@ -5,6 +5,7 @@
 #include <EventDisplay.hh>
 
 #include <iostream>
+#include <numeric>
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -76,27 +77,37 @@ int main(int argc, char *argv[]){
 	);
   }
 
-
-  const std::vector<double> DetBnds = {args.bnds.x(), args.bnds.y(), args.bnds.z()};
-  const std::vector<double> TBnds = {0., args.bnds.Mag() / SOL};
+  const std::vector<double> DetBnds =
+	  args.isBox ?
+	  std::vector<double>({args.bnds.x(), args.bnds.y(), args.bnds.z()}) :
+	  std::vector<double>({args.bnds.Perp(), args.bnds.Perp(), args.bnds.z()});
+  const std::vector<double> TBnds =
+	  args.isBox ?
+	  std::vector<double>({0., args.bnds.Mag() / SOL}) :
+	  std::vector<double>({0., sqrt(2*std::pow(args.bnds.Perp(), 2) + std::pow(args.bnds.z(), 2)) / SOL});
   Bnds bnds = {DetBnds, TBnds};
 
-  const int MaxRho = std::ceil(args.bnds.Perp()*1.e-3)*1.e3;
-  const int MaxZ   = args.bnds.z();
-  AxisGrid<int> agRho({0, MaxRho}, MaxRho/10);
-  AxisGrid<int> agZ({0, MaxZ}, MaxZ/10);
+  const double MaxDWall = *std::min_element(DetBnds.begin(), DetBnds.end());
+
+  const int RoundedRho = static_cast<int>(std::round(args.bnds.Perp()*1.e-3/2)*1.e3*2);
+  const int RoundedZ   = static_cast<int>(std::round(args.bnds.z()*1.e-3/2)*1.e3*2);
+  AxisGrid<int> agRho({0, RoundedRho}, 1.e3);
+  AxisGrid<int> agZ({0, RoundedZ}, 1.e3);
 
   TrigTimePDF TTPDF(agRho.GetVCenters(), agZ.GetVCenters());
 
-  const int MaxDWall = std::min(MaxRho, MaxZ);
 
   auto hDWallVSTTime = new TH2D("hDWallVSTTime", "TRUE d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
 								20, 0., MaxDWall / SOL,
 								20, 0., MaxDWall);
 
-  auto hCentroidDWallVSTTime = new TH2D("hCentroidDWallVSTTime", "CENTROID d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-										20, 0., MaxDWall / SOL,
-										20, 0., MaxDWall);
+  auto hRDWallVSTTime = new TH2D("hRDWallVSTTime", "TRUE d_{Wall} from R vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
+								20, 0., MaxDWall / SOL,
+								20, 0., MaxDWall);
+
+  auto hZDWallVSTTime = new TH2D("hZDWallVSTTime", "TRUE d_{Wall} from Z vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
+								20, 0., MaxDWall / SOL,
+								20, 0., MaxDWall);
 
   // ######################################## //
   // Loop and get vector of NHits
@@ -168,8 +179,16 @@ int main(int argc, char *argv[]){
 
 
 	  TTPDF.Fill(PosTrue, TrigTime);
-	  hDWallVSTTime->Fill(TrigTime, GetDWall(PosTrue, 9000., 35000.));
-	  hCentroidDWallVSTTime->Fill(TrigTime, GetDWall(GetCentroidSeed(vHits, bnds, 2), 9000., 35000.));
+
+	  std::size_t idx = 0;
+	  double dWall = GetDWall(PosTrue, 9000., 35000., idx);
+
+	  hDWallVSTTime->Fill(TrigTime, dWall);
+	  if(idx==0)
+	    hRDWallVSTTime->Fill(TrigTime, dWall);
+	  else if(idx==1)
+		hZDWallVSTTime->Fill(TrigTime, dWall);
+
 
 	  // ...
 
@@ -195,8 +214,8 @@ int main(int argc, char *argv[]){
 
   ScaleHist(hDWallVSTTime, static_cast<double>(nEvts));
   hDWallVSTTime->Write();
-  ScaleHist(hCentroidDWallVSTTime, static_cast<double>(nEvts));
-  hCentroidDWallVSTTime->Write();
+  hRDWallVSTTime->Write();
+  hZDWallVSTTime->Write();
 
   for(auto& vHPDFs:vvHPDFs){
 
