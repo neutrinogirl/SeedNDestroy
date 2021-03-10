@@ -19,6 +19,7 @@
 #include "CreatePDF.hh"
 #include "MathUtils.hh"
 #include "TriggerTimeMap.hh"
+#include "Centroid.hh"
 
 int main(int argc, char *argv[]){
 
@@ -87,6 +88,13 @@ int main(int argc, char *argv[]){
 
   TrigTimePDF TTPDF(agRho.GetVCenters(), agZ.GetVCenters());
 
+  auto hDWallVSTTime = new TH2D("hDWallVSTTime", "TRUE d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
+								20, 0., MaxZ / SOL,
+								20, 0., MaxZ);
+
+  auto hCentroidDWallVSTTime = new TH2D("hCentroidDWallVSTTime", "CENTROID d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
+										20, 0., MaxZ / SOL,
+										20, 0., MaxZ);
 
   // ######################################## //
   // Loop and get vector of NHits
@@ -158,6 +166,8 @@ int main(int argc, char *argv[]){
 
 
 	  TTPDF.Fill(PosTrue, TrigTime);
+	  hDWallVSTTime->Fill(TrigTime, GetDWall(PosTrue, 9000., 35000.));
+	  hCentroidDWallVSTTime->Fill(TrigTime, GetDWall(GetCentroidSeed(vHits, bnds, 2), 9000., 35000.));
 
 	  // ...
 
@@ -180,6 +190,11 @@ int main(int argc, char *argv[]){
 
   ScaleHist(hNHits, static_cast<double>(nEvts));
   hNHits->Write();
+
+  ScaleHist(hDWallVSTTime, static_cast<double>(nEvts));
+  hDWallVSTTime->Write();
+  ScaleHist(hCentroidDWallVSTTime, static_cast<double>(nEvts));
+  hCentroidDWallVSTTime->Write();
 
   for(auto& vHPDFs:vvHPDFs){
 
