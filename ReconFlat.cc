@@ -8,6 +8,7 @@
 
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TF1.h>
 
 #include <Wrapper.hh>
 #include <ProgressBar.hpp>
@@ -62,8 +63,14 @@ int main(int argc, char *argv[]){
 
   // ######################################## //
   // DET Boundaries
-  const std::vector<double> DetBnds = {args.bnds.x(), args.bnds.y(), args.bnds.z()};
-  const std::vector<double> TBnds = {-10., args.bnds.Mag() / SOL};
+  const std::vector<double> DetBnds =
+	  args.isBox ?
+	  std::vector<double>({args.bnds.x(), args.bnds.y(), args.bnds.z()}) :
+	  std::vector<double>({args.bnds.Perp(), args.bnds.Perp(), args.bnds.z()});
+  const std::vector<double> TBnds =
+	  args.isBox ?
+	  std::vector<double>({0., args.bnds.Mag() / SOL}) :
+	  std::vector<double>({0., sqrt(2*std::pow(args.bnds.Perp(), 2) + std::pow(args.bnds.z(), 2)) / SOL});
   Bnds bnds = {DetBnds, TBnds};
   if(args.isVerbose)
 	std::cout << "DET BNDS SET: Rho=" << bnds.GetTVector3().Perp() << " z=" << bnds.GetTVector3().z() << std::endl;
@@ -75,6 +82,27 @@ int main(int argc, char *argv[]){
   TimePDF.Load(pdf);
   if(args.isVerbose)
 	std::cout << "TimePDF LOADED" << std::endl;
+
+  // Save fit in ttree
+  typedef struct PolFitResults {
+	double A, AErr, B, BErr, Chi2NDF;
+  } PolFitResults;
+  PolFitResults pfr;
+  TFile file(pdf.c_str(), "READ");
+  auto T = file.Get<TTree>("pfr");
+  T->SetBranchAddress("A", &pfr.A);
+  T->SetBranchAddress("AErr", &pfr.AErr);
+  T->SetBranchAddress("B", &pfr.B);
+  T->SetBranchAddress("BErr", &pfr.BErr);
+  T->GetEntry(0);
+  delete T;
+  file.Close();
+  std::cout << pfr.A << "[ns/mm]" << std::endl;
+
+  const double MaxDWall = *std::min_element(DetBnds.begin(), DetBnds.end());
+  TF1 fDWallVSTTrig("fDWallVSTTrig", "pol1", 0, MaxDWall);
+  fDWallVSTTrig.SetParameter(0, pfr.B); fDWallVSTTrig.SetParError(0, pfr.BErr);
+  fDWallVSTTrig.SetParameter(1, pfr.A); fDWallVSTTrig.SetParError(1, pfr.AErr);
 
 
   // ######################################## //
@@ -140,8 +168,12 @@ int main(int argc, char *argv[]){
 		continue;
 	  }
 
-	  std::vector<double> TBounds(2);
-	  const double TSeed = TimePDF.GetTrigTime(CentroidSeed, TBounds);
+	  const double DWallSeed = GetDWall(CentroidSeed, args.bnds.Perp(), args.bnds.z());
+	  const double TDWallSeed = fDWallVSTTrig.Eval(DWallSeed);
+
+	  std::vector<double> TBounds = {TDWallSeed - 4., TDWallSeed + 4.};
+	  // const double TSeed = TimePDF.GetTrigTime(CentroidSeed, TBounds);
+	  const double TSeed = TDWallSeed;
 
 	  //
 	  // #### #### #### POS SEEDING #### #### #### //

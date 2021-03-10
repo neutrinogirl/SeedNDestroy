@@ -250,7 +250,7 @@ int main(int argc, char *argv[]){
   TH1D *hDWallVSTTime_Prof_Err = new TH1D("hDWallVSTTime_Prof_Err",
 						"TRUE d_{Wall} vs T_{Trig} ;  d_{Wall} [mm] ;",
 						hProf->GetNbinsX(), hProf->GetXaxis()->GetXmin(), hProf->GetXaxis()->GetXmax());
-  (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hDWallVSTTime_Prof_Err, 0.68);
+  (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hDWallVSTTime_Prof_Err, 0.997);
   hDWallVSTTime_Prof_Err->SetStats(kFALSE);
   hDWallVSTTime_Prof_Err->SetFillColor(2);
   hDWallVSTTime_Prof_Err->Write();
