@@ -67,11 +67,6 @@ static std::vector<TVector3> GetVSpml(const TVector3& orig = TVector3(0.,0.,0.),
 
 }
 
-// static void TranslateVVec(std::vector<TVector3>& vVev, const TVector3& orig = TVector3(0.,0.,0.)){
-//   for(auto&v:vVev)
-//     v+=orig;
-// }
-
 double fPosTSmear(const std::vector<double> &x, std::vector<double> &grad, void *data){
   auto d = static_cast<DataStruct1D*>(data);
 
@@ -98,6 +93,22 @@ double fPosTSmear(const std::vector<double> &x, std::vector<double> &grad, void 
 const double PosScale = 1.e-1;
 const double TScale   = 1.e1;
 
+typedef struct DetParams {
+  double radius;
+  double hheight;
+  double A;
+} DetParams;
+
+double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data) {
+  auto d = static_cast<DetParams *>(data);
+
+  TVector3 PosGuess(x[0] / PosScale, x[1] / PosScale, x[2] / PosScale);
+  double TGuess = x[3] / TScale;
+  double dWall = GetDWall(PosGuess, d->radius, d->hheight);
+
+  return -TGuess - dWall*d->A;
+
+}
 
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data){
   auto d = static_cast<DataStruct1D*>(data);

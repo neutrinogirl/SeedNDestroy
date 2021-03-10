@@ -226,7 +226,7 @@ int main(int argc, char *argv[]){
 
   auto hProf = hDWallVSTTime->ProfileY();
   hProf->Write();
-  TFitResultPtr fr = hProf->Fit(fpol, "LQEMRNS");
+  TFitResultPtr fr = hProf->Fit(fpol, "Q");
 
   // Save fit in ttree
   typedef struct PolFitResults {

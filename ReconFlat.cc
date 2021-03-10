@@ -99,6 +99,10 @@ int main(int argc, char *argv[]){
   file.Close();
   std::cout << pfr.A << "[ns/mm]" << std::endl;
 
+  // ######################################## //
+  // Create structure holding boundaries
+  DetParams dp = {args.bnds.Perp(), args.bnds.z(), pfr.A};
+
   const double MaxDWall = *std::min_element(DetBnds.begin(), DetBnds.end());
   TF1 fDWallVSTTrig("fDWallVSTTrig", "pol1", 0, MaxDWall);
   fDWallVSTTrig.SetParameter(0, pfr.B); fDWallVSTTrig.SetParError(0, pfr.BErr);
@@ -171,7 +175,6 @@ int main(int argc, char *argv[]){
 	  const double DWallSeed = GetDWall(CentroidSeed, args.bnds.Perp(), args.bnds.z());
 	  const double TDWallSeed = fDWallVSTTrig.Eval(DWallSeed);
 
-	  std::vector<double> TBounds = {TDWallSeed - 4., TDWallSeed + 4.};
 	  // const double TSeed = TimePDF.GetTrigTime(CentroidSeed, TBounds);
 	  const double TSeed = TDWallSeed;
 
@@ -181,12 +184,6 @@ int main(int argc, char *argv[]){
 
 	  const std::size_t MaxSeeds = 5;
 	  std::vector<TVector3> vSeeds = GetVSeeds(vHits, hPDF_TRes, -TSeed, bnds, wPower, MaxSeeds);
-
-	  //
-	  // #### #### #### Create local boundaries for fit #### #### #### //
-	  //
-
-	  Bnds localbnds = {bnds.Pos, TBounds};
 
 	  //
 	  // #### #### #### Time to fit some sinsemilia #### #### #### //
@@ -202,7 +199,7 @@ int main(int argc, char *argv[]){
 
 		// Recon
 		// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
-		auto x = ReconPosTime(ds, localbnds, Seed, -TSeed);
+		auto x = ReconPosTime(ds, bnds, dp, Seed, -TSeed);
 		vX.emplace_back(x);
 
 	  }

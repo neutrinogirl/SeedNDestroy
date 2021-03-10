@@ -333,7 +333,7 @@ std::vector<double> GetIntSpace(const unsigned int& nSteps, const double& min=-1
   const double step = (max-min) / (double)(nSteps);
   std::vector<double> v(nSteps);
   for(auto i=0; i<nSteps;i++)
-    v[i]=min+i*step;
+	v[i]=min+i*step;
   v.emplace_back(max);
   return v;
 }
@@ -361,7 +361,7 @@ typedef struct Bnds {
   }
 
   bool IsIn(const std::vector<double>& x) const{
-    return std::abs(x[0]) < Pos[0] && std::abs(x[1]) < Pos[1] && std::abs(x[2]) < Pos[2];
+	return std::abs(x[0]) < Pos[0] && std::abs(x[1]) < Pos[1] && std::abs(x[2]) < Pos[2];
   }
 
   bool IsIn(const TVector3& v) const{
@@ -373,21 +373,21 @@ typedef struct Bnds {
   }
 
   bool IsIn(const double& TGuess) const {
-    return TGuess > T[0] && TGuess < T[1];
+	return TGuess > T[0] && TGuess < T[1];
   }
 
 } Bnds;
 
 template <typename T>
 T GetDWall(const TVector3& v,
-				const T& radius, const T& hheight)  {
+		   const T& radius, const T& hheight)  {
   return std::min(radius - v.Perp(), hheight - std::abs(v.z()));
 }
 
 template <typename T>
 T GetDWall(const TVector3& v,
-				const T& radius, const T& hheight,
-				std::size_t& idx)  {
+		   const T& radius, const T& hheight,
+		   std::size_t& idx)  {
   std::vector<T> vv = {radius - v.Perp(), hheight - std::abs(v.z())};
   auto min_element = std::min_element(vv.begin(), vv.end());
   idx = std::distance(vv.begin(), min_element);
@@ -396,8 +396,8 @@ T GetDWall(const TVector3& v,
 
 template <typename T>
 T GetDWall(const TVector3& v,
-				const std::vector<T>& vDims,
-				std::size_t& idx)  {
+		   const std::vector<T>& vDims,
+		   std::size_t& idx)  {
   std::vector<T> vv = {vDims[0] - v.Perp(), vDims[1] - std::abs(v.z())};
   auto min_element = std::min_element(vv.begin(), vv.end());
   idx = std::distance(vv.begin(), min_element);
