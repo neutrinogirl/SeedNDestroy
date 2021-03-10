@@ -378,5 +378,9 @@ typedef struct Bnds {
 
 } Bnds;
 
+double GetDWall(const TVector3& v,
+				const double& radius, const double& hheight)  {
+  return std::min(radius - v.Perp(), hheight - std::abs(v.z()));
+}
 
 #endif //_MATHUTILS_HH_
