@@ -20,7 +20,6 @@
 #include "CreatePDF.hh"
 #include "MathUtils.hh"
 #include "TriggerTimeMap.hh"
-#include "Centroid.hh"
 
 int main(int argc, char *argv[]){
 
@@ -98,16 +97,16 @@ int main(int argc, char *argv[]){
 
 
   auto hDWallVSTTime = new TH2D("hDWallVSTTime", "TRUE d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								20, 0., MaxDWall / SOL,
+								20, TBnds[0], TBnds[1],
 								20, 0., MaxDWall);
 
   auto hRDWallVSTTime = new TH2D("hRDWallVSTTime", "TRUE d_{Wall} from R vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								20, 0., MaxDWall / SOL,
-								20, 0., MaxDWall);
+								 20, TBnds[0], TBnds[1],
+								 20, 0., MaxDWall);
 
   auto hZDWallVSTTime = new TH2D("hZDWallVSTTime", "TRUE d_{Wall} from Z vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								20, 0., MaxDWall / SOL,
-								20, 0., MaxDWall);
+								 20, TBnds[0], TBnds[1],
+								 20, 0., MaxDWall);
 
   // ######################################## //
   // Loop and get vector of NHits
@@ -185,7 +184,7 @@ int main(int argc, char *argv[]){
 
 	  hDWallVSTTime->Fill(TrigTime, dWall);
 	  if(idx==0)
-	    hRDWallVSTTime->Fill(TrigTime, dWall);
+		hRDWallVSTTime->Fill(TrigTime, dWall);
 	  else if(idx==1)
 		hZDWallVSTTime->Fill(TrigTime, dWall);
 
