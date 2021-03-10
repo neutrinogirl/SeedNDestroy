@@ -378,9 +378,30 @@ typedef struct Bnds {
 
 } Bnds;
 
-double GetDWall(const TVector3& v,
-				const double& radius, const double& hheight)  {
+template <typename T>
+T GetDWall(const TVector3& v,
+				const T& radius, const T& hheight)  {
   return std::min(radius - v.Perp(), hheight - std::abs(v.z()));
+}
+
+template <typename T>
+T GetDWall(const TVector3& v,
+				const T& radius, const T& hheight,
+				std::size_t& idx)  {
+  std::vector<T> vv = {radius - v.Perp(), hheight - std::abs(v.z())};
+  auto min_element = std::min_element(vv.begin(), vv.end());
+  idx = std::distance(vv.begin(), min_element);
+  return *min_element;
+}
+
+template <typename T>
+T GetDWall(const TVector3& v,
+				const std::vector<T>& vDims,
+				std::size_t& idx)  {
+  std::vector<T> vv = {vDims[0] - v.Perp(), vDims[1] - std::abs(v.z())};
+  auto min_element = std::min_element(vv.begin(), vv.end());
+  idx = std::distance(vv.begin(), min_element);
+  return *min_element;
 }
 
 #endif //_MATHUTILS_HH_
