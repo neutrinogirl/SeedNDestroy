@@ -12,6 +12,8 @@
 #include <TFile.h>
 #include <TF1.h>
 #include <TRandom3.h>
+#include <TProfile.h>
+#include <TVirtualFitter.h>
 
 #include <Wrapper.hh>
 #include <Hit.hh>
@@ -213,6 +215,47 @@ int main(int argc, char *argv[]){
 
   ScaleHist(hDWallVSTTime, static_cast<double>(nEvts));
   hDWallVSTTime->Write();
+
+  //
+  // ####
+  //
+
+  TF1 *fpol = new TF1("fpol", "pol1", -1, 1);
+  fpol->SetLineWidth(2);
+  fpol->SetParNames("B [ns]", "A [ns/mm]");
+
+  auto hProf = hDWallVSTTime->ProfileY();
+  hProf->Write();
+  TFitResultPtr fr = hProf->Fit(fpol, "LQEMRNS");
+
+  // Save fit in ttree
+  typedef struct PolFitResults {
+    double A, AErr, B, BErr, Chi2NDF;
+  } PolFitResults;
+
+  PolFitResults pfr;
+  TTree T("pfr", "Linear fit results of d_Wall VS TTrig");
+  T.Branch("A", &pfr.A, "A/D");
+  T.Branch("AErr", &pfr.AErr, "AErr/D");
+  T.Branch("B", &pfr.B, "B/D");
+  T.Branch("BErr", &pfr.BErr, "BErr/D");
+  T.Branch("Chi2NDF", &pfr.Chi2NDF, "Chi2NDF/D");
+  pfr.Chi2NDF = fpol->GetChisquare() / fpol->GetNDF();
+  pfr.B = fpol->GetParameter(0); pfr.BErr = fpol->GetParError(0);
+  pfr.A = fpol->GetParameter(1); pfr.AErr = fpol->GetParError(1);
+  T.Fill();
+  T.Write();
+
+  /*Create a histogram to hold the confidence intervals*/
+  TH1D *hDWallVSTTime_Prof_Err = new TH1D("hDWallVSTTime_Prof_Err",
+						"TRUE d_{Wall} vs T_{Trig} ;  d_{Wall} [mm] ;",
+						hProf->GetNbinsX(), hProf->GetXaxis()->GetXmin(), hProf->GetXaxis()->GetXmax());
+  (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hDWallVSTTime_Prof_Err, 0.68);
+  hDWallVSTTime_Prof_Err->SetStats(kFALSE);
+  hDWallVSTTime_Prof_Err->SetFillColor(2);
+  hDWallVSTTime_Prof_Err->Write();
+
+
   hRDWallVSTTime->Write();
   hZDWallVSTTime->Write();
 
