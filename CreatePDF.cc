@@ -78,7 +78,7 @@ int main(int argc, char *argv[]){
 
 
   const std::vector<double> DetBnds = {args.bnds.x(), args.bnds.y(), args.bnds.z()};
-  const std::vector<double> TBnds = {-10., args.bnds.Mag() / SOL};
+  const std::vector<double> TBnds = {0., args.bnds.Mag() / SOL};
   Bnds bnds = {DetBnds, TBnds};
 
   const int MaxRho = std::ceil(args.bnds.Perp()*1.e-3)*1.e3;
@@ -88,13 +88,15 @@ int main(int argc, char *argv[]){
 
   TrigTimePDF TTPDF(agRho.GetVCenters(), agZ.GetVCenters());
 
+  const int MaxDWall = std::min(MaxRho, MaxZ);
+
   auto hDWallVSTTime = new TH2D("hDWallVSTTime", "TRUE d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								20, 0., MaxZ / SOL,
-								20, 0., MaxZ);
+								20, 0., MaxDWall / SOL,
+								20, 0., MaxDWall);
 
   auto hCentroidDWallVSTTime = new TH2D("hCentroidDWallVSTTime", "CENTROID d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-										20, 0., MaxZ / SOL,
-										20, 0., MaxZ);
+										20, 0., MaxDWall / SOL,
+										20, 0., MaxDWall);
 
   // ######################################## //
   // Loop and get vector of NHits
