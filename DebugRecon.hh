@@ -49,14 +49,20 @@ std::vector<std::string> GetFilesInDir(const boost::filesystem::path& dir, const
 typedef struct Args{
   bool isVerbose = false;
   bool isDebug   = false;
+  bool isDDebug   = false;
+
   std::vector<std::string> filename;
   std::string pdfname;
   std::string outname = "fRecon.root";
+
   unsigned int nEvts = 0;
-  unsigned int wPower = 1;
-  TVector3 bnds = TVector3(10.e3, 10.e3, 10.e3);
+  unsigned int wPower = 0;
+  std::vector<double> bnds = {10.e3, 10.e3};
   bool isBox = false;
   unsigned int nThreads = 1;
+
+  bool useTSeed = true;
+
 } Args;
 
 static void ShowUsage(const std::string& name){
@@ -66,11 +72,19 @@ static void ShowUsage(const std::string& name){
 
 			<< "\t-h\tShow this help message\n"
 			<< "\t-v\tSet verbose mode (display progress bar)\n"
+
 			<< "\t-d\tWrite debug plot into output file\n"
+			<< "\t-dd\tAdditional debug info\n"
+
 			<< "\t-n\tSet #Evts to process\n"
+
 			<< "\t-w\tSet weight exponent power for Q kernel (default 1) \n"
+
 			<< "\t-b <XX YY ZZ>\tSet boundaries for box geom (in mm) \n"
 			<< "\t-c <R H>\tSet boundaries for cylinder geom (in mm) \n"
+
+			<< "\t--ttrig\tDo not seed time \n"
+
 			<< "\t--nthreads\tSet nThread to run in parallel (default 1) \n"
 
 			<< "\t--dir\tRead all .root files in directory \n"
@@ -88,8 +102,6 @@ static void ProcessArgs(TApplication &theApp,
 	exit(0);
   }
 
-  int nFiles=0;
-
   for (int i = 1; i < theApp.Argc(); i++) {
 	std::string arg = theApp.Argv(i);
 	if ((arg == "-h") || (arg == "--help")) {
@@ -99,27 +111,28 @@ static void ProcessArgs(TApplication &theApp,
 	  args.isVerbose=true;
 	} else if (boost::iequals(arg, "-d")) {
 	  args.isDebug=true;
+	} else if (boost::iequals(arg, "-dd")) {
+	  args.isDDebug=true;
 	} else if (boost::iequals(arg, "-n")) {
 	  args.nEvts=std::stoi(theApp.Argv(++i));
 	} else if (boost::iequals(arg, "-w")) {
 	  args.wPower=std::stoi(theApp.Argv(++i));
+
+	} else if (boost::iequals(arg, "-ttrig")) {
+	  args.useTSeed=false;
+
 	} else if (boost::iequals(arg, "-b")) {
-	  args.bnds.SetX(std::stod(theApp.Argv(++i)));
-	  args.bnds.SetY(std::stod(theApp.Argv(++i)));
-	  args.bnds.SetZ(std::stod(theApp.Argv(++i)));
+	  args.bnds.resize(3);
+	  args.bnds[0] = (std::stod(theApp.Argv(++i)));
+	  args.bnds[1] = (std::stod(theApp.Argv(++i)));
+	  args.bnds[2] = (std::stod(theApp.Argv(++i)));
 	  std::cout << "Setting box geom boundaries" << std::endl;
-	  args.bnds.Print();
 	  args.isBox = true;
 	} else if (boost::iequals(arg, "-c")) {
-	  const double R = std::stod(theApp.Argv(++i));
-	  const double Z = std::stod(theApp.Argv(++i));
-	  args.bnds.SetX(1);
-	  args.bnds.SetY(0);
-	  args.bnds.SetZ(0);
+	  args.bnds.resize(2);
+	  args.bnds[0] = (std::stod(theApp.Argv(++i)));
+	  args.bnds[1] = (std::stod(theApp.Argv(++i)));
 	  std::cout << "Setting cylinder geom boundaries" << std::endl;
-	  args.bnds.SetPerp(R);
-	  args.bnds.SetZ(Z);
-	  args.bnds.Print();
 	  args.isBox = false;
 	} else if (boost::iequals(arg, "--nthreads")) {
 	  args.nThreads=std::stoi(theApp.Argv(++i));
@@ -196,6 +209,32 @@ void LoadMCInfo2Evt(wRAT& w_rat, Event& evt){
   evt.MCT   = -TrigTime;
   evt.ETrue = w_rat.GetETrue(iParticle);
 
+}
+
+typedef struct PolFitResults {
+  double A, AErr, B, BErr, Chi2NDF;
+} PolFitResults;
+
+PolFitResults GetSOL(const std::string& tpdf){
+  // Save fit in ttree
+  PolFitResults pfr;
+  TFile file(tpdf.c_str(), "READ");
+  auto T = file.Get<TTree>("pfr");
+  T->SetBranchAddress("A", &pfr.A);
+  T->SetBranchAddress("AErr", &pfr.AErr);
+  T->SetBranchAddress("B", &pfr.B);
+  T->SetBranchAddress("BErr", &pfr.BErr);
+  T->GetEntry(0);
+  delete T;
+  file.Close();
+  std::cout << 1/pfr.A << "[mm/ns]" << std::endl;
+  return pfr;
+}
+
+const std::vector<double> GetTBndsLocal(const double& TSeed, const std::vector<double> vTBnds){
+  double TMin = TSeed - 3 > vTBnds[0] ? TSeed - 3 : vTBnds[0] ;
+  double TMax = TSeed + 3 < vTBnds[1] ? TSeed + 3 : vTBnds[1] ;
+  return {TMin, TMax};
 }
 
 #endif //_DEBUGRECON_HH_
