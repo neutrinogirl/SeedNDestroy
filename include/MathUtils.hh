@@ -113,82 +113,6 @@ double GetXYRho(const std::vector<T>& Pos){
   }
 }
 
-struct CylVec {
-
-  double rho, theta, z;
-
-  CylVec() {
-	rho = 0;
-	theta = 0;
-	z = 0;
-  }
-
-  CylVec(double rho, double theta, double z)
-	  : rho(rho), theta(theta), z(z) {}
-
-  explicit CylVec(const TVector3 &v) {
-
-	rho = sqrt(v.x() * v.x() + v.y() * v.y());
-	theta = atan2(v.y(), v.x());
-	z = v.z();
-
-  }
-
-  explicit CylVec(const std::vector<double> &v) {
-
-	rho = sqrt(v[0] * v[0] + v[1] * v[1]);
-	theta = atan2(v[1], v[0]);
-	z = v[2];
-
-  }
-
-  void Print() const {
-	std::cout << "CylVec() with rho=" << rho << " theta=" << theta << " z=" << z << std::endl;
-  }
-
-  TVector3 GetVec3() const {
-	return TVector3(rho*cos(theta), rho*sin(theta), z);
-  }
-
-  double GetMag2() const {
-	return rho*rho+z*z;
-  }
-
-  double GetMag() const {
-	return sqrt(GetMag2());
-  }
-
-};
-
-static bool operator<(const CylVec& v1, const CylVec& v2){
-  return v1.theta < v2.theta;
-}
-
-static bool operator>(const CylVec& v1, const CylVec& v2){
-  return v1.theta > v2.theta;
-}
-
-static CylVec operator+(const CylVec& v1, const CylVec& v2){
-  return {v1.rho+v2.rho, v1.theta+v2.theta, v1.z+v2.z};
-}
-
-static CylVec operator-(const CylVec& v1, const CylVec& v2){
-  return {v1.rho-v2.rho, v1.theta-v2.theta, v1.z-v2.z};
-}
-
-static double GetDCylVec(const CylVec& v1, const CylVec& v2){
-  return sqrt(std::pow(v2.rho-v1.rho,2) + std::pow(v2.z-v1.z,2));
-}
-
-static CylVec GetScaledCylVec(const CylVec& cv, const double& scale){
-  return {cv.rho/scale, cv.theta, cv.z/scale};
-}
-
-static CylVec GetRepCylVec(const CylVec& cv, const double& scale){
-  auto scv = GetScaledCylVec(cv, scale);
-  return {scv.rho, scv.theta, scv.z/2 + 0.5};
-}
-
 typedef std::vector<std::vector<double> > Matrix_t;
 
 struct Matrix {
@@ -327,6 +251,16 @@ typedef struct zAxis {
 	max   = ax->GetXmax();
   }
 
+  std::vector<double> GetStdVec() const{
+    std::vector<double> v(nBins+1);
+    const double width = (max-min) / static_cast<double>(nBins);
+    std::iota(v.begin(), v.end(), 0);
+	std::transform(v.begin(), v.end(), v.begin(), [&](const double& val){
+	  return min + (val+0.5)*width;
+	});
+	return v;
+  }
+
 } zAxis ;
 
 std::vector<double> GetIntSpace(const unsigned int& nSteps, const double& min=-1, const double& max=1.){
@@ -347,36 +281,216 @@ void ScaleHist(T *hist, const double& norm = 0){
   }
 }
 
-typedef struct Bnds {
-  std::vector<double> Pos;
-  std::vector<double> T;
+template <typename T>
+struct Bnd{
 
-  Bnds() = default;
+  T min, max;
 
-  double GetMin() const {
-	return *std::min_element(Pos.begin(), Pos.end());
-  }
-  double GetMax() const {
-	return *std::max_element(Pos.begin(), Pos.end());
+  bool IsIn(const T& val) const {
+    return val > min && val < max;
   }
 
-  bool IsIn(const std::vector<double>& x) const{
-	return std::abs(x[0]) < Pos[0] && std::abs(x[1]) < Pos[1] && std::abs(x[2]) < Pos[2];
+};
+
+template <typename T, typename U>
+struct Bnds {
+
+  std::vector<Bnd<T>> vPos;
+  Bnd<U> vT;
+
+  virtual bool IsInPos(const std::vector<T>& v) const {
+
+    if(v.size() != vPos.size()){
+	  std::cerr << "Bnds::InInPos() DIM BOUNDS != DIM V" << std::endl;
+	  return false;
+    }
+
+    for(auto i=0; i<v.size(); i++){
+      if(!vPos[i].IsIn(v[i]))
+        return false;
+    }
+	return true;
+
   }
 
-  bool IsIn(const TVector3& v) const{
-	return std::abs(v[0]) < Pos[0] && std::abs(v[1]) < Pos[1] && std::abs(v[2]) < Pos[2];
+  virtual bool IsInT(const U& val) const {
+    return vT.IsIn(val);
   }
 
-  TVector3 GetTVector3() const{
-	return TVector3(Pos[0], Pos[1], Pos[2]);
+  virtual bool IsInPos(const TVector3& v) const { return false; }
+  virtual T GetDWall(const TVector3& v) const { return -std::numeric_limits<T>::max(); }
+  virtual TVector3 GetTVector3() const { return TVector3(); }
+  virtual void Print() const {
+    for(const auto& bnd: vPos){
+      std::cout << "[" << bnd.min << ", " << bnd.max << "]mm ";
+    }
+    std::cout << "[" << vT.min << ", " << vT.max << "]ns" << std::endl;
+  }
+  virtual T GetMaxDWall() const {
+	T maxdwall = std::numeric_limits<T>::max();
+	for (const auto &bnd: vPos) {
+	  maxdwall = std::min(maxdwall, std::min(std::abs(bnd.min), std::abs(bnd.max)));
+	}
+	return maxdwall;
+  }
+  virtual std::vector<T> GetVDetBnds() const {
+    std::vector<T> v;
+	for(const auto& bnd: vPos) {
+	  v.push_back(std::max(std::abs(bnd.min), std::abs(bnd.max)));
+	}
+	return v;
   }
 
-  bool IsIn(const double& TGuess) const {
-	return TGuess > T[0] && TGuess < T[1];
+  virtual std::vector<T> GetVLB() const {
+	std::vector<T> v;
+	for(const auto& bnd: vPos) {
+	  v.push_back(bnd.min);
+	}
+	v.push_back(-vT.max);
+	return v;
   }
 
-} Bnds;
+  virtual std::vector<T> GetVUB() const {
+	std::vector<T> v;
+	for(const auto& bnd: vPos) {
+	  v.push_back(bnd.max);
+	}
+	v.push_back(vT.min);
+	return v;
+  }
+
+};
+
+typedef struct Bnds<double, double> bnds;
+
+struct CylBnds : public bnds{
+
+  CylBnds(){
+	vPos = { {0, 0}, {0, 0} };
+	vT = {0, 0};
+  };
+  CylBnds(const double& radius, const double& hheight){
+	vPos = { {0, radius}, {0, hheight} };
+	vT = {0, sqrt(2*std::pow(radius, 2) + std::pow(hheight, 2)) / SOL};
+  }
+  CylBnds(const double& radius, const double& hheight,
+		  const std::vector<double>& TBnds){
+	vPos = { {0, radius}, {0, hheight} };
+	vT = {TBnds[0], TBnds[1]};
+  }
+  CylBnds(const double& radius, const double& hheight,
+		  const double& TMin, const double& TMax){
+	vPos = { {0, radius}, {0, hheight} };
+	vT = {TMin, TMax};
+  }
+
+  double GetRadius() const{
+    return vPos[0].max;
+  }
+
+  double GetHHeight() const{
+	return vPos[1].max;
+  }
+
+  bool IsInPos(const TVector3&v) const override {
+    return vPos[0].IsIn(v.Perp()) && vPos[1].IsIn(std::abs(v.z()));
+  }
+
+  double GetDWall(const TVector3& v) const override {
+	return std::min(GetRadius() - v.Perp(), GetHHeight() - std::abs(v.z()));
+  }
+
+  TVector3 GetTVector3() const override {
+    return TVector3(GetRadius(), GetRadius(), GetHHeight());
+  }
+
+  double GetMaxDWall() const override {
+    return std::min(GetRadius(), GetHHeight());
+  }
+
+  std::vector<double> GetVDetBnds() const override {
+    return {GetRadius(), GetRadius(), GetHHeight()};
+  }
+
+  std::vector<double> GetVLB() const override{
+    return {-GetRadius(), -GetRadius(), -GetHHeight(), - vT.max};
+  }
+
+  std::vector<double> GetVUB() const override{
+	return {GetRadius(), GetRadius(), GetHHeight(), vT.min};
+  }
+
+};
+
+struct BoxBnds : public bnds{
+
+  BoxBnds(){
+	vPos = { {0, 0}, {0, 0}, {0, 0} };
+	vT = {0, 0};
+  };
+  BoxBnds(const std::vector<double>& vvPos) : BoxBnds(){
+	if(vPos.size() != vvPos.size())
+	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+	double max2 = 0;
+	for(auto i=0; i<vvPos.size();i++){
+	  vPos[i] = {0, vvPos[i]};
+	  max2 += std::pow(vvPos[i], 2);
+	}
+	vT = {0, sqrt(max2)};
+  }
+  BoxBnds(const std::vector<std::vector<double>>& vvPos) : BoxBnds(){
+	if(vPos.size() != vvPos.size())
+	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+	double max2 = 0;
+	for(auto i=0; i<vvPos.size();i++){
+	  vPos[i] = {vvPos[i][0], vvPos[i][1]};
+	  max2 += std::pow(vvPos[i][1], 2);
+	}
+	vT = {0, sqrt(max2)};
+  }
+  BoxBnds(const std::vector<std::vector<double>>& vvPos,
+		  const std::vector<double>& TBnds) : BoxBnds(){
+	if(vPos.size() != vvPos.size())
+	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+	for(auto i=0; i<vvPos.size();i++){
+	  vPos[i] = {vvPos[i][0], vvPos[i][1]};
+	}
+	vT = {TBnds[0], TBnds[1]};
+  }
+  BoxBnds(const std::vector<std::vector<double>>& vvPos,
+		  const double& TMin, const double& TMax) : BoxBnds(){
+	if(vPos.size() != vvPos.size())
+	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+	for(auto i=0; i<vvPos.size();i++){
+	  vPos[i] = {vvPos[i][0], vvPos[i][1]};
+	}
+	vT = {TMin, TMax};
+  }
+
+  bool IsInPos(const TVector3&v) const override {
+    for(auto i=0; i<3; i++){
+	  if(!vPos[i].IsIn(v[i]))
+	    return false;
+    }
+    return true;
+  }
+
+  double GetDWall(const TVector3& v) const override {
+    double dWall = std::numeric_limits<double>::max();
+	for(auto i=0; i<3; i++) {
+	  double absv = std::abs(v[i]);
+	  double min = std::min(std::abs(vPos[0].min) - absv, std::abs(vPos[0].max) - absv);
+	  dWall = min < dWall ? min : dWall;
+	}
+	return dWall;
+  }
+
+  TVector3 GetTVector3() const override {
+	return TVector3(vPos[0].max, vPos[1].max, vPos[2].max);
+  }
+
+};
+
 
 template <typename T>
 T GetDWall(const TVector3& v,

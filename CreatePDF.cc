@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
   // #### #### #### HISTOGRAMS #### #### #### //
   // ######################################## //
 
-  const zAxis axTRes(150, -50., 100.);
+  const zAxis axTRes(600, -200., 400.);
   const zAxis axCosT(24, -1., 1.);
   const zAxis axNHits(1000, 0., 2000.);
 
@@ -78,20 +78,21 @@ int main(int argc, char *argv[]){
 	);
   }
 
-  const std::vector<double> DetBnds =
-	  args.isBox ?
-	  std::vector<double>({args.bnds.x(), args.bnds.y(), args.bnds.z()}) :
-	  std::vector<double>({args.bnds.Perp(), args.bnds.Perp(), args.bnds.z()});
-  const std::vector<double> TBnds =
-	  args.isBox ?
-	  std::vector<double>({0., args.bnds.Mag() / SOL}) :
-	  std::vector<double>({0., sqrt(2*std::pow(args.bnds.Perp(), 2) + std::pow(args.bnds.z(), 2)) / SOL});
-  Bnds bnds = {DetBnds, TBnds};
+  // ######################################## //
+  // DET Boundaries
+  bnds *b;
+  if(args.isBox){
+	b = new BoxBnds( { args.bnds[0] , args.bnds[1] , args.bnds[2] });
+  } else{
+	b = new CylBnds(args.bnds[0], args.bnds[1]);
+  }
+  if(args.isVerbose)
+	b->Print();
 
-  const double MaxDWall = *std::min_element(DetBnds.begin(), DetBnds.end());
+  const double MaxDWall = b->GetMaxDWall();
 
-  const int RoundedRho = static_cast<int>(std::round(args.bnds.Perp()*1.e-3/2)*1.e3*2);
-  const int RoundedZ   = static_cast<int>(std::round(args.bnds.z()*1.e-3/2)*1.e3*2);
+  const int RoundedRho = static_cast<int>(std::round(b->GetTVector3().Perp()*1.e-3/2)*1.e3*2);
+  const int RoundedZ   = static_cast<int>(std::round(b->GetTVector3().z()*1.e-3/2)*1.e3*2);
   AxisGrid<int> agRho({0, RoundedRho}, 1.e3);
   AxisGrid<int> agZ({0, RoundedZ}, 1.e3);
 
@@ -99,15 +100,15 @@ int main(int argc, char *argv[]){
 
 
   auto hDWallVSTTime = new TH2D("hDWallVSTTime", "TRUE d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								20, TBnds[0], TBnds[1],
+								20, b->vT.min, b->vT.max,
 								20, 0., MaxDWall);
 
   auto hRDWallVSTTime = new TH2D("hRDWallVSTTime", "TRUE d_{Wall} from R vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								 20, TBnds[0], TBnds[1],
+								 20, b->vT.min, b->vT.max,
 								 20, 0., MaxDWall);
 
   auto hZDWallVSTTime = new TH2D("hZDWallVSTTime", "TRUE d_{Wall} from Z vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								 20, TBnds[0], TBnds[1],
+								 20, b->vT.min, b->vT.max,
 								 20, 0., MaxDWall);
 
   // ######################################## //

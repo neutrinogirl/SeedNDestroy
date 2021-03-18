@@ -49,7 +49,7 @@ typedef struct Args{
   std::vector<std::string> filename;
   std::string outname = "PDF.root";
   unsigned int nEvts = 0;
-  TVector3 bnds = TVector3(10.e3, 10.e3, 10.e3);
+  std::vector<double> bnds = {10.e3, 10.e3};
   bool isBox = false;
 } Args;
 
@@ -90,24 +90,18 @@ static void ProcessArgs(TApplication &theApp,
 	} else if (boost::iequals(arg, "-n")) {
 	  args.nEvts=std::stoi(theApp.Argv(++i));
 	} else if (boost::iequals(arg, "-b")) {
-      args.bnds.SetX(std::stod(theApp.Argv(++i)));
-      args.bnds.SetY(std::stod(theApp.Argv(++i)));
-      args.bnds.SetZ(std::stod(theApp.Argv(++i)));
-      std::cout << "Setting box geom boundaries" << std::endl;
-      args.bnds.Print();
-      args.isBox = true;
+	  args.bnds.resize(3);
+	  args.bnds[0] = (std::stod(theApp.Argv(++i)));
+	  args.bnds[1] = (std::stod(theApp.Argv(++i)));
+	  args.bnds[2] = (std::stod(theApp.Argv(++i)));
+	  std::cout << "Setting box geom boundaries" << std::endl;
+	  args.isBox = true;
 	} else if (boost::iequals(arg, "-c")) {
-	  const double R = std::stod(theApp.Argv(++i));
-	  const double Z = std::stod(theApp.Argv(++i));
-	  args.bnds.SetX(1);
-	  args.bnds.SetY(0);
-	  args.bnds.SetZ(0);
+	  args.bnds.resize(2);
+	  args.bnds[0] = (std::stod(theApp.Argv(++i)));
+	  args.bnds[1] = (std::stod(theApp.Argv(++i)));
 	  std::cout << "Setting cylinder geom boundaries" << std::endl;
-	  args.bnds.SetPerp(R);
-	  args.bnds.SetZ(Z);
-	  args.bnds.Print();
 	  args.isBox = false;
-
 	} else if (boost::iequals(arg,"-i") || boost::iequals(arg,"--input")) {
 	  args.filename.emplace_back(theApp.Argv(++i));
 	} else if (boost::iequals(arg,"--dir")) {
