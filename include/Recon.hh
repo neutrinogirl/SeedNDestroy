@@ -15,8 +15,8 @@
 #include "MathUtils.hh"
 
 
-std::vector<double> ReconPosTime(DataStruct1D& DS, const Bnds& bnds, DetParams& DP,
-								 const TVector3& PosSeed, const double& TSeed = 0.){
+std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
+								 const TVector3& PosSeed, const double& TSeed){
 
   const unsigned nDimf = 4;
   std::vector<double> x = {
@@ -33,14 +33,23 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const Bnds& bnds, DetParams& 
 
   // ######################################## //
   // Create fitter boundaries
-  std::vector<double> lb(nDimf); lb[3] = - bnds.T[1] * TScale;
-  std::vector<double> ub(nDimf); ub[3] = - bnds.T[0] * TScale;
+  std::vector<double> lb = b.GetVLB();
+  std::vector<double> ub = b.GetVUB();
   for(auto iDim=0; iDim<3; iDim++){
-    lb[iDim] = ( - bnds.Pos[iDim]) * PosScale;
-	ub[iDim] = ( + bnds.Pos[iDim]) * PosScale;
+    lb[iDim] *= PosScale;
+	ub[iDim] *= PosScale;
   }
+  lb[3] *= TScale;
+  ub[3] *= TScale;
 
-  // std::cout << "[" << lb[3] << "," << ub[3] << "] " << x[3] << std::endl;
+  // // ######################################## //
+  // // DEBUG PRINTS
+  // double ll, uu, xx;
+  // BOOST_FOREACH(boost::tie(ll, uu, xx), boost::combine(lb, ub, x)){
+	// 	  std::cout << " [" << ll << "," << uu << "] " << xx;
+  // }
+  // std::cout << std::endl;
+
 
   // Set boundaries
   opt_local.set_lower_bounds(lb);
@@ -50,7 +59,8 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const Bnds& bnds, DetParams& 
   opt_local.add_inequality_constraint(fPosTC, &DP, 3);
 
   // Set stopping criteria
-  opt_local.set_xtol_rel(1.e-6);
+  opt_local.set_xtol_rel(1.e-12);
+  opt_local.set_ftol_rel(1.e-3);
 
   // Set limits
   opt_local.set_maxtime(1./*sec*/);
@@ -62,6 +72,24 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const Bnds& bnds, DetParams& 
 		  10.
 	  }
   );
+
+  nlopt::opt opt(nlopt::AUGLAG_EQ, nDimf);
+  opt.set_local_optimizer(opt_local);
+  opt.set_min_objective(fPosT, &DS);
+
+  // Set boundaries
+  opt.set_lower_bounds(lb);
+  opt.set_upper_bounds(ub);
+
+  // Set T constraints
+  opt.add_inequality_constraint(fPosTC, &DP, 3);
+
+  // Set stopping criteria
+  opt.set_xtol_rel(1.e-12);
+  opt.set_ftol_rel(1.e-3);
+
+  // Set limits
+  opt.set_maxtime(1./*sec*/);
 
   try{
 

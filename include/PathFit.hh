@@ -94,8 +94,7 @@ const double PosScale = 1.e-1;
 const double TScale   = 1.e1;
 
 typedef struct DetParams {
-  double radius;
-  double hheight;
+  bnds *b;
   double A;
 } DetParams;
 
@@ -104,7 +103,7 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
 
   TVector3 PosGuess(x[0] / PosScale, x[1] / PosScale, x[2] / PosScale);
   double TGuess = x[3] / TScale;
-  double dWall = GetDWall(PosGuess, d->radius, d->hheight);
+  double dWall = d->b->GetDWall(PosGuess);
 
   return -TGuess - dWall*d->A;
 

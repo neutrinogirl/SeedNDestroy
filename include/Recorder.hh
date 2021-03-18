@@ -115,6 +115,8 @@ class MapNLL {
   std::vector<TVector3> vSmplPts;
 
   TH3D *hGrid;
+  TVector3 vMinNLL;
+  double MinNLL;
 
  public:
 
@@ -125,11 +127,15 @@ class MapNLL {
   explicit MapNLL(std::vector<Grid1D> v_grids)
 	  : vGrids(std::move(v_grids)){
     hGrid = CreateHGrid();
+    vMinNLL = TVector3();
+    MinNLL = std::numeric_limits<double>::max();
   }
   MapNLL(const double& bnds, const double& width){
 	vGrids = std::vector<Grid1D>(3, Grid1D(bnds, width));
 	vSmplPts = Get3DSmplVec(width);
 	hGrid = CreateHGrid();
+	vMinNLL = TVector3();
+	MinNLL = std::numeric_limits<double>::max();
   }
   MapNLL(const std::vector<double>& bnds, const std::vector<double>& width){
 	double b, w;
@@ -138,6 +144,8 @@ class MapNLL {
 		  };
 	vSmplPts = Get3DSmplVec(width);
 	hGrid = CreateHGrid();
+	vMinNLL = TVector3();
+	MinNLL = std::numeric_limits<double>::max();
   }
 
   virtual ~MapNLL(){
@@ -146,6 +154,8 @@ class MapNLL {
 
   void ResetGrid(){
     hGrid->Reset();
+	vMinNLL = TVector3();
+	MinNLL = std::numeric_limits<double>::max();
   }
 
   //
@@ -176,6 +186,11 @@ class MapNLL {
 
 		  double NLL = GetNLL(vHits, hPDF, v, T, fweight, wPower);
 
+		  if(NLL<MinNLL){
+		    MinNLL = NLL;
+		    vMinNLL = v;
+		  }
+
 		  hGrid->SetBinContent(GlobalBin, NLL);
 
 		}
@@ -190,6 +205,8 @@ class MapNLL {
 
   const std::vector<Grid1D> &GetVGrids() const { return vGrids; }
   TH3D *GetHGrid() const { return hGrid; }
+  const TVector3 &GetVMinNll() const { return vMinNLL; }
+  double GetMinNll() const { return MinNLL; }
 
   // ...
 

@@ -10,7 +10,7 @@
 #include <Hit.hh>
 #include "MathUtils.hh"
 
-TVector3 GetCentroidSeed(const std::vector<Hit>& vHits, const Bnds& bnds,
+TVector3 GetCentroidSeed(const std::vector<Hit>& vHits, const bnds& b,
 						 const unsigned int& wPower = 2){
 
   TVector3 Seed(0.,0.,0.);
@@ -35,7 +35,7 @@ TVector3 GetCentroidSeed(const std::vector<Hit>& vHits, const Bnds& bnds,
 
   Seed = TVector3(xMean, yMean, zMean);
 
-  return bnds.IsIn(Seed) ? Seed :  bnds.GetTVector3();
+  return b.IsInPos(Seed) ? Seed : b.GetTVector3();
 
 }
 
