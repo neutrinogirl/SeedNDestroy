@@ -349,7 +349,6 @@ struct Bnds {
 	v.push_back(-vT.max);
 	return v;
   }
-
   virtual std::vector<T> GetVUB() const {
 	std::vector<T> v;
 	for(const auto& bnd: vPos) {
@@ -369,9 +368,9 @@ struct CylBnds : public bnds{
 	vPos = { {0, 0}, {0, 0} };
 	vT = {0, 0};
   };
-  CylBnds(const double& radius, const double& hheight){
+  CylBnds(const double& radius, const double& hheight, const double& SoL = SOL){
 	vPos = { {0, radius}, {0, hheight} };
-	vT = {0, sqrt(2*std::pow(radius, 2) + std::pow(hheight, 2)) / SOL};
+	vT = {0, std::min(radius, hheight) / SoL};
   }
   CylBnds(const double& radius, const double& hheight,
 		  const std::vector<double>& TBnds){
@@ -428,25 +427,28 @@ struct BoxBnds : public bnds{
 	vPos = { {0, 0}, {0, 0}, {0, 0} };
 	vT = {0, 0};
   };
-  BoxBnds(const std::vector<double>& vvPos) : BoxBnds(){
+  BoxBnds(const std::vector<double>& vvPos, const double& SoL = SOL) : BoxBnds(){
 	if(vPos.size() != vvPos.size())
 	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
-	double max2 = 0;
+	double min = *std::min_element(vvPos.begin(), vvPos.end());
 	for(auto i=0; i<vvPos.size();i++){
 	  vPos[i] = {0, vvPos[i]};
-	  max2 += std::pow(vvPos[i], 2);
 	}
-	vT = {0, sqrt(max2)};
+	vT = {0, min/SoL};
   }
-  BoxBnds(const std::vector<std::vector<double>>& vvPos) : BoxBnds(){
+  BoxBnds(const std::vector<std::vector<double>>& vvPos, const double& SoL = SOL) : BoxBnds(){
 	if(vPos.size() != vvPos.size())
 	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
-	double max2 = 0;
+	auto min =
+		*std::min_element(vvPos.begin(), vvPos.end(),
+						  [](const std::vector<double>&v1, const std::vector<double>&v2){
+							return *std::min_element(v1.begin(), v1.end()) < *std::min_element(v2.begin(), v2.end());
+						  }
+		);
 	for(auto i=0; i<vvPos.size();i++){
 	  vPos[i] = {vvPos[i][0], vvPos[i][1]};
-	  max2 += std::pow(vvPos[i][1], 2);
 	}
-	vT = {0, sqrt(max2)};
+	vT = {0, *std::min_element(min.begin(), min.end())/SoL};
   }
   BoxBnds(const std::vector<std::vector<double>>& vvPos,
 		  const std::vector<double>& TBnds) : BoxBnds(){

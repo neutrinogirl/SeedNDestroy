@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
   // #### #### #### HISTOGRAMS #### #### #### //
   // ######################################## //
 
-  const zAxis axTRes(600, -200., 400.);
+  const zAxis axTRes(250, -50., 200.);
   const zAxis axCosT(24, -1., 1.);
   const zAxis axNHits(1000, 0., 2000.);
 
