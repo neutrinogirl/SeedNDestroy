@@ -286,6 +286,17 @@ struct Bnd{
 
   T min, max;
 
+  Bnd() = default;
+  Bnd(T min, T max) : min(min), max(max) {}
+  Bnd(const Bnd<T>& rhs) {
+    min = rhs.min;
+    max = rhs.max;
+  }
+  // Bnd(Bnd<T>&& rhs) noexcept {
+	// min = std::move(rhs.min);
+	// max = std::move(rhs.max);
+  // }
+
   bool IsIn(const T& val) const {
     return val > min && val < max;
   }
@@ -297,6 +308,17 @@ struct Bnds {
 
   std::vector<Bnd<T>> vPos;
   Bnd<U> vT;
+
+  Bnds() = default;
+  Bnds(const std::vector<Bnd<T>> &v_pos, const Bnd<U> &v_t) : vPos(v_pos), vT(v_t) {}
+  Bnds(const Bnds& rhs){
+    vPos = rhs.vPos;
+    vT = rhs.vT;
+  }
+  // Bnds(Bnds&& rhs){
+	// vPos = std::move(rhs.vPos);
+	// vT = std::move(rhs.vT);
+  // }
 
   virtual bool IsInPos(const std::vector<T>& v) const {
 
@@ -354,7 +376,7 @@ struct Bnds {
 	for(const auto& bnd: vPos) {
 	  v.push_back(bnd.max);
 	}
-	v.push_back(vT.min);
+	v.push_back(-vT.min);
 	return v;
   }
 
@@ -365,9 +387,13 @@ typedef struct Bnds<double, double> bnds;
 struct CylBnds : public bnds{
 
   CylBnds(){
-	vPos = { {0, 0}, {0, 0} };
-	vT = {0, 0};
+	vPos = { {0., 0.}, {0., 0.} };
+	vT = {0., 0.};
   };
+  explicit CylBnds(const bnds& b){
+	vPos = b.vPos;
+	vT = b.vT;
+  }
   CylBnds(const double& radius, const double& hheight, const double& SoL = SOL){
 	vPos = { {0, radius}, {0, hheight} };
 	vT = {0, std::min(radius, hheight) / SoL};
@@ -416,7 +442,7 @@ struct CylBnds : public bnds{
   }
 
   std::vector<double> GetVUB() const override{
-	return {GetRadius(), GetRadius(), GetHHeight(), vT.min};
+	return {GetRadius(), GetRadius(), GetHHeight(), - vT.min};
   }
 
 };
@@ -427,7 +453,11 @@ struct BoxBnds : public bnds{
 	vPos = { {0, 0}, {0, 0}, {0, 0} };
 	vT = {0, 0};
   };
-  BoxBnds(const std::vector<double>& vvPos, const double& SoL = SOL) : BoxBnds(){
+  explicit BoxBnds(const bnds& b){
+	vPos = b.vPos;
+	vT = b.vT;
+  }
+  explicit BoxBnds(const std::vector<double>& vvPos, const double& SoL = SOL) : BoxBnds(){
 	if(vPos.size() != vvPos.size())
 	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
 	double min = *std::min_element(vvPos.begin(), vvPos.end());
@@ -436,7 +466,7 @@ struct BoxBnds : public bnds{
 	}
 	vT = {0, min/SoL};
   }
-  BoxBnds(const std::vector<std::vector<double>>& vvPos, const double& SoL = SOL) : BoxBnds(){
+  explicit BoxBnds(const std::vector<std::vector<double>>& vvPos, const double& SoL = SOL) : BoxBnds(){
 	if(vPos.size() != vvPos.size())
 	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
 	auto min =

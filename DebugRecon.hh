@@ -231,9 +231,10 @@ PolFitResults GetSOL(const std::string& tpdf){
   return pfr;
 }
 
-const std::vector<double> GetTBndsLocal(const double& TSeed, const std::vector<double> vTBnds){
-  double TMin = TSeed - 3 > vTBnds[0] ? TSeed - 3 : vTBnds[0] ;
-  double TMax = TSeed + 3 < vTBnds[1] ? TSeed + 3 : vTBnds[1] ;
+std::vector<double> GetTBndsLocal(const double& TSeed,
+								  const std::vector<double>& vTBnds, const double& range = 3.){
+  double TMin = TSeed - range > vTBnds[0] ? TSeed - range : vTBnds[0] ;
+  double TMax = TSeed + range < vTBnds[1] ? TSeed + range : vTBnds[1] ;
   return {TMin, TMax};
 }
 

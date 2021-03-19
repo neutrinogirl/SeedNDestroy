@@ -109,6 +109,25 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
 
 }
 
+typedef struct NLLBound : public DataStruct1D {
+  double NLLSeed;
+  NLLBound(TH1D *h_pdf, unsigned int w_power, double nll_seed)
+	  : DataStruct1D(h_pdf, w_power), NLLSeed(nll_seed) {
+
+  }
+} NLLBound;
+
+double fPosTNLL(const std::vector<double> &x, std::vector<double> &grad, void *data) {
+  auto d = static_cast<NLLBound*>(data);
+
+  // Create object to calculate TRes histogram
+  TVector3 PosGuess(x[0] / PosScale, x[1] / PosScale, x[2] / PosScale);
+  double TGuess = x[3] / TScale;
+
+  return GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower) - d->NLLSeed;
+
+}
+
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data){
   auto d = static_cast<DataStruct1D*>(data);
 

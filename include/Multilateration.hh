@@ -165,14 +165,14 @@ std::vector<TVector3> GetVSeeds(vHits& vHits,
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
-  auto CentroidSeed = GetCentroidSeed(vHits, b, 2);
-  if(b.IsInPos(CentroidSeed))
-	vSeeds.emplace_back(CentroidSeed);
+  // auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
+  // if(b.IsInPos(CentroidSeed))
+	// vSeeds.emplace_back(CentroidSeed);
   auto DTSeed = GetDTSeed(vHits, b);
   if(b.IsInPos(DTSeed))
 	vSeeds.emplace_back(DTSeed);
 
-  if(MaxSeeds < 3)
+  if(MaxSeeds < 2)
     return vSeeds;
 
   auto M = GetDMatrix(vHits);
@@ -235,12 +235,12 @@ std::vector<TVector3> GetVSeeds(vHits& vHits,
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
-  auto CentroidSeed = GetCentroidSeed(vHits, b, 2);
-  if(b.IsInPos(CentroidSeed))
-	vSeeds.emplace_back(CentroidSeed);
-
+  auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
   const double DWallSeed = b.GetDWall(CentroidSeed);
   const double TGuess = DWallSeed/SOL;
+  // if(b.IsInPos(CentroidSeed))
+	// vSeeds.emplace_back(CentroidSeed);
+
 
   auto DTSeed = GetDTSeed(vHits, b);
   if(b.IsInPos(DTSeed))
@@ -328,9 +328,9 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 
   // Get vector of seeds
   std::vector<PosT> vSeeds;
-  auto CentroidSeed = GetCentroidSeed(vHits, b, 2);
-  if(b.IsInPos(CentroidSeed))
-	vSeeds.emplace_back(CentroidSeed, b);
+  // auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
+  // if(b.IsInPos(CentroidSeed))
+	// vSeeds.emplace_back(CentroidSeed, b);
   auto DTSeed = GetDTSeed(vHits, b);
   if(b.IsInPos(DTSeed))
 	vSeeds.emplace_back(DTSeed, b);
@@ -392,6 +392,77 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 
 std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 								TH1D* hPDF,
+								const bnds& b,
+								const double& SoL,
+								const unsigned int& wPower = 1,
+								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
+
+  // Get vector of seeds
+  std::vector<PosT> vSeeds;
+  // auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
+  // if(b.IsInPos(CentroidSeed))
+	// vSeeds.emplace_back(CentroidSeed, b.GetDWall(CentroidSeed)/SoL);
+  auto DTSeed = GetDTSeed(vHits, b);
+  if(b.IsInPos(DTSeed))
+	vSeeds.emplace_back(DTSeed, b.GetDWall(DTSeed)/SoL);
+
+  if(MaxSeeds < 3)
+	return vSeeds;
+
+  auto M = GetDMatrix(vHits);
+  auto nHits = vHits.size();
+
+  for(auto i=0; i<nHits; i++) {
+	auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
+
+	for(auto &ivSeed:vSubSeeds){
+
+	  if(ivSeed.empty() || ivSeed.size() < 5)
+		continue;
+
+	  auto PosSeed = GetDTSeed(ivSeed, b);
+
+	  if(b.IsInPos(PosSeed))
+		vSeeds.emplace_back(PosSeed, b.GetDWall(PosSeed)/SoL);
+
+	}
+
+  }
+
+  // Clear vector of seeds for duplicates
+  for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
+	vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
+  }
+
+  // Sort by magnitude
+  std::sort(vSeeds.begin(), vSeeds.end(), [](const PosT& v1, const PosT& v2){
+	return v1.Pos.Mag2()<v2.Pos.Mag2();
+  });
+
+  // Remove seed guess if less than a few cm between them
+  for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
+	auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
+	const double lim = SQRT2*500.; // 50cm
+	if(diffInf.Mag() < lim)
+	  vSeeds.erase(vSeeds.begin()+iSeed);
+
+  }
+
+
+  // Sort seeds by flat NLL value
+  std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
+	return GetNLL(vHits, hPDF, v1.Pos, v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, v2.T, fweight, wPower);
+  });
+
+  if(vSeeds.size() > MaxSeeds)
+	vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
+
+  return vSeeds;
+
+}
+
+std::vector<PosT> GetVPosTSeeds(vHits& vHits,
+								TH1D* hPDF,
 								const double& TGuess,
 								const bnds& b,
 								const unsigned int& wPower = 1,
@@ -399,7 +470,7 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 
   // Get vector of seeds
   std::vector<PosT> vSeeds;
-  auto CentroidSeed = GetCentroidSeed(vHits, b, 2);
+  auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
   if(b.IsInPos(CentroidSeed))
 	vSeeds.emplace_back(CentroidSeed, TGuess);
   auto DTSeed = GetDTSeed(vHits, b);

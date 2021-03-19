@@ -107,7 +107,8 @@ int main(int argc, char *argv[]){
 	  FitPerfMonitor("centroid_Q3",MaxDWall, MaxDWall/100.),
 	  FitPerfMonitor("centroid_Q4",MaxDWall, MaxDWall/100.)
   };
-  FitPerfMonitor grid_seed_perf_monitor("grid_seed", MaxDWall, MaxDWall/100.);
+  FitPerfMonitor gridTDWall_seed_perf_monitor("gridTDWall_seed", MaxDWall, MaxDWall/100.);
+  FitPerfMonitor gridTMap_seed_perf_monitor("gridTMap_seed", MaxDWall, MaxDWall/100.);
   FitPerfMonitor seed_perf_monitor("seed", MaxDWall, MaxDWall/100.);
   FitPerfMonitor recon_perf_monitor("rec", MaxDWall, MaxDWall/100.);
 
@@ -227,6 +228,7 @@ int main(int argc, char *argv[]){
 	  if(args.isDDebug) {
 	    std::cout << "[" << TDwallSeedBnds[0] << "," << TDwallSeedBnds[1] << "]: " << TDWallSeed << std::endl;
 	  }
+
 	  // DEBUG PRINTS
 	  if(args.isDDebug){
 		std::cout << "#### #### #### CENTROID #### #### ####" << std::endl;
@@ -236,7 +238,6 @@ int main(int argc, char *argv[]){
 		std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, CentroidSeed, -TDWallSeed, fweight, args.wPower) << std::endl;
 		std::cout << "#### #### #### -------- #### #### ####" << std::endl;
 	  }
-
 	  std::vector<double> TBoundsLocal = {0., 0.};
 	  const double TMapSeed = TimePDF.GetTrigTime(CentroidSeed, TBoundsLocal);
 
@@ -254,13 +255,15 @@ int main(int argc, char *argv[]){
 	  //
 
 	  const std::size_t MaxSeeds = 5;
-	  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, wPower, MaxSeeds);
+	  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, 1/pfr.A, wPower, MaxSeeds);
 	  seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
 
+	  vSeeds.emplace_back(CentroidSeed, TDWallSeed);
+	  vSeeds.emplace_back(CentroidSeed, TMapSeed);
+
 	  map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
-	  auto GridSeed = map_nll.GetVMinNll();
-	  vSeeds.emplace_back(GridSeed, TDWallSeed);
-	  grid_seed_perf_monitor.Fill(GridSeed, PosTrue);
+	  vSeeds.emplace_back(map_nll.GetVMinNll(), TDWallSeed);
+	  gridTDWall_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
 	  if(!args.isDebug){
 		// RESET
 		map_nll.ResetGrid();
@@ -268,10 +271,27 @@ int main(int argc, char *argv[]){
 
 	  // DEBUG PRINTS
 	  if(args.isDDebug){
-		std::cout << "#### #### #### GRIDSEARCH #### #### ####" << std::endl;
-		GridSeed.Print();
+		std::cout << "#### #### #### GRIDSEARCH DWALL #### #### ####" << std::endl;
+		map_nll.GetVMinNll().Print();
 		std::cout << TDWallSeed << "ns" << std::endl;
-		std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, GridSeed, -TDWallSeed, fweight, args.wPower) << std::endl;
+		std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TDWallSeed, fweight, args.wPower) << std::endl;
+		std::cout << "#### #### #### -------- #### #### ####" << std::endl;
+	  }
+
+	  map_nll.Fill(vHits, -TMapSeed, hPDF_TRes, args.wPower);
+	  vSeeds.emplace_back(map_nll.GetVMinNll(), TMapSeed);
+	  gridTMap_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
+	  if(!args.isDebug){
+		// RESET
+		map_nll.ResetGrid();
+	  }
+
+	  // DEBUG PRINTS
+	  if(args.isDDebug){
+		std::cout << "#### #### #### GRIDSEARCH MAP #### #### ####" << std::endl;
+		map_nll.GetVMinNll().Print();
+		std::cout << TMapSeed << "ns" << std::endl;
+		std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TMapSeed, fweight, args.wPower) << std::endl;
 		std::cout << "#### #### #### -------- #### #### ####" << std::endl;
 	  }
 
@@ -292,10 +312,24 @@ int main(int argc, char *argv[]){
 		// Prep Recon
 		ds.Reset();
 
+		// GetLocalBnds
+		std::vector<double> vT = GetTBndsLocal(Seed.T, {b->vT.min, b->vT.max});
+		bnds *localb;
+		if(args.isBox)
+		  localb = new BoxBnds(*b);
+		else
+		  localb = new CylBnds(*b);
+
+		localb->vT.min = vT[0];
+		localb->vT.max = vT[1];
+
+		double NLLSeed = GetNLL(vHits, hPDF_TRes, Seed.Pos, -Seed.T, fweight, args.wPower);
+
 		// Recon
 		// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
-		auto x = ReconPosTime(ds, *b, dp, Seed.Pos, -Seed.T);
-		vX.emplace_back(x);
+		auto x = ReconPosTime(ds, *localb, dp, Seed.Pos, -Seed.T, NLLSeed);
+
+		delete localb;
 
 		// DEBUG PRINTS
 		if(args.isDDebug){
@@ -306,6 +340,19 @@ int main(int argc, char *argv[]){
 		  std::cout << "NLL=" << x[4] << std::endl;
 		  std::cout << "#### #### #### --- #### #### ####" << std::endl;
 		}
+
+		if(x[4] > NLLSeed){
+		  x[0] = Seed.Pos[0];
+		  x[1] = Seed.Pos[1];
+		  x[2] = Seed.Pos[2];
+		  x[3] = Seed.T;
+		  x[4] = NLLSeed;
+		  x[5] = 666;
+		}
+
+
+		vX.emplace_back(x);
+
 
 	  }
 
@@ -344,25 +391,31 @@ int main(int argc, char *argv[]){
 
 		// Centroid
 		const std::vector<double> xCentroidSeed = {CentroidSeed[0], CentroidSeed[1], CentroidSeed[2], -TDWallSeed};
-		Save2ROOT( GetTResHist(tag+"_CentroidSeed", vHits,
+		Save2ROOT( GetTResHist(tag+"_CentroidSeedTDWall", vHits,
 							   xTrue, xCentroidSeed,
 							   wPower, hPDF_TRes), output);
 
 		// TMap
 		const std::vector<double> xMapSeed = {CentroidSeed[0], CentroidSeed[1], CentroidSeed[2], -TMapSeed};
-		Save2ROOT( GetTResHist(tag+"_MapSeed", vHits,
+		Save2ROOT( GetTResHist(tag+"CentroidSeedTMap", vHits,
 							   xTrue, xMapSeed,
 							   wPower, hPDF_TRes), output);
 
-		// Grid
-		const std::vector<double> xGridSeed = {GridSeed[0], GridSeed[1], GridSeed[2], -TDWallSeed};
-		Save2ROOT( GetTResHist(tag+"_GridSeed", vHits,
-							   xTrue, xMapSeed,
+		// Grid dWall
+		const std::vector<double> xGridSeedDWall = {vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2], -TDWallSeed};
+		Save2ROOT( GetTResHist(tag+"_GridTDWallSeed", vHits,
+							   xTrue, xGridSeedDWall,
+							   wPower, hPDF_TRes), output);
+
+		// Grid TMap
+		const std::vector<double> xGridSeedTMap = {vSeeds.back().Pos[0], vSeeds.back().Pos[1], vSeeds.back().Pos[2], -TMapSeed};
+		Save2ROOT( GetTResHist(tag+"_GridTMapSeed", vHits,
+							   xTrue, xGridSeedTMap,
 							   wPower, hPDF_TRes), output);
 
 		// SEED
 		const std::vector<double> xSeed = {vSeeds.front().Pos[0], vSeeds.front().Pos[1], vSeeds.front().Pos[2], -vSeeds.front().T};
-		Save2ROOT( GetTResHist(tag+"_Seed", vHits,
+		Save2ROOT( GetTResHist(tag+"_SeednD", vHits,
 							   xTrue, xSeed,
 							   wPower, hPDF_TRes), output);
 
@@ -397,7 +450,17 @@ int main(int argc, char *argv[]){
 
 		// TCentroid
 		map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
-		Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, GridSeed} ,
+		Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, TVector3(vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2])} ,
+							   Form("cGridSeedDWall_%s", tag.c_str())),
+				   output );
+		// HGrid GARBAGE COLLECTOR
+		HGridGarbageCollector();
+		// RESET
+		map_nll.ResetGrid();
+
+		// TMap
+		map_nll.Fill(vHits, -TMapSeed, hPDF_TRes, args.wPower);
+		Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, TVector3(vSeeds.back().Pos[0], vSeeds.back().Pos[1], vSeeds.back().Pos[2])} ,
 							   Form("cGridSeed_%s", tag.c_str())),
 				   output );
 		// HGrid GARBAGE COLLECTOR
@@ -465,10 +528,15 @@ int main(int argc, char *argv[]){
   auto cDRhoSeed = seed_perf_monitor.GetDRhoPlot();
   cDRhoSeed->Write();
 
-  auto cGSeed = grid_seed_perf_monitor.GetPlot(true);
+  auto cGSeed = gridTDWall_seed_perf_monitor.GetPlot(true);
   cGSeed->Write();
-  auto cDRhoGSeed = grid_seed_perf_monitor.GetDRhoPlot();
+  auto cDRhoGSeed = gridTDWall_seed_perf_monitor.GetDRhoPlot();
   cDRhoGSeed->Write();
+
+  auto cGSeedTMap = gridTMap_seed_perf_monitor.GetPlot(true);
+  cGSeedTMap->Write();
+  auto cDRhoGSeedTMap = gridTMap_seed_perf_monitor.GetDRhoPlot();
+  cDRhoGSeedTMap->Write();
 
   auto cFit = recon_perf_monitor.GetPlot(true);
   cFit->Write();

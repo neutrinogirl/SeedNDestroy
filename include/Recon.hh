@@ -16,7 +16,7 @@
 
 
 std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
-								 const TVector3& PosSeed, const double& TSeed){
+								 const TVector3& PosSeed, const double& TSeed, const double& NLLSeed = std::numeric_limits<double>::max()){
 
   const unsigned nDimf = 4;
   std::vector<double> x = {
@@ -49,6 +49,7 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
 	// 	  std::cout << " [" << ll << "," << uu << "] " << xx;
   // }
   // std::cout << std::endl;
+  // b.Print();
 
 
   // Set boundaries
@@ -56,11 +57,13 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   opt_local.set_upper_bounds(ub);
 
   // Set T constraints
-  opt_local.add_inequality_constraint(fPosTC, &DP, 3);
+  opt_local.add_inequality_constraint(fPosTC, &DP, 1.e-12);
+  NLLBound nll_bound(DS.hPDF, DS.wPower, NLLSeed);
+  opt_local.add_inequality_constraint(fPosTNLL, &nll_bound, 1.e-12);
 
   // Set stopping criteria
   opt_local.set_xtol_rel(1.e-12);
-  opt_local.set_ftol_rel(1.e-3);
+  opt_local.set_ftol_rel(1.e-12);
 
   // Set limits
   opt_local.set_maxtime(1./*sec*/);
@@ -83,10 +86,11 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
 
   // Set T constraints
   opt.add_inequality_constraint(fPosTC, &DP, 3);
+  opt.add_inequality_constraint(fPosTNLL, &nll_bound, 1.e-12);
 
   // Set stopping criteria
   opt.set_xtol_rel(1.e-12);
-  opt.set_ftol_rel(1.e-3);
+  opt.set_ftol_rel(1.e-12);
 
   // Set limits
   opt.set_maxtime(1./*sec*/);
