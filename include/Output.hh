@@ -42,13 +42,16 @@ typedef struct Event{
   int iEvt=0;
   int iTrig=0;
 
+  double dWall=0;
+
   Event() = default;
   Event(const TVector3& mcpos, const TVector3& mcdir, const double& mct,
 		const TVector3& recpos, const double& recT, const double& etrue, const int& nhits,
-		const double& chi2, const int& nlopt)
+		const double& chi2, const int& nlopt, const double& dwall)
 	  : MCPos(mcpos), MCDir(mcdir), MCT(mct), RecPos(recpos), RecT(recT),
 		ETrue(etrue), NHits(nhits),
-		Chi2(chi2), NLOPT(nlopt){ };
+		Chi2(chi2), NLOPT(nlopt),
+		dWall(dwall){ };
 } Event;
 
 void SetTTree(TTree& Tree, Event& Event){
@@ -81,6 +84,8 @@ void SetTTree(TTree& Tree, Event& Event){
 
   Tree.Branch("chi2", &Event.Chi2, "chi2/D");
   Tree.Branch("nlopt", &Event.NLOPT, "nlopt/I");
+
+  Tree.Branch("dwall", &Event.dWall, "dwall/D");
 
 }
 

@@ -9,6 +9,8 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include <utility>
+#include <bitset>
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -17,7 +19,6 @@
 
 #include <boost/range/combine.hpp>
 #include <boost/foreach.hpp>
-#include <utility>
 
 #define PI 3.14159265359
 #define SQRT2 1.41421356237
@@ -73,44 +74,6 @@ double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
 
   return Chi2 /*/ static_cast<double>(nBinsX + nBinsY)*/;
 
-}
-
-TVector3 ScaleVector(const TVector3& v, const double& scale){
-  return TVector3(v.x()*scale, v.y()*scale, v.z()*scale);
-}
-
-std::vector<double> TranslateStdVector(const std::vector<double>& vSeed,
-									   const std::vector<double>& vOrig){
-
-  if(vSeed.size() != vOrig.size()){
-	std::cerr << "std::vector<double> TranslateStdVector() has different dimensions" << std::endl;
-	return vSeed;
-  } else {
-	auto nDim = vSeed.size();
-	std::vector<double> vTranslated(nDim, 0.);
-	double seed, orig;
-	unsigned iDim = 0;
-	BOOST_FOREACH(boost::tie(seed, orig), boost::combine(vSeed, vOrig)){
-			vTranslated[iDim++] = seed+orig;
-		  }
-
-	return vTranslated;
-
-  }
-
-}
-
-double GetXYRho(const TVector3& Pos){
-  return sqrt(Pos.x()*Pos.x() + Pos.y()*Pos.y());
-}
-
-template <typename T>
-double GetXYRho(const std::vector<T>& Pos){
-  if(Pos.size()>2){
-	return sqrt(Pos[0]*Pos[0] + Pos[1]*Pos[1]);
-  } else {
-	return -1;
-  }
 }
 
 typedef std::vector<std::vector<double> > Matrix_t;
@@ -548,6 +511,57 @@ T GetDWall(const TVector3& v,
   auto min_element = std::min_element(vv.begin(), vv.end());
   idx = std::distance(vv.begin(), min_element);
   return *min_element;
+}
+
+static std::vector< std::vector<double> >
+Get4DSmplGuess(const std::vector<double>& xGuess,
+			   const std::vector<double>& vScale){
+
+  const unsigned int nDim = 4;
+  const std::size_t nPts = std::pow(2, nDim);
+  std::vector< std::vector<double> > vSmplGuess; vSmplGuess.reserve(nPts+1);
+  vSmplGuess.emplace_back(xGuess);
+
+  auto GetBnd = [](const unsigned int& b, const double& x){
+	return b ? x : -x;
+  };
+
+  for(auto i=0; i<nPts;i++){
+	std::bitset<nDim> word(i);
+	std::vector<double> v(nDim);
+	for(auto iDim=0; iDim<nDim; iDim++){
+	  v[iDim] = xGuess[iDim] + GetBnd(word[iDim], vScale[iDim]);
+	}
+	vSmplGuess.emplace_back(v);
+  }
+
+  return vSmplGuess;
+
+}
+static std::vector< std::vector<double> >
+Get4DSmplGuess(const std::vector<double>& xGuess,
+			   const double& Scale){
+
+  const unsigned int nDim = 4;
+  const std::size_t nPts = std::pow(2, nDim);
+  std::vector< std::vector<double> > vSmplGuess; vSmplGuess.reserve(nPts+1);
+  vSmplGuess.emplace_back(xGuess);
+
+  auto GetBnd = [](const unsigned int& b, const double& x){
+	return b ? x : -x;
+  };
+
+  for(auto i=0; i<nPts;i++){
+	std::bitset<nDim> word(i);
+	std::vector<double> v(nDim);
+	for(auto iDim=0; iDim<nDim; iDim++){
+	  v[iDim] = xGuess[iDim] + GetBnd(word[iDim], Scale);
+	}
+	vSmplGuess.emplace_back(v);
+  }
+
+  return vSmplGuess;
+
 }
 
 #endif //_MATHUTILS_HH_

@@ -329,8 +329,6 @@ int main(int argc, char *argv[]){
 		// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
 		auto x = ReconPosTime(ds, *localb, dp, Seed.Pos, -Seed.T, NLLSeed);
 
-		delete localb;
-
 		// DEBUG PRINTS
 		if(args.isDDebug){
 		  std::cout << "#### #### #### REC #### #### ####" << std::endl;
@@ -342,14 +340,24 @@ int main(int argc, char *argv[]){
 		}
 
 		if(x[4] > NLLSeed){
-		  x[0] = Seed.Pos[0];
-		  x[1] = Seed.Pos[1];
-		  x[2] = Seed.Pos[2];
-		  x[3] = Seed.T;
-		  x[4] = NLLSeed;
-		  x[5] = 666;
+
+		  x.clear();
+		  x = ReconPos(ds, *localb, dp, Seed.Pos, -Seed.T);
+
+		  // DEBUG PRINTS
+		  if(args.isDDebug){
+			std::cout << "#### #### #### REC #### #### ####" << std::endl;
+			TVector3(x[0], x[1], x[2]).Print();
+			std::cout << -x[3] << "ns" << std::endl;
+			std::cout << b->GetDWall(TVector3(x[0], x[1], x[2])) << std::endl;
+			std::cout << "NLL=" << x[4] << std::endl;
+			std::cout << "#### #### #### --- #### #### ####" << std::endl;
+		  }
+
 		}
 
+
+		delete localb;
 
 		vX.emplace_back(x);
 
@@ -368,6 +376,7 @@ int main(int argc, char *argv[]){
 	  evt.RecT   = vX.front()[3];
 	  evt.Chi2   = vX.front()[4];
 	  evt.NLOPT  = vX.front()[5];
+	  evt.dWall  = b->GetDWall(PosRec);
 
 	  tree.Fill();
 

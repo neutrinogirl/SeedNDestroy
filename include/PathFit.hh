@@ -128,6 +128,23 @@ double fPosTNLL(const std::vector<double> &x, std::vector<double> &grad, void *d
 
 }
 
+typedef struct DSFixedT : public DataStruct1D {
+  double TSeed;
+  DSFixedT(TH1D *h_pdf, unsigned int w_power, double t_seed)
+	  : DataStruct1D(h_pdf, w_power), TSeed(t_seed) {}
+} DSFixedT;
+
+double fPos(const std::vector<double> &x, std::vector<double> &grad, void *data) {
+  auto d = static_cast<DSFixedT *>(data);
+
+  // Create object to calculate TRes histogram
+  TVector3 PosGuess(x[0], x[1], x[2]);
+
+  // Calculate NLL
+  return GetNLL(d->vHits, d->hPDF, PosGuess, d->TSeed, fweight, d->wPower);
+
+}
+
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data){
   auto d = static_cast<DataStruct1D*>(data);
 
