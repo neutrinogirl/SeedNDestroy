@@ -3,6 +3,7 @@
 #include <string>
 
 #include <TChain.h>
+#include <TH1D.h>
 #include <TH2D.h>
 #include <TCanvas.h>
 #include <TGraph.h>
@@ -12,130 +13,157 @@
 #include <DrawingUtils.hh>
 #include <TLine.h>
 
-TGraph *GetInt(const std::string& tag, TH2D* h){
+TGraph* GetInt(TH1D* h, const std::string& tag = ""){
 
-  const double nEvts = h->GetEntries();
+  auto *gr = new TGraph();
+  if(tag.empty())
+	gr->SetName(Form("g_%s", h->GetName()));
+  else
+    gr->SetName(tag.c_str());
 
-  auto g = new TGraph();
-  g->SetName(Form("g_%s", tag.c_str()));
-  g->SetTitle(Form("Fraction of events kept ; Chi^{2} cut ; Frac [%%] "));
+  const double NormInt = h->Integral();
 
   for(auto iBin=1; iBin<h->GetNbinsX()+1; iBin++){
-	const double nevt = h->ProjectionX("hProj", 1, iBin+1)->GetEntries();
-	g->SetPoint(g->GetN(), h->GetXaxis()->GetBinLowEdge(iBin+1), nevt / nEvts);
+	gr->SetPoint(gr->GetN(),
+				 h->GetXaxis()->GetBinLowEdge(iBin),
+				 h->Integral(0, iBin) / NormInt);
   }
 
-  return g;
-
+  return gr;
 }
 
-int main(){
+void LLA(const std::string& histname = "nhits", const zAxis& Ax = {1000, 0., 10000.}){
 
-  const std::string path = "outputs/electrons_5MeV_Fill_TrigThresh8_dWall_9000_35000_TTrigCut0_m50_p100";
+  const std::string path = "outputs/electrons_5MeV_Fill_TrigThresh8_dWall_9000_35000_TTrigCut0_m50_p100/wGridSearch/";
   const std::string detname = "theia_90pct_9000_35000_wbls_3pct";
 
   const std::vector<std::string> vComponents {
 	  "geoneutrino",
-	  "pmt_*"
-	  // "pmt_bi214",
-	  // "pmt_tl208",
-	  // "pmt_k40",
+	  "reactorWorld",
+	  "pmt_bi214*"
+  };
+
+  const std::vector<int> ColPalette {
+    kBlue-4,
+    kRed-4,
+    kGreen+1
   };
 
   const std::string signame = vComponents[0];
+  const std::vector< std::string > vSigNames = {signame};
 
   const int weight = 1;
   const std::string pdfweight = Form("_*_dWall_*_W%d_*.root", weight);
 
   std::map<std::string, TChain*> vCh;
+  std::map<std::string, TH1D*> vHist;
+  std::map<std::string, TGraph*> vGr;
+  auto mg = new TMultiGraph("mg", "mg");
 
-  zAxis AxChi2 = {50, 0., 3.};
-  zAxis AxRec = {50, -1.e4, 1.e4};
+  int iCounter = 0;
 
-  const std::vector<std::string> vAxNames = {
-	  "x",
-	  "y",
-	  "z"
+  auto c =
+	  new TCanvas(Form("c%s", histname.c_str()), Form("c%s", histname.c_str()), 800, 600);
+
+  for(const auto& name:vComponents) {
+
+    vHist[name] = new TH1D(Form("h_%s", name.c_str()),
+						   Form("%s %s", name.c_str(), histname.c_str()),
+						   Ax.nBins, Ax.min, Ax.max);
+    SetBasicTStyle(vHist[name], ColPalette[iCounter]);
+
+	std::string filenames = path + "/" + detname + "_" + name + pdfweight;
+	vCh[name] = new TChain("T", "");
+	vCh[name]->Add(filenames.c_str());
+
+	std::cout << vCh[name]->GetNtrees() << std::endl;
+
+	vCh[name]->Draw(Form("%s>>h_%s",histname.c_str(), name.c_str()), "itrig==0", "GOFF");
+	vHist[name]->Scale(1./vCh[name]->GetNtrees());
+
+	vGr[name] = GetInt(vHist[name]);
+	SetBasicTStyle(vGr[name], ColPalette[iCounter]);
+
+	mg->Add(vGr[name], "PL");
+
+	iCounter++;
+  }
+
+  typedef std::pair<std::string, TH1D*> MyPairType;
+  struct GetMin
+  {
+	bool operator()(const MyPairType& left, const MyPairType& right) const
+	{
+	  return left.second->GetMinimum() > right.second->GetMinimum();
+	}
   };
 
-  std::map< std::string, std::map<std::string, TGraph*> > mG;
+  auto MaxHist = std::max_element(vHist.begin(), vHist.end(),GetMin());
 
-  for(const auto& axName: vAxNames){
+  MaxHist->second->Draw("HIST");
+  for(auto& pair: vHist){
+    if(pair.first!=MaxHist->first)
+      pair.second->Draw("HISTSAME");
+  }
 
-	mG.insert(
-		std::make_pair(axName, std::map<std::string, TGraph*>())
-	);
+  c->BuildLegend();
 
-    auto c =
-		new TCanvas(Form("c%s", axName.c_str()), Form("c%s", axName.c_str()), 800, 600);
+  auto gDiscr = new TGraph();
+  gDiscr->SetName(Form("gDiscr_%s", histname.c_str()));
+  gDiscr->SetLineStyle(kDashed);
+  gDiscr->SetLineWidth(2);
+  const std::vector<double> vPts = Ax.GetStdVec();
 
-    auto mg = new TMultiGraph(Form("mg_%s", axName.c_str()),
-							  Form("Fraction of events kept #vec{%s} ; Chi^{2} cut ; Frac [%%] ", axName.c_str()));
+  double maxDiscri = -std::numeric_limits<double>::max();
+  double maxChi2Cut = -1;
 
-	std::vector<TH2D*> vHPerfs;
-	vHPerfs.reserve(vComponents.size());
+  for(const auto& pt:vPts) {
+
+	// BCKG
+	double bckgfrac = 1.;
 	for(const auto& name:vComponents){
-	  vHPerfs.emplace_back(
-		  new TH2D(Form("h_%s", name.c_str()),
-				   Form("Rec - True %s VS Chi^{2} ; Chi^{2} ; ", name.c_str()),
-				   AxChi2.nBins, AxChi2.min, AxChi2.max,
-				   AxRec.nBins, AxRec.min, AxRec.max)
-
-	  );
-	  std::string filenames = path + "/" + detname + "_" + name + pdfweight;
-	  vCh[name] = new TChain("T", "");
-	  vCh[name]->Add(filenames.c_str());
-	  vCh[name]->Draw(Form("mc%s-rec%s:chi2>>h_%s",axName.c_str(), axName.c_str(), name.c_str()), "", "GOFF");
-
-	  auto g = GetInt(axName+name, vHPerfs.back());
-	  if(name == signame)
-		SetBasicTStyle(g, kBlue-4, 2, kSolid);
-	  else
-		SetBasicTStyle(g, kRed-4, 2, kSolid);
-
-	  mg->Add(g, "PC");
-	  mG[axName][name] = g;
-
+	  for(const auto& sname:vSigNames){
+		if(name != sname){
+		  bckgfrac -= vGr[name]->Eval(pt);
+		}
+	  }
 	}
 
-	auto gDiscr = new TGraph();
-	gDiscr->SetName(Form("gDiscr_%s", axName.c_str()));
-	const std::vector<double> vPts = AxChi2.GetStdVec();
+	// SIG
+	double sigfrac = 1-vGr[signame]->Eval(pt);
 
-	double maxDiscri = -std::numeric_limits<double>::max();
-	double maxChi2Cut = -1;
+	// DEBUG
+	// std::cout << bckgfrac << " " << sigfrac << std::endl;
 
-	for(const auto& pt:vPts){
-	  double bckgfrac = 0;
-	  for(const auto& name:vComponents){
-	    if(name != signame)
-	      bckgfrac += mG[axName][name]->Eval(pt);
-	  }
-	  const double discri = mG[axName][signame]->Eval(pt) / bckgfrac;
-	  if(discri > maxDiscri){
-	    maxDiscri = discri;
-	    maxChi2Cut = pt;
-	  }
-	  gDiscr->SetPoint(gDiscr->GetN(), pt, discri);
+	double disci = 0;
+	const double discri = bckgfrac != 0 ? std::abs(sigfrac / bckgfrac) : bckgfrac;
+	if(discri > maxDiscri){
+	  maxDiscri = discri;
+	  maxChi2Cut = pt;
 	}
 
-	SetBasicTStyle(gDiscr, kGreen+1, 2, kDashed);
-
-	mg->Add(gDiscr, "PC");
-	mg->Draw("A");
-
-	auto lDiscri = new TLine(maxChi2Cut, 0, maxChi2Cut, maxDiscri);
-	lDiscri->SetLineColor(kBlack);
-	lDiscri->SetLineWidth(2);
-	lDiscri->SetLineStyle(kDashed);
-
-	lDiscri->Draw("SAME");
-
-	std::cout << axName << " " << maxChi2Cut << " " << maxDiscri << std::endl;
-
-	c->Print(Form("%sW%d.png",c->GetName(), weight), "png");
+	gDiscr->SetPoint(gDiscr->GetN(), pt, discri);
 
   }
 
-  return EXIT_SUCCESS;
+  // SetBasicTStyle(gDiscr, kBlack+1, 2, kDashed);
+
+  // mg->Add(gDiscr, "C");
+
+
+  auto lDiscri = new TLine(maxChi2Cut, 0., maxChi2Cut, MaxHist->second->GetMaximum());
+  lDiscri->SetLineColor(kBlack);
+  lDiscri->SetLineWidth(2);
+  lDiscri->SetLineStyle(kDashed);
+
+  lDiscri->Draw("SAME");
+
+
+  c = new TCanvas(Form("cmg_%s", histname.c_str()), Form("cmg_%s", histname.c_str()), 800, 600);
+  mg->Draw("A");
+  c->BuildLegend();
+  lDiscri->Draw("SAME");
+
+  std::cout  << maxChi2Cut << " " << maxDiscri << std::endl;
+
 }
