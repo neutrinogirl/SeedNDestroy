@@ -261,39 +261,44 @@ int main(int argc, char *argv[]){
 	  vSeeds.emplace_back(CentroidSeed, TDWallSeed);
 	  vSeeds.emplace_back(CentroidSeed, TMapSeed);
 
-	  map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
-	  vSeeds.emplace_back(map_nll.GetVMinNll(), TDWallSeed);
-	  gridTDWall_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
-	  if(!args.isDebug){
+	  //
+	  // #### GRID SEARCH
+	  //
+
+	  if(args.useGridSearch){
+
+		map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
+		vSeeds.emplace_back(map_nll.GetVMinNll(), TDWallSeed);
+		gridTDWall_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
 		// RESET
 		map_nll.ResetGrid();
-	  }
 
-	  // DEBUG PRINTS
-	  if(args.isDDebug){
-		std::cout << "#### #### #### GRIDSEARCH DWALL #### #### ####" << std::endl;
-		map_nll.GetVMinNll().Print();
-		std::cout << TDWallSeed << "ns" << std::endl;
-		std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TDWallSeed, fweight, args.wPower) << std::endl;
-		std::cout << "#### #### #### -------- #### #### ####" << std::endl;
-	  }
+		// DEBUG PRINTS
+		if(args.isDDebug){
+		  std::cout << "#### #### #### GRIDSEARCH DWALL #### #### ####" << std::endl;
+		  map_nll.GetVMinNll().Print();
+		  std::cout << TDWallSeed << "ns" << std::endl;
+		  std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TDWallSeed, fweight, args.wPower) << std::endl;
+		  std::cout << "#### #### #### -------- #### #### ####" << std::endl;
+		}
 
-	  map_nll.Fill(vHits, -TMapSeed, hPDF_TRes, args.wPower);
-	  vSeeds.emplace_back(map_nll.GetVMinNll(), TMapSeed);
-	  gridTMap_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
-	  if(!args.isDebug){
+		map_nll.Fill(vHits, -TMapSeed, hPDF_TRes, args.wPower);
+		vSeeds.emplace_back(map_nll.GetVMinNll(), TMapSeed);
+		gridTMap_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
 		// RESET
 		map_nll.ResetGrid();
+
+		// DEBUG PRINTS
+		if(args.isDDebug){
+		  std::cout << "#### #### #### GRIDSEARCH MAP #### #### ####" << std::endl;
+		  map_nll.GetVMinNll().Print();
+		  std::cout << TMapSeed << "ns" << std::endl;
+		  std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TMapSeed, fweight, args.wPower) << std::endl;
+		  std::cout << "#### #### #### -------- #### #### ####" << std::endl;
+		}
+
 	  }
 
-	  // DEBUG PRINTS
-	  if(args.isDDebug){
-		std::cout << "#### #### #### GRIDSEARCH MAP #### #### ####" << std::endl;
-		map_nll.GetVMinNll().Print();
-		std::cout << TMapSeed << "ns" << std::endl;
-		std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TMapSeed, fweight, args.wPower) << std::endl;
-		std::cout << "#### #### #### -------- #### #### ####" << std::endl;
-	  }
 
 	  std::vector< std::vector<double> > vX;
 	  vX.reserve(vSeeds.size());
@@ -436,6 +441,9 @@ int main(int argc, char *argv[]){
 		//
 		// MAP NLL SPACE
 		//
+
+		// RESET
+		map_nll.ResetGrid();
 
 		// TCentroid
 		map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);

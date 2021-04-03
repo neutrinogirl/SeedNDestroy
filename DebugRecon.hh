@@ -61,7 +61,7 @@ typedef struct Args{
   bool isBox = false;
   unsigned int nThreads = 1;
 
-  bool useTSeed = true;
+  bool useGridSearch = false;
 
 } Args;
 
@@ -78,14 +78,14 @@ static void ShowUsage(const std::string& name){
 
 			<< "\t-n\tSet #Evts to process\n"
 
-			<< "\t-w\tSet weight exponent power for Q kernel (default 1) \n"
+			<< "\t-w\tSet weight exponent power for Q kernel (default 0) \n"
 
 			<< "\t-b <XX YY ZZ>\tSet boundaries for box geom (in mm) \n"
 			<< "\t-c <R H>\tSet boundaries for cylinder geom (in mm) \n"
 
-			<< "\t--ttrig\tDo not seed time \n"
-
 			<< "\t--nthreads\tSet nThread to run in parallel (default 1) \n"
+
+			<< "\t-g\tGrid search seeding (default false) \n"
 
 			<< "\t--dir\tRead all .root files in directory \n"
 
@@ -118,8 +118,8 @@ static void ProcessArgs(TApplication &theApp,
 	} else if (boost::iequals(arg, "-w")) {
 	  args.wPower=std::stoi(theApp.Argv(++i));
 
-	} else if (boost::iequals(arg, "-ttrig")) {
-	  args.useTSeed=false;
+	} else if (boost::iequals(arg, "-g")) {
+	  args.useGridSearch=false;
 
 	} else if (boost::iequals(arg, "-b")) {
 	  args.bnds.resize(3);
