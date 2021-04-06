@@ -378,7 +378,7 @@ int main(int argc, char *argv[]){
 	  recon_perf_monitor.Fill(PosRec, PosTrue);
 
 	  evt.RecPos = Vec(vX.front());
-	  evt.RecT   = vX.front()[3];
+	  evt.RecT   = TrigTime + vX.front()[3];
 	  evt.Chi2   = vX.front()[4];
 	  evt.NLOPT  = vX.front()[5];
 	  evt.dWall  = b->GetDWall(PosRec);
