@@ -63,6 +63,8 @@ typedef struct Args{
 
   bool useGridSearch = false;
 
+  double cvg = 0.;
+
 } Args;
 
 static void ShowUsage(const std::string& name){
@@ -88,6 +90,8 @@ static void ShowUsage(const std::string& name){
 			<< "\t-g\tGrid search seeding (default false) \n"
 
 			<< "\t--dir\tRead all .root files in directory \n"
+
+			<< "\t--cvg\tSet new cvg [default 0] \n"
 
 	  << std::endl;
 
@@ -117,6 +121,9 @@ static void ProcessArgs(TApplication &theApp,
 	  args.nEvts=std::stoi(theApp.Argv(++i));
 	} else if (boost::iequals(arg, "-w")) {
 	  args.wPower=std::stoi(theApp.Argv(++i));
+
+	} else if (boost::iequals(arg, "--cvg")) {
+	  args.cvg=std::stod(theApp.Argv(++i));
 
 	} else if (boost::iequals(arg, "-g")) {
 	  args.useGridSearch=false;
@@ -237,5 +244,17 @@ std::vector<double> GetTBndsLocal(const double& TSeed,
   double TMax = TSeed + range < vTBnds[1] ? TSeed + range : vTBnds[1] ;
   return {TMin, TMax};
 }
+
+void SlimVHits(std::vector<Hit>& vHOrig, const double ScaleFactor = 0.9){
+
+  const auto nHitsScaled = static_cast<unsigned>( std::round(vHOrig.size() * (ScaleFactor / 0.9) ) );
+
+  auto rng = std::default_random_engine {};
+  std::shuffle(vHOrig.begin(), vHOrig.end(), rng);
+
+  vHOrig.resize(nHitsScaled);
+
+}
+
 
 #endif //_DEBUGRECON_HH_

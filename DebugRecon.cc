@@ -194,6 +194,8 @@ int main(int argc, char *argv[]){
 
 	  // Get vector of hits
 	  std::vector<Hit> vHits = w_rat.GetVHits(iTrig);
+	  if(args.cvg > 0)
+		SlimVHits(vHits, args.cvg);
 	  if(vHits.empty())
 		continue;
 	  std::sort(vHits.begin(), vHits.end());
@@ -256,7 +258,8 @@ int main(int argc, char *argv[]){
 
 	  const std::size_t MaxSeeds = 5;
 	  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, 1/pfr.A, wPower, MaxSeeds);
-	  seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
+	  if(!vSeeds.empty())
+		seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
 
 	  vSeeds.emplace_back(CentroidSeed, TDWallSeed);
 	  vSeeds.emplace_back(CentroidSeed, TMapSeed);
