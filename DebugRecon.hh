@@ -126,7 +126,7 @@ static void ProcessArgs(TApplication &theApp,
 	  args.cvg=std::stod(theApp.Argv(++i));
 
 	} else if (boost::iequals(arg, "-g")) {
-	  args.useGridSearch=false;
+	  args.useGridSearch=true;
 
 	} else if (boost::iequals(arg, "-b")) {
 	  args.bnds.resize(3);
