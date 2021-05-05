@@ -318,7 +318,7 @@ TCanvas *GetMapPlots(TH3D* hGrid, const std::vector<TVector3>& vPos,
 
   std::size_t iM=0;
   std::vector<int> ColorPalette = {kBlue-4, kRed-4, kGreen+1};
-  std::vector<int> StylePalette = {kFullCrossX, kOpenCrossX, kFullCross};
+  std::vector<int> StylePalette = {kFullCross, kOpenCross, kFullCross};
 
   for(auto& Pos: vPos){
 	vvM.emplace_back(GetVMarker(Pos, ColorPalette[iM], StylePalette[iM]));

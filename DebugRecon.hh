@@ -196,7 +196,7 @@ void LoadMCInfo2Evt(wRAT& w_rat, Event& evt){
 
   // IF USE SPLITEVDAQ
   // Get EV TrigTime
-  const auto TrigTime = w_rat.GetTriggerTime(evt.iTrig);
+  const auto TrigTime = 0.;
 
   // Try to guess which particle is attached to this trigger
   // Make sense only for IBD gen, when n capture will be >> in T that prompt event
@@ -226,7 +226,7 @@ PolFitResults GetSOL(const std::string& tpdf){
   // Save fit in ttree
   PolFitResults pfr;
   TFile file(tpdf.c_str(), "READ");
-  auto T = file.Get<TTree>("pfr");
+  TTree* T = (TTree*)file.Get("pfr");
   T->SetBranchAddress("A", &pfr.A);
   T->SetBranchAddress("AErr", &pfr.AErr);
   T->SetBranchAddress("B", &pfr.B);
