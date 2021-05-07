@@ -159,7 +159,6 @@ int main(int argc, char *argv[]){
       if(vHits.empty())
 	continue;
       ReTriggerVHits(vHits, 2., TrigTime);
-      std::cout << TrigTime << std::endl;
       // std::sort(vHits.begin(), vHits.end());
 
       //
@@ -192,7 +191,6 @@ int main(int argc, char *argv[]){
 
       std::size_t idx = 0;
       double dWall = GetDWall(PosTrue, 1516.6, 1973.8, idx);
-      std::cout << dWall << "mm" << std::endl;
 
       hDWallVSTTime->Fill(TrigTime, dWall);
       if(idx==0)
