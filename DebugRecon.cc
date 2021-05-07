@@ -120,16 +120,15 @@ int main(int argc, char *argv[]){
   // ######################################## //
   // FitterDebbuger and co
   std::vector<FitPerfMonitor> v_centroid_per_monitor = {
-    FitPerfMonitor("centroid_NoWeight",MaxDWall, MaxDWall/100.),
-    FitPerfMonitor("centroid_Q",MaxDWall, MaxDWall/100.),
-    FitPerfMonitor("centroid_Q2",MaxDWall, MaxDWall/100.),
-    FitPerfMonitor("centroid_Q3",MaxDWall, MaxDWall/100.),
-    FitPerfMonitor("centroid_Q4",MaxDWall, MaxDWall/100.)
+    FitPerfMonitor("centroid_NoWeight",MaxDWall, MaxDWall/50.),
+    FitPerfMonitor("centroid_Q",MaxDWall, MaxDWall/50.),
+    FitPerfMonitor("centroid_Q2",MaxDWall, MaxDWall/50.),
+    FitPerfMonitor("centroid_Q3",MaxDWall, MaxDWall/50.),
+    FitPerfMonitor("centroid_Q4",MaxDWall, MaxDWall/50.)
   };
-  FitPerfMonitor gridTDWall_seed_perf_monitor("gridTDWall_seed", MaxDWall, MaxDWall/100.);
-  FitPerfMonitor gridTMap_seed_perf_monitor("gridTMap_seed", MaxDWall, MaxDWall/100.);
-  FitPerfMonitor seed_perf_monitor("seed", MaxDWall, MaxDWall/100.);
-  FitPerfMonitor recon_perf_monitor("rec", MaxDWall, MaxDWall/100.);
+  FitPerfMonitor gridTDWall_seed_perf_monitor("gridTDWall_seed", MaxDWall, MaxDWall/50.);
+  FitPerfMonitor seed_perf_monitor("seed", MaxDWall, MaxDWall/50.);
+  FitPerfMonitor recon_perf_monitor("rec", MaxDWall, MaxDWall/50.);
 
   std::vector<double> DetBnds = b->GetVDetBnds();
   MapNLL map_nll(DetBnds, {DetBnds[0]/10, DetBnds[1]/10, DetBnds[2]/10});
@@ -254,7 +253,7 @@ int main(int argc, char *argv[]){
       //
 
       const std::size_t MaxSeeds = 5;
-      std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, SOL, wPower, MaxSeeds);
+      std::vector<PosT> vSeeds;// = GetVPosTSeeds(vHits, hPDF_TRes, *b, wPower, MaxSeeds);
       if(!vSeeds.empty())
 	seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
 
@@ -316,7 +315,7 @@ int main(int argc, char *argv[]){
 
 	// Recon
 	// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
-	auto x = ReconPosTime(ds, *b, dp, Seed.Pos, -Seed.T, NLLSeed);
+	auto x = ReconPosTime(ds, *localb, dp, Seed.Pos, -Seed.T, NLLSeed);
 
 	// DEBUG PRINTS
 	if(args.isDDebug){
@@ -498,16 +497,13 @@ int main(int argc, char *argv[]){
   auto cDRhoSeed = seed_perf_monitor.GetDRhoPlot();
   cDRhoSeed->Write();
 
-  auto cGSeed = gridTDWall_seed_perf_monitor.GetPlot(true);
-  cGSeed->Write();
-  auto cDRhoGSeed = gridTDWall_seed_perf_monitor.GetDRhoPlot();
-  cDRhoGSeed->Write();
-
-  auto cGSeedTMap = gridTMap_seed_perf_monitor.GetPlot(true);
-  cGSeedTMap->Write();
-  auto cDRhoGSeedTMap = gridTMap_seed_perf_monitor.GetDRhoPlot();
-  cDRhoGSeedTMap->Write();
-
+  if(args.useGridSearch){
+    auto cGSeed = gridTDWall_seed_perf_monitor.GetPlot(true);
+    cGSeed->Write();
+    auto cDRhoGSeed = gridTDWall_seed_perf_monitor.GetDRhoPlot();
+    cDRhoGSeed->Write();
+  }
+      
   auto cFit = recon_perf_monitor.GetPlot(true);
   cFit->Write();
   auto cDRho = recon_perf_monitor.GetDRhoPlot();
