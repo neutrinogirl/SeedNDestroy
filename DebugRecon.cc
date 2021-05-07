@@ -25,6 +25,25 @@
 
 #include "Output.hh"
 
+//the following are UBUNTU/LINUX, and MacOS ONLY terminal color codes.
+#define RESET   "\033[0m"
+#define BLACK   "\033[30m"      /* Black */
+#define RED     "\033[31m"      /* Red */
+#define GREEN   "\033[32m"      /* Green */
+#define YELLOW  "\033[33m"      /* Yellow */
+#define BLUE    "\033[34m"      /* Blue */
+#define MAGENTA "\033[35m"      /* Magenta */
+#define CYAN    "\033[36m"      /* Cyan */
+#define WHITE   "\033[37m"      /* White */
+#define BOLDBLACK   "\033[1m\033[30m"      /* Bold Black */
+#define BOLDRED     "\033[1m\033[31m"      /* Bold Red */
+#define BOLDGREEN   "\033[1m\033[32m"      /* Bold Green */
+#define BOLDYELLOW  "\033[1m\033[33m"      /* Bold Yellow */
+#define BOLDBLUE    "\033[1m\033[34m"      /* Bold Blue */
+#define BOLDMAGENTA "\033[1m\033[35m"      /* Bold Magenta */
+#define BOLDCYAN    "\033[1m\033[36m"      /* Bold Cyan */
+#define BOLDWHITE   "\033[1m\033[37m"      /* Bold White */
+
 int main(int argc, char *argv[]){
 
   // ######################################## //
@@ -92,27 +111,12 @@ int main(int argc, char *argv[]){
   if(args.isVerbose)
     b->Print();
 
-  // ######################################## //
-  // LOAD TTPDF
-  TrigTimePDF TimePDF;
-  TimePDF.Load(pdf);
-  if(args.isVerbose)
-    std::cout << "TimePDF LOADED" << std::endl;
-
-  const PolFitResults pfr = GetSOL(pdf);
-
-  // ######################################## //
-  // Create structure holding boundaries
-  DetParams dp = {b, pfr.A};
-
+  DetParams dp = {b, 1./SOL};
+  
   const double MaxDWall = b->GetMaxDWall();
   if(args.isVerbose)
     std::cout << MaxDWall << std::endl;
-  TF1 fDWallVSTTrig("fDWallVSTTrig", "pol1", 0, MaxDWall);
-  fDWallVSTTrig.SetParameter(0, pfr.B); fDWallVSTTrig.SetParError(0, pfr.BErr);
-  fDWallVSTTrig.SetParameter(1, pfr.A); fDWallVSTTrig.SetParError(1, pfr.AErr);
-
-
+  
   // ######################################## //
   // FitterDebbuger and co
   std::vector<FitPerfMonitor> v_centroid_per_monitor = {
@@ -173,47 +177,36 @@ int main(int argc, char *argv[]){
 	std::cout << std::endl;
       }
 
-      // IF USE SPLITEVDAQ
       // Get EV TrigTime
-      const auto TrigTime = 0;
-
-      // Try to guess which particle is attached to this trigger
-      // Make sense only for IBD gen, when n capture will be >> in T that prompt event
-      // Note that also e+ is always first particle generated
-      auto nParticle = w_rat.GetNPrimaryParticle();
-      auto iParticle = nParticle > 1 ? (TrigTime > 1e3 ? 1 : 0) : 0;
-      // Skip if it is not prompt
-      // if(iParticle>0)
-      // continue;
-
-      // Get True info to record
-      const auto PosTrue = ANNIEShift(w_rat.GetPosTrue(0));
-      const auto DirTrue = ANNIEDirShift(w_rat.GetDirTrue(0));
-
-      evt.MCPos = Vec(PosTrue);
-      evt.MCDir = Vec(DirTrue);
-      evt.MCT   = -TrigTime;
-      evt.ETrue = w_rat.GetETrue(iParticle);
-
-      const std::vector<double> xTrue = {PosTrue[0], PosTrue[1], PosTrue[2], -TrigTime};
-
-      // DEBUG PRINTS
-      if(args.isDDebug){
-	std::cout << "#### #### #### TRUTH #### #### ####" << std::endl;
-	PosTrue.Print();
-	std::cout << TrigTime << "ns" << std::endl;
-	std::cout << b->GetDWall(PosTrue) << std::endl;
-	std::cout << "#### #### #### ----- #### #### ####" << std::endl;
-      }
-
-
+      double TrigTime = 0;
       // Get vector of hits
       std::vector<Hit> vHits = w_rat.GetVHits(iTrig);
       if(args.cvg > 0)
 	SlimVHits(vHits, args.cvg);
       if(vHits.empty())
 	continue;
-      std::sort(vHits.begin(), vHits.end());
+      ReTriggerVHits(vHits, 2., TrigTime);
+
+      // Get True info to record
+      const auto PosTrue = ANNIEShift(w_rat.GetPosTrue(0));
+      const auto DirTrue = ANNIEDirShift(w_rat.GetDirTrue(0));
+      const auto TTrue = w_rat.GetTTrue(0);
+
+      evt.MCPos = Vec(PosTrue);
+      evt.MCDir = Vec(DirTrue);
+      evt.MCT   = -TTrue;
+      evt.ETrue = w_rat.GetETrue(0);
+
+      const std::vector<double> xTrue = {PosTrue[0], PosTrue[1], PosTrue[2], -TTrue};
+
+      // DEBUG PRINTS
+      if(args.isDDebug){
+	std::cout << "#### #### #### TRUTH #### #### ####" << std::endl;
+	PosTrue.Print();
+	std::cout << TTrue << "ns" << std::endl;
+	std::cout << b->GetDWall(PosTrue) << std::endl;
+	std::cout << "#### #### #### ----- #### #### ####" << std::endl;
+      }
 
       LoadVHits(evt, vHits);
 
@@ -233,13 +226,12 @@ int main(int argc, char *argv[]){
       // #### #### #### TIME SEEDING #### #### #### //
       //
 
-      auto CentroidSeed = GetCentroidSeed(vHits, *b, 4);
+      auto CentroidSeed = GetCentroidSeed(vHits, *b, 0);
       if(!b->IsInPos(CentroidSeed)){
 	std::cerr << "NASTY Centroid seed" << std::endl;
 	continue;
       }
       const double DWallSeed = b->GetDWall(CentroidSeed);
-      // const double TDWallSeed = fDWallVSTTrig.Eval(DWallSeed);
       const double TDWallSeed = DWallSeed/SOL;
 
       auto TDwallSeedBnds = GetTBndsLocal(TDWallSeed, {b->vT.min, b->vT.max});
@@ -253,18 +245,7 @@ int main(int argc, char *argv[]){
 	CentroidSeed.Print();
 	std::cout << TDWallSeed << "ns" << std::endl;
 	std::cout << DWallSeed << std::endl;
-	std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, CentroidSeed, -TDWallSeed, fweight, args.wPower) << std::endl;
-	std::cout << "#### #### #### -------- #### #### ####" << std::endl;
-      }
-      std::vector<double> TBoundsLocal = {0., 0.};
-      const double TMapSeed = TimePDF.GetTrigTime(CentroidSeed, TBoundsLocal);
-
-      // DEBUG PRINTS
-      if(args.isDDebug){
-	std::cout << "#### #### #### TMAPPDF #### #### ####" << std::endl;
-	CentroidSeed.Print();
-	std::cout << TMapSeed << "ns" << std::endl;
-	std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, CentroidSeed, -TMapSeed, fweight, args.wPower) << std::endl;
+	std::cout << RED << "NLL=" << GetNLL(vHits, hPDF_TRes, CentroidSeed, -TDWallSeed, fweight, args.wPower) << RESET << std::endl;
 	std::cout << "#### #### #### -------- #### #### ####" << std::endl;
       }
 
@@ -273,12 +254,11 @@ int main(int argc, char *argv[]){
       //
 
       const std::size_t MaxSeeds = 5;
-      std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, 1/pfr.A, wPower, MaxSeeds);
+      std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, SOL, wPower, MaxSeeds);
       if(!vSeeds.empty())
 	seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
 
       vSeeds.emplace_back(CentroidSeed, TDWallSeed);
-      vSeeds.emplace_back(CentroidSeed, TMapSeed);
 
       //
       // #### GRID SEARCH
@@ -297,22 +277,7 @@ int main(int argc, char *argv[]){
 	  std::cout << "#### #### #### GRIDSEARCH DWALL #### #### ####" << std::endl;
 	  map_nll.GetVMinNll().Print();
 	  std::cout << TDWallSeed << "ns" << std::endl;
-	  std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TDWallSeed, fweight, args.wPower) << std::endl;
-	  std::cout << "#### #### #### -------- #### #### ####" << std::endl;
-	}
-
-	map_nll.Fill(vHits, -TMapSeed, hPDF_TRes, args.wPower);
-	vSeeds.emplace_back(map_nll.GetVMinNll(), TMapSeed);
-	gridTMap_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
-	// RESET
-	map_nll.ResetGrid();
-
-	// DEBUG PRINTS
-	if(args.isDDebug){
-	  std::cout << "#### #### #### GRIDSEARCH MAP #### #### ####" << std::endl;
-	  map_nll.GetVMinNll().Print();
-	  std::cout << TMapSeed << "ns" << std::endl;
-	  std::cout << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TMapSeed, fweight, args.wPower) << std::endl;
+	  std::cout << RED << "NLL=" << GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TDWallSeed, fweight, args.wPower) << RESET <<std::endl;
 	  std::cout << "#### #### #### -------- #### #### ####" << std::endl;
 	}
 
@@ -351,7 +316,7 @@ int main(int argc, char *argv[]){
 
 	// Recon
 	// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
-	auto x = ReconPosTime(ds, *localb, dp, Seed.Pos, -Seed.T, NLLSeed);
+	auto x = ReconPosTime(ds, *b, dp, Seed.Pos, -Seed.T, NLLSeed);
 
 	// DEBUG PRINTS
 	if(args.isDDebug){
@@ -359,7 +324,7 @@ int main(int argc, char *argv[]){
 	  TVector3(x[0], x[1], x[2]).Print();
 	  std::cout << -x[3] << "ns" << std::endl;
 	  std::cout << b->GetDWall(TVector3(x[0], x[1], x[2])) << std::endl;
-	  std::cout << "NLL=" << x[4] << std::endl;
+	  std::cout << RED << "NLL=" << x[4] << RESET << std::endl;
 	  std::cout << "#### #### #### --- #### #### ####" << std::endl;
 	}
 
@@ -374,7 +339,7 @@ int main(int argc, char *argv[]){
 	    TVector3(x[0], x[1], x[2]).Print();
 	    std::cout << -x[3] << "ns" << std::endl;
 	    std::cout << b->GetDWall(TVector3(x[0], x[1], x[2])) << std::endl;
-	    std::cout << "NLL=" << x[4] << std::endl;
+	    std::cout << RED << "NLL=" << x[4] << RESET << std::endl;
 	    std::cout << "#### #### #### --- #### #### ####" << std::endl;
 	  }
 
@@ -428,23 +393,12 @@ int main(int argc, char *argv[]){
 			       xTrue, xCentroidSeed,
 			       wPower, hPDF_TRes), output);
 
-	// TMap
-	const std::vector<double> xMapSeed = {CentroidSeed[0], CentroidSeed[1], CentroidSeed[2], -TMapSeed};
-	Save2ROOT( GetTResHist(tag+"CentroidSeedTMap", vHits,
-			       xTrue, xMapSeed,
-			       wPower, hPDF_TRes), output);
-
 	// Grid dWall
 	const std::vector<double> xGridSeedDWall = {vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2], -TDWallSeed};
 	Save2ROOT( GetTResHist(tag+"_GridTDWallSeed", vHits,
 			       xTrue, xGridSeedDWall,
 			       wPower, hPDF_TRes), output);
 
-	// Grid TMap
-	const std::vector<double> xGridSeedTMap = {vSeeds.back().Pos[0], vSeeds.back().Pos[1], vSeeds.back().Pos[2], -TMapSeed};
-	Save2ROOT( GetTResHist(tag+"_GridTMapSeed", vHits,
-			       xTrue, xGridSeedTMap,
-			       wPower, hPDF_TRes), output);
 
 	// SEED
 	const std::vector<double> xSeed = {vSeeds.front().Pos[0], vSeeds.front().Pos[1], vSeeds.front().Pos[2], -vSeeds.front().T};
@@ -474,30 +428,10 @@ int main(int argc, char *argv[]){
 	// RESET
 	map_nll.ResetGrid();
 
-	// TMap
-	map_nll.Fill(vHits, -TMapSeed, hPDF_TRes, args.wPower);
-	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, CentroidSeed} ,
-			       Form("cMapSeed_%s", tag.c_str())),
-		   output );
-	// HGrid GARBAGE COLLECTOR
-	HGridGarbageCollector();
-	// RESET
-	map_nll.ResetGrid();
-
 	// TCentroid
 	map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
 	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, TVector3(vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2])} ,
 			       Form("cGridSeedDWall_%s", tag.c_str())),
-		   output );
-	// HGrid GARBAGE COLLECTOR
-	HGridGarbageCollector();
-	// RESET
-	map_nll.ResetGrid();
-
-	// TMap
-	map_nll.Fill(vHits, -TMapSeed, hPDF_TRes, args.wPower);
-	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, TVector3(vSeeds.back().Pos[0], vSeeds.back().Pos[1], vSeeds.back().Pos[2])} ,
-			       Form("cGridSeed_%s", tag.c_str())),
 		   output );
 	// HGrid GARBAGE COLLECTOR
 	HGridGarbageCollector();
@@ -580,6 +514,8 @@ int main(int argc, char *argv[]){
   cDRho->Write();
 
   fOut.Close();
+
+  theApp.Terminate();
 
   return EXIT_SUCCESS;
 }

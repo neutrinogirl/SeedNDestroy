@@ -147,30 +147,20 @@ int main(int argc, char *argv[]){
 
     for(auto iTrigger=0; iTrigger<nTriggers; iTrigger++){
 
-      // IF USE SPLITEVDAQ
-      // Get EV TrigTime
-      const auto TrigTime = 0.;
-
-      // Try to guess which particle is attached to this trigger
-      // Make sense only for IBD gen, when n capture will be >> in T that prompt event
-      // Note that also e+ is always first particle generated
-      auto nParticle = w_rat.GetNPrimaryParticle();
-      auto iParticle = nParticle > 1 ? (TrigTime > 1e3 ? 1 : 0) : 0;
-      // Skip if it is not prompt
-      if(iParticle>0)
-	continue;
+      double TrigTime = 0;
 
       // Get True info to build PDFs
       const auto PosTrue = ANNIEShift(w_rat.GetPosTrue(0));
       const auto DirTrue = ANNIEDirShift(w_rat.GetDirTrue(0));
-      const auto TTrue = w_rat.GetTTrue(iParticle);
+      const auto TTrue = w_rat.GetTTrue(0);
 
       // Get vector of hits
       std::vector<Hit> vHits = w_rat.GetVHits(iTrigger);
       if(vHits.empty())
 	continue;
-
-      std::sort(vHits.begin(), vHits.end());
+      ReTriggerVHits(vHits, 2., TrigTime);
+      std::cout << TrigTime << std::endl;
+      // std::sort(vHits.begin(), vHits.end());
 
       //
       // DO STUFF
@@ -202,6 +192,7 @@ int main(int argc, char *argv[]){
 
       std::size_t idx = 0;
       double dWall = GetDWall(PosTrue, 1516.6, 1973.8, idx);
+      std::cout << dWall << "mm" << std::endl;
 
       hDWallVSTTime->Fill(TrigTime, dWall);
       if(idx==0)

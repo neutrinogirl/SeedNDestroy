@@ -16,12 +16,12 @@
 
 
 std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
-								 const TVector3& PosSeed, const double& TSeed, const double& NLLSeed = std::numeric_limits<double>::max()){
+				 const TVector3& PosSeed, const double& TSeed, const double& NLLSeed = std::numeric_limits<double>::max()){
 
   const unsigned nDimf = 4;
   std::vector<double> x = {
-	  PosSeed.x() * PosScale, PosSeed.y() * PosScale, PosSeed.z() * PosScale,
-	  TSeed * TScale /* Get same dimensionality as space */
+    PosSeed.x() * PosScale, PosSeed.y() * PosScale, PosSeed.z() * PosScale,
+    TSeed * TScale /* Get same dimensionality as space */
   };
   double minf;
 
@@ -37,7 +37,7 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   std::vector<double> ub = b.GetVUB();
   for(auto iDim=0; iDim<3; iDim++){
     lb[iDim] *= PosScale;
-	ub[iDim] *= PosScale;
+    ub[iDim] *= PosScale;
   }
   lb[3] *= TScale;
   ub[3] *= TScale;
@@ -46,7 +46,7 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   // // DEBUG PRINTS
   // double ll, uu, xx;
   // BOOST_FOREACH(boost::tie(ll, uu, xx), boost::combine(lb, ub, x)){
-	// 	  std::cout << " [" << ll << "," << uu << "] " << xx;
+  // 	  std::cout << " [" << ll << "," << uu << "] " << xx;
   // }
   // std::cout << std::endl;
   // b.Print();
@@ -71,11 +71,11 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
 
   // Set step size
   opt_local.get_initial_step_(
-	  {
-		  10., 10., 10.,
-		  10.
-	  }
-  );
+			      {
+				10., 10., 10.,
+				10.
+			      }
+			      );
 
   nlopt::opt opt(nlopt::AUGLAG_EQ, nDimf);
   opt.set_local_optimizer(opt_local);
@@ -98,11 +98,11 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
 
   try{
 
-	result_local = opt_local.optimize(x, minf);
+    result_local = opt_local.optimize(x, minf);
 
   } catch (std::exception &e) {
 
-	std::cout << "nlopt failed: " << e.what() << std::endl;
+    std::cout << "nlopt failed: " << e.what() << std::endl;
 
   }
 
@@ -117,11 +117,11 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
 }
 
 std::vector<double> ReconPos(DataStruct1D& DS, const bnds& b, DetParams& DP,
-							 const TVector3& PosSeed, const double& TSeed, const double& NLLSeed = std::numeric_limits<double>::max()){
+			     const TVector3& PosSeed, const double& TSeed, const double& NLLSeed = std::numeric_limits<double>::max()){
 
   const unsigned nDimf = 3;
   std::vector<double> x = {
-	  PosSeed.x(), PosSeed.y(), PosSeed.z()
+    PosSeed.x(), PosSeed.y(), PosSeed.z()
   };
   double minf;
 
@@ -163,11 +163,11 @@ std::vector<double> ReconPos(DataStruct1D& DS, const bnds& b, DetParams& DP,
 
   try{
 
-	result_local = opt_local.optimize(x, minf);
+    result_local = opt_local.optimize(x, minf);
 
   } catch (std::exception &e) {
 
-	std::cout << "nlopt failed: " << e.what() << std::endl;
+    std::cout << "nlopt failed: " << e.what() << std::endl;
 
   }
 
