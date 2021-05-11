@@ -90,12 +90,14 @@ double fPosTSmear(const std::vector<double> &x, std::vector<double> &grad, void 
 }
 
 
-const double PosScale = 1.e-1;
-const double TScale   = 1.e1;
+// const double PosScale = 1.e-1;
+// const double TScale   = 1.e1;
+const double PosScale = 1.;
+const double TScale   = 1.;
 
 typedef struct DetParams {
   bnds *b;
-  double A;
+  double SoL;
 } DetParams;
 
 double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data) {
@@ -105,7 +107,7 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
   double TGuess = x[3] / TScale;
   double dWall = d->b->GetDWall(PosGuess);
 
-  return -TGuess - dWall*d->A;
+  return -TGuess - dWall/d->SoL;
 
 }
 
@@ -151,6 +153,9 @@ double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data
   // Create object to calculate TRes histogram
   TVector3 PosGuess(x[0] / PosScale, x[1] / PosScale, x[2] / PosScale);
   double TGuess = x[3] / TScale;
+
+  // PosGuess.Print();
+  // std::cout << TGuess << std::endl;
 
   // Calculate NLL
   double NLL = GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower);

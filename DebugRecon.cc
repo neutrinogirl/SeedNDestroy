@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
   if(args.isVerbose)
     b->Print();
 
-  DetParams dp = {b, 1./SOL};
+  DetParams dp = {b, SOL};
   
   const double MaxDWall = b->GetMaxDWall();
   if(args.isVerbose)
@@ -184,6 +184,7 @@ int main(int argc, char *argv[]){
 	SlimVHits(vHits, args.cvg);
       if(vHits.empty())
 	continue;
+      
       ReTriggerVHits(vHits, 2., TrigTime);
 
       // Get True info to record
@@ -193,7 +194,7 @@ int main(int argc, char *argv[]){
 
       evt.MCPos = Vec(PosTrue);
       evt.MCDir = Vec(DirTrue);
-      evt.MCT   = -TTrue;
+      evt.MCT   = TrigTime;
       evt.ETrue = w_rat.GetETrue(0);
 
       const std::vector<double> xTrue = {PosTrue[0], PosTrue[1], PosTrue[2], -TTrue};
@@ -315,7 +316,7 @@ int main(int argc, char *argv[]){
 
 	// Recon
 	// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
-	auto x = ReconPosTime(ds, *localb, dp, Seed.Pos, -Seed.T, NLLSeed);
+	auto x = ReconPosTime(ds, *b, dp, Seed.Pos, -Seed.T, NLLSeed);
 
 	// DEBUG PRINTS
 	if(args.isDDebug){
@@ -330,7 +331,7 @@ int main(int argc, char *argv[]){
 	if(x[4] > NLLSeed){
 
 	  x.clear();
-	  x = ReconPos(ds, *localb, dp, Seed.Pos, -Seed.T);
+	  x = ReconPos(ds, *b, dp, Seed.Pos, -Seed.T);
 
 	  // DEBUG PRINTS
 	  if(args.isDDebug){
@@ -347,8 +348,10 @@ int main(int argc, char *argv[]){
 
 	delete localb;
 
-	vX.emplace_back(x);
-
+	if(x[4] < NLLSeed)
+	  vX.emplace_back(x);
+	else
+	  vX.emplace_back(std::vector<double>({Seed.Pos[0], Seed.Pos[1], Seed.Pos[2], -Seed.T, NLLSeed, 666.}));
 
       }
 
@@ -356,116 +359,119 @@ int main(int argc, char *argv[]){
 	return v1[4] < v2[4];
       });
 
-      // Recon
-      const TVector3 PosRec(vX.front()[0], vX.front()[1], vX.front()[2]);
-      recon_perf_monitor.Fill(PosRec, PosTrue);
+      if(!vX.empty()){
 
-      evt.RecPos = Vec(vX.front());
-      evt.RecT   = TrigTime + vX.front()[3];
-      evt.Chi2   = vX.front()[4];
-      evt.NLOPT  = vX.front()[5];
-      evt.dWall  = b->GetDWall(PosRec);
+	// Recon
+	const TVector3 PosRec(vX.front()[0], vX.front()[1], vX.front()[2]);
+	recon_perf_monitor.Fill(PosRec, PosTrue);
 
-      tree.Fill();
+	evt.RecPos = Vec(vX.front());
+	evt.RecT   = vX.front()[3];
+	evt.Chi2   = vX.front()[4];
+	evt.NLOPT  = vX.front()[5];
+	evt.dWall  = b->GetDWall(PosRec);
+
+	tree.Fill();
+      }
 
       // ###################################### //
       // #### #### #### PLOTTING #### #### #### //
       // ###################################### //
 
-      if(args.isDebug){
+      // if(args.isDebug){
 
-	//
-	// EV DISPLAY
-	//
+      // 	//
+      // 	// EV DISPLAY
+      // 	//
 
-	auto m_hits = w_rat.GetMHits(iTrig);
-	Save2ROOT( GetEventDisplay(w_rat.GetMHits(iTrig), pmt_grid, tag, 4.0),
-		   output );
+      // 	auto m_hits = w_rat.GetMHits(iTrig);
+      // 	Save2ROOT( GetEventDisplay(w_rat.GetMHits(iTrig), pmt_grid, tag, 4.0),
+      // 		   output );
 
-	//
-	// TRes Hist
-	//
+      // 	//
+      // 	// TRes Hist
+      // 	//
 
-	// Centroid
-	const std::vector<double> xCentroidSeed = {CentroidSeed[0], CentroidSeed[1], CentroidSeed[2], -TDWallSeed};
-	Save2ROOT( GetTResHist(tag+"_CentroidSeedTDWall", vHits,
-			       xTrue, xCentroidSeed,
-			       wPower, hPDF_TRes), output);
+      // 	// Centroid
+      // 	const std::vector<double> xCentroidSeed = {CentroidSeed[0], CentroidSeed[1], CentroidSeed[2], -TDWallSeed};
+      // 	Save2ROOT( GetTResHist(tag+"_CentroidSeedTDWall", vHits,
+      // 			       xTrue, xCentroidSeed,
+      // 			       wPower, hPDF_TRes), output);
 
-	// Grid dWall
-	const std::vector<double> xGridSeedDWall = {vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2], -TDWallSeed};
-	Save2ROOT( GetTResHist(tag+"_GridTDWallSeed", vHits,
-			       xTrue, xGridSeedDWall,
-			       wPower, hPDF_TRes), output);
+      // 	// Grid dWall
+      // 	const std::vector<double> xGridSeedDWall = {vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2], -TDWallSeed};
+      // 	Save2ROOT( GetTResHist(tag+"_GridTDWallSeed", vHits,
+      // 			       xTrue, xGridSeedDWall,
+      // 			       wPower, hPDF_TRes), output);
 
 
-	// SEED
-	const std::vector<double> xSeed = {vSeeds.front().Pos[0], vSeeds.front().Pos[1], vSeeds.front().Pos[2], -vSeeds.front().T};
-	Save2ROOT( GetTResHist(tag+"_SeednD", vHits,
-			       xTrue, xSeed,
-			       wPower, hPDF_TRes), output);
+      // 	// SEED
+      // 	const std::vector<double> xSeed = {vSeeds.front().Pos[0], vSeeds.front().Pos[1], vSeeds.front().Pos[2], -vSeeds.front().T};
+      // 	Save2ROOT( GetTResHist(tag+"_SeednD", vHits,
+      // 			       xTrue, xSeed,
+      // 			       wPower, hPDF_TRes), output);
 
-	// REC
-	Save2ROOT( GetTResHist(tag, vHits,
-			       xTrue, vX.front(),
-			       wPower, hPDF_TRes) , output);
+      // 	// REC
+      // 	Save2ROOT( GetTResHist(tag, vHits,
+      // 			       xTrue, vX.front(),
+      // 			       wPower, hPDF_TRes) , output);
 
-	//
-	// MAP NLL SPACE
-	//
+      // 	//
+      // 	// MAP NLL SPACE
+      // 	//
 
-	// RESET
-	map_nll.ResetGrid();
+      // 	// RESET
+      // 	map_nll.ResetGrid();
 
-	// TCentroid
-	map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
-	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, CentroidSeed} ,
-			       Form("cCentroidSeed_%s", tag.c_str())),
-		   output );
-	// HGrid GARBAGE COLLECTOR
-	HGridGarbageCollector();
-	// RESET
-	map_nll.ResetGrid();
+      // 	// TCentroid
+      // 	map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
+      // 	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, CentroidSeed} ,
+      // 			       Form("cCentroidSeed_%s", tag.c_str())),
+      // 		   output );
+      // 	// HGrid GARBAGE COLLECTOR
+      // 	HGridGarbageCollector();
+      // 	// RESET
+      // 	map_nll.ResetGrid();
 
-	// TCentroid
-	map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
-	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, TVector3(vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2])} ,
-			       Form("cGridSeedDWall_%s", tag.c_str())),
-		   output );
-	// HGrid GARBAGE COLLECTOR
-	HGridGarbageCollector();
-	// RESET
-	map_nll.ResetGrid();
+      // 	// TCentroid
+      // 	map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.wPower);
+      // 	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, TVector3(vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2])} ,
+      // 			       Form("cGridSeedDWall_%s", tag.c_str())),
+      // 		   output );
+      // 	// HGrid GARBAGE COLLECTOR
+      // 	HGridGarbageCollector();
+      // 	// RESET
+      // 	map_nll.ResetGrid();
 
-	// TSeed
-	map_nll.Fill(vHits, -vSeeds.front().T, hPDF_TRes, args.wPower);
-	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, vSeeds.front().Pos} ,
-			       Form("cSeed_%s", tag.c_str())),
-		   output );
-	// HGrid GARBAGE COLLECTOR
-	HGridGarbageCollector();
-	// RESET
-	map_nll.ResetGrid();
+      // 	// TSeed
+      // 	map_nll.Fill(vHits, -vSeeds.front().T, hPDF_TRes, args.wPower);
+      // 	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, vSeeds.front().Pos} ,
+      // 			       Form("cSeed_%s", tag.c_str())),
+      // 		   output );
+      // 	// HGrid GARBAGE COLLECTOR
+      // 	HGridGarbageCollector();
+      // 	// RESET
+      // 	map_nll.ResetGrid();
 
-	// TTrue
-	map_nll.Fill(vHits, -TrigTime, hPDF_TRes, args.wPower);
-	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, vSeeds.front().Pos} ,
-			       Form("cTrue_%s", tag.c_str())),
-		   output );
-	// HGrid GARBAGE COLLECTOR
-	HGridGarbageCollector();
-	// RESET
-	map_nll.ResetGrid();
+      // 	// TTrue
+      // 	map_nll.Fill(vHits, -TrigTime, hPDF_TRes, args.wPower);
+      // 	Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, vSeeds.front().Pos} ,
+      // 			       Form("cTrue_%s", tag.c_str())),
+      // 		   output );
+      // 	// HGrid GARBAGE COLLECTOR
+      // 	HGridGarbageCollector();
+      // 	// RESET
+      // 	map_nll.ResetGrid();
 
-	//
-	// TCANVAS GARBAGE COLLECTOR
-	//
+      // 	//
+      // 	// TCANVAS GARBAGE COLLECTOR
+      // 	//
 
-	for (auto &&obj: *gROOT->GetListOfCanvases()) {
-	  delete obj;
-	}
+      // 	for (auto &&obj: *gROOT->GetListOfCanvases()) {
+      // 	  delete obj;
+      // 	}
 
-      }
+      // }
 
       //
       // ...

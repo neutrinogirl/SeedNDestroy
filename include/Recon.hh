@@ -16,7 +16,8 @@
 
 
 std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
-				 const TVector3& PosSeed, const double& TSeed, const double& NLLSeed = std::numeric_limits<double>::max()){
+				 const TVector3& PosSeed, const double& TSeed,
+				 const double& NLLSeed = std::numeric_limits<double>::max()){
 
   const unsigned nDimf = 4;
   std::vector<double> x = {
@@ -26,7 +27,7 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   double minf;
 
   // Create minimizer obj
-  nlopt::opt opt_local(nlopt::LN_COBYLA, nDimf);
+  nlopt::opt opt_local(nlopt::GN_AGS, nDimf);
   opt_local.set_min_objective(fPosT, &DS);
   // Create result obj
   nlopt::result result_local;
@@ -51,16 +52,12 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   // std::cout << std::endl;
   // b.Print();
 
-
   // Set boundaries
   opt_local.set_lower_bounds(lb);
   opt_local.set_upper_bounds(ub);
 
   // Set T constraints
   opt_local.add_inequality_constraint(fPosTC, &DP, 1.e-12);
-  NLLBound nll_bound(DS.hPDF, DS.wPower, NLLSeed);
-  nll_bound.vHits = DS.vHits;
-  opt_local.add_inequality_constraint(fPosTNLL, &nll_bound, 1.e-12);
 
   // Set stopping criteria
   opt_local.set_xtol_rel(1.e-12);
@@ -68,33 +65,6 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
 
   // Set limits
   opt_local.set_maxtime(1./*sec*/);
-
-  // Set step size
-  opt_local.get_initial_step_(
-			      {
-				10., 10., 10.,
-				10.
-			      }
-			      );
-
-  nlopt::opt opt(nlopt::AUGLAG_EQ, nDimf);
-  opt.set_local_optimizer(opt_local);
-  opt.set_min_objective(fPosT, &DS);
-
-  // Set boundaries
-  opt.set_lower_bounds(lb);
-  opt.set_upper_bounds(ub);
-
-  // Set T constraints
-  opt.add_inequality_constraint(fPosTC, &DP, 3);
-  opt.add_inequality_constraint(fPosTNLL, &nll_bound, 1.e-12);
-
-  // Set stopping criteria
-  opt.set_xtol_rel(1.e-12);
-  opt.set_ftol_rel(1.e-12);
-
-  // Set limits
-  opt.set_maxtime(1./*sec*/);
 
   try{
 
