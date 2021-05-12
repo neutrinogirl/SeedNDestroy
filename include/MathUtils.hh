@@ -26,6 +26,18 @@
 #define SOL_VACUUM 299.792
 #define SOL SOL_VACUUM/RINDEX_WATER
 
+const double GetPI(){
+  return PI;
+}
+
+const double GetSQRT2(){
+  return SQRT2;
+}
+
+const double GetSOL(){
+  return SOL;
+}
+
 static double EvalLL(double nObs, double nPred){
   return nObs*TMath::Log(nPred);
 }
@@ -37,9 +49,9 @@ static double EvalExtendedLL(double nObs, double nPred){
 static double EvalNLL(double nObs, double nPred){
   double L;
   if(nObs>0 && nPred>0)
-	L=nObs*TMath::Log(nObs/nPred) + nPred-nObs;
+    L=nObs*TMath::Log(nObs/nPred) + nPred-nObs;
   else
-	L=nPred;
+    L=nPred;
   return -L;
 }
 
@@ -52,8 +64,8 @@ double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
   auto normPDF = 1.;
   auto normExp = 1.;
   if(!isNormalized){
-	normPDF = hPDF->Integral();
-	normExp = hExp->Integral();
+    normPDF = hPDF->Integral();
+    normExp = hExp->Integral();
   }
 
   auto Chi2 = 0.;
@@ -61,15 +73,15 @@ double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
   auto NonNullBin = 0;
 
   for(auto iBinX=1; iBinX<nBinsX+1; iBinX++){
-	for(auto iBinY=1; iBinY<nBinsY+1; iBinY++) {
+    for(auto iBinY=1; iBinY<nBinsY+1; iBinY++) {
 
-	  auto nObs  = hExp->GetBinContent(hExp->GetBin(iBinX, iBinY))/normExp;
-	  auto nPred = hPDF->GetBinContent(hPDF->GetBin(iBinX, iBinY))/normPDF;
+      auto nObs  = hExp->GetBinContent(hExp->GetBin(iBinX, iBinY))/normExp;
+      auto nPred = hPDF->GetBinContent(hPDF->GetBin(iBinX, iBinY))/normPDF;
 
-	  // Chi2 += EvalLL(nObs, nPred);
-	  // Chi2 += EvalExtendedLL(nObs, nPred);
-	  Chi2 += EvalNLL(nObs, nPred);
-	}
+      // Chi2 += EvalLL(nObs, nPred);
+      // Chi2 += EvalExtendedLL(nObs, nPred);
+      Chi2 += EvalNLL(nObs, nPred);
+    }
   }
 
   return Chi2 /*/ static_cast<double>(nBinsX + nBinsY)*/;
@@ -84,19 +96,19 @@ struct Matrix {
   std::size_t nrows, ncols;
 
   Matrix(std::size_t n, std::size_t m)
-	  : nrows(n), ncols(m) {
-	M = Matrix_t (n, std::vector<double>(m, 0));
+    : nrows(n), ncols(m) {
+    M = Matrix_t (n, std::vector<double>(m, 0));
   }
 
   std::vector<double>& operator[](std::size_t idx) {return M[idx];}
 
   void Print(){
-	for(auto i=0; i<nrows; i++){
-	  for(auto j=0; j<ncols; j++){
-		std::cout << M[i][j] << " ";
-	  }
-	  std::cout << std::endl;
-	}
+    for(auto i=0; i<nrows; i++){
+      for(auto j=0; j<ncols; j++){
+	std::cout << M[i][j] << " ";
+      }
+      std::cout << std::endl;
+    }
   }
 
 };
@@ -109,87 +121,29 @@ struct DiagMatrix {
   std::size_t dim;
 
   explicit DiagMatrix(std::size_t n)
-	  : dim(n) {
-	dM = Matrix_t (n, std::vector<double>(n, 0));
+    : dim(n) {
+    dM = Matrix_t (n, std::vector<double>(n, 0));
   }
 
   double& operator[](std::size_t idx) {return dM[idx][idx];}
 
   void Print(){
-	for(auto i=0; i<dim; i++){
-	  for(auto j=0; j<dim; j++){
-		std::cout << dM[i][j] << " ";
-	  }
-	  std::cout << std::endl;
-	}
+    for(auto i=0; i<dim; i++){
+      for(auto j=0; j<dim; j++){
+	std::cout << dM[i][j] << " ";
+      }
+      std::cout << std::endl;
+    }
   }
 
 };
 typedef struct DiagMatrix DiagMatrix;
-
-static double GetSignificance(const double& S, const double& B){
-  return S+B != 0 ? S / std::sqrt(S + B) : 0;
-}
-static double ErrRate(const double& S, const double& T){
-  return std::sqrt(S) / T + S / std::pow(T,2);
-}
-
-static double GetSigStatUn(const double& S, const double& B, const double& dS, const double& dB){
-  if (S+B > 0) {
-	double dSigdS, dSigdB;
-	dSigdS = (2*B + S) / (2*std::pow(S+B, 3/2));
-	dSigdB = - S / (2*std::pow(S+B, 3/2));
-	return std::sqrt(std::pow(dSigdS*dS, 2) + std::pow(dSigdB*dB, 2));
-  } else {
-	return 0.;
-  };
-}
-
-static double GetSigStatUn(const double& S, const double& B, const double& T){
-  if (S+B > 0) {
-	double dSigdS, dS, dSigdB, dB;
-	dSigdS = (2*B + S) / (2*std::pow(S+B, 3/2));
-	dSigdB = - S / (2*std::pow(S+B, 3/2));
-	dS = ErrRate(S, T);
-	dB = ErrRate(B, T);
-	return std::sqrt(std::pow(dSigdS*dS, 2) + std::pow(dSigdB*dB, 2));
-  } else {
-	return 0.;
-  };
-}
-
-static double PoissonScaled(const double& x, const double& lambda,
-							const double& fScale){
-
-  return std::pow(lambda / fScale, x / fScale) * std::exp(-lambda/fScale) / std::tgamma(x / fScale);
-
-}
-
-Double_t FitPoisson(const Double_t *x, const Double_t *par){
-
-  Double_t xx = x[0]; Double_t lambda = par[0];
-
-  return PoissonScaled(xx, lambda, 1000.);
-
-}
 
 Double_t FitGaus(const Double_t *x, const Double_t *par){
 
   Double_t arg = 0;
   if (par[2]!=0) arg = (x[0] - par[1])/par[2];
   Double_t fitval = par[0]*TMath::Exp(-0.5*arg*arg);
-  return fitval;
-
-}
-
-Double_t FitExp(const Double_t *x, const Double_t *par){
-
-  Double_t xx = x[0];
-  Double_t A = par[0]; Double_t t0 = par[1]; Double_t tau = par[2];
-
-  Double_t arg = 0;
-  if (tau!=0) arg = (xx - t0)/tau;
-  Double_t fitval = par[0]*TMath::Exp(-arg);
   return fitval;
 
 }
@@ -201,46 +155,37 @@ typedef struct zAxis {
   zAxis() = default;
 
   zAxis(int n, double mmin, double mmax)
-	  : nBins(n), min(mmin), max(mmax){}
+    : nBins(n), min(mmin), max(mmax){}
 
   explicit zAxis(TAxis* ax)
-	  : nBins(ax->GetNbins()), min(ax->GetXmin()), max(ax->GetXmax()){
+    : nBins(ax->GetNbins()), min(ax->GetXmin()), max(ax->GetXmax()){
 
   }
 
   void Set(TAxis* ax){
-	nBins = ax->GetNbins();
-	min   = ax->GetXmin();
-	max   = ax->GetXmax();
+    nBins = ax->GetNbins();
+    min   = ax->GetXmin();
+    max   = ax->GetXmax();
   }
 
   std::vector<double> GetStdVec() const{
     std::vector<double> v(nBins+1);
     const double width = (max-min) / static_cast<double>(nBins);
     std::iota(v.begin(), v.end(), 0);
-	std::transform(v.begin(), v.end(), v.begin(), [&](const double& val){
-	  return min + (val+0.5)*width;
-	});
-	return v;
+    std::transform(v.begin(), v.end(), v.begin(), [&](const double& val){
+      return min + (val+0.5)*width;
+    });
+    return v;
   }
 
 } zAxis ;
 
-std::vector<double> GetIntSpace(const unsigned int& nSteps, const double& min=-1, const double& max=1.){
-  const double step = (max-min) / (double)(nSteps);
-  std::vector<double> v(nSteps);
-  for(auto i=0; i<nSteps;i++)
-	v[i]=min+i*step;
-  v.emplace_back(max);
-  return v;
-}
-
 template<typename T>
 void ScaleHist(T *hist, const double& norm = 0){
   if(norm > 0){
-	hist->Scale(1./norm);
+    hist->Scale(1./norm);
   } else {
-	hist->Scale(1./hist->Integral());
+    hist->Scale(1./hist->Integral());
   }
 }
 
@@ -256,8 +201,8 @@ struct Bnd{
     max = rhs.max;
   }
   // Bnd(Bnd<T>&& rhs) noexcept {
-	// min = std::move(rhs.min);
-	// max = std::move(rhs.max);
+  // min = std::move(rhs.min);
+  // max = std::move(rhs.max);
   // }
 
   bool IsIn(const T& val) const {
@@ -279,22 +224,22 @@ struct Bnds {
     vT = rhs.vT;
   }
   // Bnds(Bnds&& rhs){
-	// vPos = std::move(rhs.vPos);
-	// vT = std::move(rhs.vT);
+  // vPos = std::move(rhs.vPos);
+  // vT = std::move(rhs.vT);
   // }
 
   virtual bool IsInPos(const std::vector<T>& v) const {
 
     if(v.size() != vPos.size()){
-	  std::cerr << "Bnds::InInPos() DIM BOUNDS != DIM V" << std::endl;
-	  return false;
+      std::cerr << "Bnds::InInPos() DIM BOUNDS != DIM V" << std::endl;
+      return false;
     }
 
     for(auto i=0; i<v.size(); i++){
       if(!vPos[i].IsIn(v[i]))
         return false;
     }
-	return true;
+    return true;
 
   }
 
@@ -312,35 +257,35 @@ struct Bnds {
     std::cout << "[" << vT.min << ", " << vT.max << "]ns" << std::endl;
   }
   virtual T GetMaxDWall() const {
-	T maxdwall = std::numeric_limits<T>::max();
-	for (const auto &bnd: vPos) {
-	  maxdwall = std::min(maxdwall, std::min(std::abs(bnd.min), std::abs(bnd.max)));
-	}
-	return maxdwall;
+    T maxdwall = std::numeric_limits<T>::max();
+    for (const auto &bnd: vPos) {
+      maxdwall = std::min(maxdwall, std::min(std::abs(bnd.min), std::abs(bnd.max)));
+    }
+    return maxdwall;
   }
   virtual std::vector<T> GetVDetBnds() const {
     std::vector<T> v;
-	for(const auto& bnd: vPos) {
-	  v.push_back(std::max(std::abs(bnd.min), std::abs(bnd.max)));
-	}
-	return v;
+    for(const auto& bnd: vPos) {
+      v.push_back(std::max(std::abs(bnd.min), std::abs(bnd.max)));
+    }
+    return v;
   }
 
   virtual std::vector<T> GetVLB() const {
-	std::vector<T> v;
-	for(const auto& bnd: vPos) {
-	  v.push_back(bnd.min);
-	}
-	v.push_back(-vT.max);
-	return v;
+    std::vector<T> v;
+    for(const auto& bnd: vPos) {
+      v.push_back(bnd.min);
+    }
+    v.push_back(-vT.max);
+    return v;
   }
   virtual std::vector<T> GetVUB() const {
-	std::vector<T> v;
-	for(const auto& bnd: vPos) {
-	  v.push_back(bnd.max);
-	}
-	v.push_back(-vT.min);
-	return v;
+    std::vector<T> v;
+    for(const auto& bnd: vPos) {
+      v.push_back(bnd.max);
+    }
+    v.push_back(-vT.min);
+    return v;
   }
 
 };
@@ -350,26 +295,26 @@ typedef struct Bnds<double, double> bnds;
 struct CylBnds : public bnds{
 
   CylBnds(){
-	vPos = { {0., 0.}, {0., 0.} };
-	vT = {0., 0.};
+    vPos = { {0., 0.}, {0., 0.} };
+    vT = {0., 0.};
   };
   explicit CylBnds(const bnds& b){
-	vPos = b.vPos;
-	vT = b.vT;
+    vPos = b.vPos;
+    vT = b.vT;
   }
-  CylBnds(const double& radius, const double& hheight, const double& SoL = SOL){
-	vPos = { {0, radius}, {0, hheight} };
-	vT = {0, std::min(radius, hheight) / SoL};
-  }
-  CylBnds(const double& radius, const double& hheight,
-		  const std::vector<double>& TBnds){
-	vPos = { {0, radius}, {0, hheight} };
-	vT = {TBnds[0], TBnds[1]};
+  CylBnds(const double& radius, const double& hheight, const double& SoL = GetSOL()){
+    vPos = { {0, radius}, {0, hheight} };
+    vT = {0, std::min(radius, hheight) / SoL};
   }
   CylBnds(const double& radius, const double& hheight,
-		  const double& TMin, const double& TMax){
-	vPos = { {0, radius}, {0, hheight} };
-	vT = {TMin, TMax};
+	  const std::vector<double>& TBnds){
+    vPos = { {0, radius}, {0, hheight} };
+    vT = {TBnds[0], TBnds[1]};
+  }
+  CylBnds(const double& radius, const double& hheight,
+	  const double& TMin, const double& TMax){
+    vPos = { {0, radius}, {0, hheight} };
+    vT = {TMin, TMax};
   }
 
   double GetRadius() const{
@@ -377,7 +322,7 @@ struct CylBnds : public bnds{
   }
 
   double GetHHeight() const{
-	return vPos[1].max;
+    return vPos[1].max;
   }
 
   bool IsInPos(const TVector3&v) const override {
@@ -385,7 +330,7 @@ struct CylBnds : public bnds{
   }
 
   double GetDWall(const TVector3& v) const override {
-	return std::min(GetRadius() - v.Perp(), GetHHeight() - std::abs(v.z()));
+    return std::min(GetRadius() - v.Perp(), GetHHeight() - std::abs(v.z()));
   }
 
   TVector3 GetTVector3() const override {
@@ -405,7 +350,7 @@ struct CylBnds : public bnds{
   }
 
   std::vector<double> GetVUB() const override{
-	return {GetRadius(), GetRadius(), GetHHeight(), - vT.min};
+    return {GetRadius(), GetRadius(), GetHHeight(), - vT.min};
   }
 
 };
@@ -413,109 +358,83 @@ struct CylBnds : public bnds{
 struct BoxBnds : public bnds{
 
   BoxBnds(){
-	vPos = { {0, 0}, {0, 0}, {0, 0} };
-	vT = {0, 0};
+    vPos = { {0, 0}, {0, 0}, {0, 0} };
+    vT = {0, 0};
   };
   explicit BoxBnds(const bnds& b){
-	vPos = b.vPos;
-	vT = b.vT;
+    vPos = b.vPos;
+    vT = b.vT;
   }
-  explicit BoxBnds(const std::vector<double>& vvPos, const double& SoL = SOL) : BoxBnds(){
-	if(vPos.size() != vvPos.size())
-	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
-	double min = *std::min_element(vvPos.begin(), vvPos.end());
-	for(auto i=0; i<vvPos.size();i++){
-	  vPos[i] = {0, vvPos[i]};
-	}
-	vT = {0, min/SoL};
+  explicit BoxBnds(const std::vector<double>& vvPos, const double& SoL = GetSOL()) : BoxBnds(){
+    if(vPos.size() != vvPos.size())
+      std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+    double min = *std::min_element(vvPos.begin(), vvPos.end());
+    for(auto i=0; i<vvPos.size();i++){
+      vPos[i] = {0, vvPos[i]};
+    }
+    vT = {0, min/SoL};
   }
-  explicit BoxBnds(const std::vector<std::vector<double>>& vvPos, const double& SoL = SOL) : BoxBnds(){
-	if(vPos.size() != vvPos.size())
-	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
-	auto min =
-		*std::min_element(vvPos.begin(), vvPos.end(),
-						  [](const std::vector<double>&v1, const std::vector<double>&v2){
-							return *std::min_element(v1.begin(), v1.end()) < *std::min_element(v2.begin(), v2.end());
-						  }
-		);
-	for(auto i=0; i<vvPos.size();i++){
-	  vPos[i] = {vvPos[i][0], vvPos[i][1]};
-	}
-	vT = {0, *std::min_element(min.begin(), min.end())/SoL};
-  }
-  BoxBnds(const std::vector<std::vector<double>>& vvPos,
-		  const std::vector<double>& TBnds) : BoxBnds(){
-	if(vPos.size() != vvPos.size())
-	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
-	for(auto i=0; i<vvPos.size();i++){
-	  vPos[i] = {vvPos[i][0], vvPos[i][1]};
-	}
-	vT = {TBnds[0], TBnds[1]};
+  explicit BoxBnds(const std::vector<std::vector<double>>& vvPos, const double& SoL = GetSOL()) : BoxBnds(){
+    if(vPos.size() != vvPos.size())
+      std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+    auto min =
+      *std::min_element(vvPos.begin(), vvPos.end(),
+			[](const std::vector<double>&v1, const std::vector<double>&v2){
+			  return *std::min_element(v1.begin(), v1.end()) < *std::min_element(v2.begin(), v2.end());
+			}
+			);
+    for(auto i=0; i<vvPos.size();i++){
+      vPos[i] = {vvPos[i][0], vvPos[i][1]};
+    }
+    vT = {0, *std::min_element(min.begin(), min.end())/SoL};
   }
   BoxBnds(const std::vector<std::vector<double>>& vvPos,
-		  const double& TMin, const double& TMax) : BoxBnds(){
-	if(vPos.size() != vvPos.size())
-	  std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
-	for(auto i=0; i<vvPos.size();i++){
-	  vPos[i] = {vvPos[i][0], vvPos[i][1]};
-	}
-	vT = {TMin, TMax};
+	  const std::vector<double>& TBnds) : BoxBnds(){
+    if(vPos.size() != vvPos.size())
+      std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+    for(auto i=0; i<vvPos.size();i++){
+      vPos[i] = {vvPos[i][0], vvPos[i][1]};
+    }
+    vT = {TBnds[0], TBnds[1]};
+  }
+  BoxBnds(const std::vector<std::vector<double>>& vvPos,
+	  const double& TMin, const double& TMax) : BoxBnds(){
+    if(vPos.size() != vvPos.size())
+      std::cerr << "BoxBnds::BoxBnds() NOT ALL DIMS ARE SPECIFIED" << std::endl;
+    for(auto i=0; i<vvPos.size();i++){
+      vPos[i] = {vvPos[i][0], vvPos[i][1]};
+    }
+    vT = {TMin, TMax};
   }
 
   bool IsInPos(const TVector3&v) const override {
     for(auto i=0; i<3; i++){
-	  if(!vPos[i].IsIn(v[i]))
-	    return false;
+      if(!vPos[i].IsIn(v[i]))
+	return false;
     }
     return true;
   }
 
   double GetDWall(const TVector3& v) const override {
     double dWall = std::numeric_limits<double>::max();
-	for(auto i=0; i<3; i++) {
-	  double absv = std::abs(v[i]);
-	  double min = std::min(std::abs(vPos[0].min) - absv, std::abs(vPos[0].max) - absv);
-	  dWall = min < dWall ? min : dWall;
-	}
-	return dWall;
+    for(auto i=0; i<3; i++) {
+      double absv = std::abs(v[i]);
+      double min = std::min(std::abs(vPos[0].min) - absv, std::abs(vPos[0].max) - absv);
+      dWall = min < dWall ? min : dWall;
+    }
+    return dWall;
   }
 
   TVector3 GetTVector3() const override {
-	return TVector3(vPos[0].max, vPos[1].max, vPos[2].max);
+    return TVector3(vPos[0].max, vPos[1].max, vPos[2].max);
   }
 
 };
 
 
-template <typename T>
-T GetDWall(const TVector3& v,
-		   const T& radius, const T& hheight)  {
-  return std::min(radius - v.Perp(), hheight - std::abs(v.z()));
-}
-
-template <typename T>
-T GetDWall(const TVector3& v,
-		   const T& radius, const T& hheight,
-		   std::size_t& idx)  {
-  std::vector<T> vv = {radius - v.Perp(), hheight - std::abs(v.z())};
-  auto min_element = std::min_element(vv.begin(), vv.end());
-  idx = std::distance(vv.begin(), min_element);
-  return *min_element;
-}
-
-template <typename T>
-T GetDWall(const TVector3& v,
-		   const std::vector<T>& vDims,
-		   std::size_t& idx)  {
-  std::vector<T> vv = {vDims[0] - v.Perp(), vDims[1] - std::abs(v.z())};
-  auto min_element = std::min_element(vv.begin(), vv.end());
-  idx = std::distance(vv.begin(), min_element);
-  return *min_element;
-}
-
 static std::vector< std::vector<double> >
 Get4DSmplGuess(const std::vector<double>& xGuess,
-			   const std::vector<double>& vScale){
+	       const std::vector<double>& vScale){
 
   const unsigned int nDim = 4;
   const std::size_t nPts = std::pow(2, nDim);
@@ -523,16 +442,16 @@ Get4DSmplGuess(const std::vector<double>& xGuess,
   vSmplGuess.emplace_back(xGuess);
 
   auto GetBnd = [](const unsigned int& b, const double& x){
-	return b ? x : -x;
+    return b ? x : -x;
   };
 
   for(auto i=0; i<nPts;i++){
-	std::bitset<nDim> word(i);
-	std::vector<double> v(nDim);
-	for(auto iDim=0; iDim<nDim; iDim++){
-	  v[iDim] = xGuess[iDim] + GetBnd(word[iDim], vScale[iDim]);
-	}
-	vSmplGuess.emplace_back(v);
+    std::bitset<nDim> word(i);
+    std::vector<double> v(nDim);
+    for(auto iDim=0; iDim<nDim; iDim++){
+      v[iDim] = xGuess[iDim] + GetBnd(word[iDim], vScale[iDim]);
+    }
+    vSmplGuess.emplace_back(v);
   }
 
   return vSmplGuess;
@@ -540,7 +459,7 @@ Get4DSmplGuess(const std::vector<double>& xGuess,
 }
 static std::vector< std::vector<double> >
 Get4DSmplGuess(const std::vector<double>& xGuess,
-			   const double& Scale){
+	       const double& Scale){
 
   const unsigned int nDim = 4;
   const std::size_t nPts = std::pow(2, nDim);
@@ -548,16 +467,16 @@ Get4DSmplGuess(const std::vector<double>& xGuess,
   vSmplGuess.emplace_back(xGuess);
 
   auto GetBnd = [](const unsigned int& b, const double& x){
-	return b ? x : -x;
+    return b ? x : -x;
   };
 
   for(auto i=0; i<nPts;i++){
-	std::bitset<nDim> word(i);
-	std::vector<double> v(nDim);
-	for(auto iDim=0; iDim<nDim; iDim++){
-	  v[iDim] = xGuess[iDim] + GetBnd(word[iDim], Scale);
-	}
-	vSmplGuess.emplace_back(v);
+    std::bitset<nDim> word(i);
+    std::vector<double> v(nDim);
+    for(auto iDim=0; iDim<nDim; iDim++){
+      v[iDim] = xGuess[iDim] + GetBnd(word[iDim], Scale);
+    }
+    vSmplGuess.emplace_back(v);
   }
 
   return vSmplGuess;
