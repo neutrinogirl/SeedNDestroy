@@ -139,69 +139,11 @@ struct DiagMatrix {
 };
 typedef struct DiagMatrix DiagMatrix;
 
-static double GetSignificance(const double& S, const double& B){
-  return S+B != 0 ? S / std::sqrt(S + B) : 0;
-}
-static double ErrRate(const double& S, const double& T){
-  return std::sqrt(S) / T + S / std::pow(T,2);
-}
-
-static double GetSigStatUn(const double& S, const double& B, const double& dS, const double& dB){
-  if (S+B > 0) {
-    double dSigdS, dSigdB;
-    dSigdS = (2*B + S) / (2*std::pow(S+B, 3/2));
-    dSigdB = - S / (2*std::pow(S+B, 3/2));
-    return std::sqrt(std::pow(dSigdS*dS, 2) + std::pow(dSigdB*dB, 2));
-  } else {
-    return 0.;
-  };
-}
-
-static double GetSigStatUn(const double& S, const double& B, const double& T){
-  if (S+B > 0) {
-    double dSigdS, dS, dSigdB, dB;
-    dSigdS = (2*B + S) / (2*std::pow(S+B, 3/2));
-    dSigdB = - S / (2*std::pow(S+B, 3/2));
-    dS = ErrRate(S, T);
-    dB = ErrRate(B, T);
-    return std::sqrt(std::pow(dSigdS*dS, 2) + std::pow(dSigdB*dB, 2));
-  } else {
-    return 0.;
-  };
-}
-
-static double PoissonScaled(const double& x, const double& lambda,
-			    const double& fScale){
-
-  return std::pow(lambda / fScale, x / fScale) * std::exp(-lambda/fScale) / std::tgamma(x / fScale);
-
-}
-
-Double_t FitPoisson(const Double_t *x, const Double_t *par){
-
-  Double_t xx = x[0]; Double_t lambda = par[0];
-
-  return PoissonScaled(xx, lambda, 1000.);
-
-}
-
 Double_t FitGaus(const Double_t *x, const Double_t *par){
 
   Double_t arg = 0;
   if (par[2]!=0) arg = (x[0] - par[1])/par[2];
   Double_t fitval = par[0]*TMath::Exp(-0.5*arg*arg);
-  return fitval;
-
-}
-
-Double_t FitExp(const Double_t *x, const Double_t *par){
-
-  Double_t xx = x[0];
-  Double_t A = par[0]; Double_t t0 = par[1]; Double_t tau = par[2];
-
-  Double_t arg = 0;
-  if (tau!=0) arg = (xx - t0)/tau;
-  Double_t fitval = par[0]*TMath::Exp(-arg);
   return fitval;
 
 }
@@ -237,15 +179,6 @@ typedef struct zAxis {
   }
 
 } zAxis ;
-
-std::vector<double> GetIntSpace(const unsigned int& nSteps, const double& min=-1, const double& max=1.){
-  const double step = (max-min) / (double)(nSteps);
-  std::vector<double> v(nSteps);
-  for(auto i=0; i<nSteps;i++)
-    v[i]=min+i*step;
-  v.emplace_back(max);
-  return v;
-}
 
 template<typename T>
 void ScaleHist(T *hist, const double& norm = 0){
@@ -498,32 +431,6 @@ struct BoxBnds : public bnds{
 
 };
 
-
-template <typename T>
-T GetDWall(const TVector3& v,
-	   const T& radius, const T& hheight)  {
-  return std::min(radius - v.Perp(), hheight - std::abs(v.z()));
-}
-
-template <typename T>
-T GetDWall(const TVector3& v,
-	   const T& radius, const T& hheight,
-	   std::size_t& idx)  {
-  std::vector<T> vv = {radius - v.Perp(), hheight - std::abs(v.z())};
-  auto min_element = std::min_element(vv.begin(), vv.end());
-  idx = std::distance(vv.begin(), min_element);
-  return *min_element;
-}
-
-template <typename T>
-T GetDWall(const TVector3& v,
-	   const std::vector<T>& vDims,
-	   std::size_t& idx)  {
-  std::vector<T> vv = {vDims[0] - v.Perp(), vDims[1] - std::abs(v.z())};
-  auto min_element = std::min_element(vv.begin(), vv.end());
-  idx = std::distance(vv.begin(), min_element);
-  return *min_element;
-}
 
 static std::vector< std::vector<double> >
 Get4DSmplGuess(const std::vector<double>& xGuess,
