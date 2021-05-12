@@ -25,16 +25,16 @@ Matrix GetDMatrix(vHits& vHits){
   std::sort(vHits.begin(), vHits.end());
 
   auto ScaleFromSoL = [](const double& v){
-	return (v / SOL);
+    return (v / GetSOL());
   };
 
   for(auto i=0; i<nHits; i++){
-	for(auto j=0; j<nHits; j++) {
-	  if(i>j)
-		M[i][j] = ScaleFromSoL((vHits[j].PMTPos.Mag() - vHits[i].PMTPos.Mag()) / (vHits[j].T - vHits[i].T));
-	  else
-		M[i][j] = 0;
-	}
+    for(auto j=0; j<nHits; j++) {
+      if(i>j)
+	M[i][j] = ScaleFromSoL((vHits[j].PMTPos.Mag() - vHits[i].PMTPos.Mag()) / (vHits[j].T - vHits[i].T));
+      else
+	M[i][j] = 0;
+    }
   }
 
   return M;
@@ -53,7 +53,7 @@ vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
   std::vector<double> dVVal(dVBins, 0);
   std::iota(dVVal.begin(), dVVal.end(), 0);
   std::transform(dVVal.begin(), dVVal.end(), dVVal.begin(), [](double dV){
-	return dV*dVStep;
+    return dV*dVStep;
   });
 
   // Prepare vHits
@@ -61,14 +61,14 @@ vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
 
   for(auto j=0; j<M.ncols; j++){
 
-	if(M[i][j] == 0)
-	  continue;
+    if(M[i][j] == 0)
+      continue;
 
-	auto itBin = std::lower_bound(dVVal.begin(), dVVal.end(), M[i][j]);
-	if(itBin!=dVVal.end()){
-	  auto iBin = std::distance(dVVal.begin(), itBin);
-	  vvHits[iBin].emplace_back(vHits[j]);
-	}
+    auto itBin = std::lower_bound(dVVal.begin(), dVVal.end(), M[i][j]);
+    if(itBin!=dVVal.end()){
+      auto iBin = std::distance(dVVal.begin(), itBin);
+      vvHits[iBin].emplace_back(vHits[j]);
+    }
 
   }
 
@@ -90,26 +90,26 @@ TVector3 GetDTSeed(vHits& vHits, const bnds& b){
   double T1 = Hit1.T;
 
   auto GetDT = [](Hit& h0, Hit& h1){
-	return h1.T - h0.T;
+    return h1.T - h0.T;
   };
 
   auto GetTau = [&Hit0, &GetDT](Hit& h){
-	return GetDT(Hit0, h);
+    return GetDT(Hit0, h);
   };
 
   auto GetACoeff = [&GetTau, &Hit1](Hit& h, std::size_t iDim){
-	return (2*h.PMTPos[iDim] / (SOL*GetTau(h))) - (2 * Hit1.PMTPos[iDim] / (SOL*GetTau(Hit1)));
+    return (2*h.PMTPos[iDim] / (GetSOL()*GetTau(h))) - (2 * Hit1.PMTPos[iDim] / (GetSOL()*GetTau(Hit1)));
   };
 
   auto GetBCoeff = [&GetTau, &Hit1](Hit& h){
-	return SOL*(GetTau(h) - GetTau(Hit1)) - h.PMTPos.Mag2()/(SOL*GetTau(h)) + Hit1.PMTPos.Mag2()/(SOL*GetTau(Hit1));
+    return GetSOL()*(GetTau(h) - GetTau(Hit1)) - h.PMTPos.Mag2()/(GetSOL()*GetTau(h)) + Hit1.PMTPos.Mag2()/(GetSOL()*GetTau(Hit1));
   };
 
   std::size_t nEq = vHits.size() - iHit1 - 1;
   std::size_t nDim = 3;
 
   if(nEq < nDim)
-	return b.GetTVector3();
+    return b.GetTVector3();
 
   Matrix A(nEq, nDim);
   DiagMatrix B(nEq);
@@ -119,58 +119,58 @@ TVector3 GetDTSeed(vHits& vHits, const bnds& b){
 
   for(auto itH = itHit0+2; itH != vHits.end(); itH++){
 
-	auto iHit = std::distance(itHit0+2, itH);
-	auto QWeight = itH->Q;
+    auto iHit = std::distance(itHit0+2, itH);
+    auto QWeight = itH->Q;
 
-	for(auto iDim=0;iDim<nDim;iDim++){
-	  if(QWeight > QCut)
-		A[iHit][iDim] = GetACoeff(*itH, iDim);
-	  else
-		A[iHit][iDim] = 0;
-	}
+    for(auto iDim=0;iDim<nDim;iDim++){
+      if(QWeight > QCut)
+	A[iHit][iDim] = GetACoeff(*itH, iDim);
+      else
+	A[iHit][iDim] = 0;
+    }
 
-	if(QWeight > QCut)
-	  B[iHit]= -GetBCoeff(*itH);
-	else
-	  B[iHit]= 0;
+    if(QWeight > QCut)
+      B[iHit]= -GetBCoeff(*itH);
+    else
+      B[iHit]= 0;
 
   }
 
   try {
 
-	SVD svd(A);
+    SVD svd(A);
 
-	svd.solve(B, X);
+    svd.solve(B, X);
 
   } catch ( const char* e) {
 
-	// std::cout << "svd failed: " << e << std::endl;
-	return b.GetTVector3();
+    // std::cout << "svd failed: " << e << std::endl;
+    return b.GetTVector3();
 
   }
 
   if(!b.IsInPos(TVector3(X[0], X[1], X[2])))
-	return b.GetTVector3();
+    return b.GetTVector3();
 
   return TVector3(X[0], X[1], X[2]);
 
 }
 
 std::vector<TVector3> GetVSeeds(vHits& vHits,
-								TH1D* hPDF,
-								const double& TGuess,
-								const bnds& b,
-								const unsigned int& wPower = 1,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
+				TH1D* hPDF,
+				const double& TGuess,
+				const bnds& b,
+				const unsigned int& wPower = 1,
+				const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
   // auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
   // if(b.IsInPos(CentroidSeed))
-	// vSeeds.emplace_back(CentroidSeed);
+  // vSeeds.emplace_back(CentroidSeed);
   auto DTSeed = GetDTSeed(vHits, b);
   if(b.IsInPos(DTSeed))
-	vSeeds.emplace_back(DTSeed);
+    vSeeds.emplace_back(DTSeed);
 
   if(MaxSeeds < 2)
     return vSeeds;
@@ -179,123 +179,123 @@ std::vector<TVector3> GetVSeeds(vHits& vHits,
   auto nHits = vHits.size();
 
   for(auto i=0; i<nHits; i++) {
-	auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
+    auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
 
-	for(auto &ivSeed:vSubSeeds){
+    for(auto &ivSeed:vSubSeeds){
 
-	  if(ivSeed.empty() || ivSeed.size() < 5)
-		continue;
+      if(ivSeed.empty() || ivSeed.size() < 5)
+	continue;
 
-	  auto PosSeed = GetDTSeed(ivSeed, b);
+      auto PosSeed = GetDTSeed(ivSeed, b);
 
-	  if(b.IsInPos(PosSeed))
-		vSeeds.emplace_back(PosSeed);
+      if(b.IsInPos(PosSeed))
+	vSeeds.emplace_back(PosSeed);
 
-	}
+    }
 
   }
 
   // Clear vector of seeds for duplicates
   for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
-	vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
+    vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
   }
 
   // Sort by magnitude
   std::sort(vSeeds.begin(), vSeeds.end(), [](const TVector3& v1, const TVector3& v2){
-	return v1.Mag2()<v2.Mag2();
+    return v1.Mag2()<v2.Mag2();
   });
 
   // Remove seed guess if less than a few cm between them
   for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
-	auto diffInf = vSeeds[iSeed]-vSeeds[iSeed-1];
-	const double lim = SQRT2*500.; // 50cm
-	if(diffInf.Mag() < lim)
-	  vSeeds.erase(vSeeds.begin()+iSeed);
+    auto diffInf = vSeeds[iSeed]-vSeeds[iSeed-1];
+    const double lim = GetSQRT2()*500.; // 50cm
+    if(diffInf.Mag() < lim)
+      vSeeds.erase(vSeeds.begin()+iSeed);
 
   }
 
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const TVector3& v1, const TVector3& v2){
-	return GetNLL(vHits, hPDF, v1, TGuess, fweight, wPower) < GetNLL(vHits, hPDF, v2, TGuess, fweight, wPower);
+    return GetNLL(vHits, hPDF, v1, TGuess, fweight, wPower) < GetNLL(vHits, hPDF, v2, TGuess, fweight, wPower);
   });
 
   if(vSeeds.size() > MaxSeeds)
-	vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
+    vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
 
   return vSeeds;
 
 }
 
 std::vector<TVector3> GetVSeeds(vHits& vHits,
-								TH1D* hPDF,
-								const bnds& b,
-								const unsigned int& wPower = 1,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
+				TH1D* hPDF,
+				const bnds& b,
+				const unsigned int& wPower = 1,
+				const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
 
   // Get vector of seeds
   std::vector<TVector3> vSeeds;
   auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
   const double DWallSeed = b.GetDWall(CentroidSeed);
-  const double TGuess = DWallSeed/SOL;
+  const double TGuess = DWallSeed/GetSOL();
   // if(b.IsInPos(CentroidSeed))
-	// vSeeds.emplace_back(CentroidSeed);
+  // vSeeds.emplace_back(CentroidSeed);
 
 
   auto DTSeed = GetDTSeed(vHits, b);
   if(b.IsInPos(DTSeed))
-	vSeeds.emplace_back(DTSeed);
+    vSeeds.emplace_back(DTSeed);
 
   if(MaxSeeds < 3)
-	return vSeeds;
+    return vSeeds;
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
 
   for(auto i=0; i<nHits; i++) {
-	auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
+    auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
 
-	for(auto &ivSeed:vSubSeeds){
+    for(auto &ivSeed:vSubSeeds){
 
-	  if(ivSeed.empty() || ivSeed.size() < 5)
-		continue;
+      if(ivSeed.empty() || ivSeed.size() < 5)
+	continue;
 
-	  auto PosSeed = GetDTSeed(ivSeed, b);
+      auto PosSeed = GetDTSeed(ivSeed, b);
 
-	  if(b.IsInPos(PosSeed))
-		vSeeds.emplace_back(PosSeed);
+      if(b.IsInPos(PosSeed))
+	vSeeds.emplace_back(PosSeed);
 
-	}
+    }
 
   }
 
   // Clear vector of seeds for duplicates
   for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
-	vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
+    vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
   }
 
   // Sort by magnitude
   std::sort(vSeeds.begin(), vSeeds.end(), [](const TVector3& v1, const TVector3& v2){
-	return v1.Mag2()<v2.Mag2();
+    return v1.Mag2()<v2.Mag2();
   });
 
   // Remove seed guess if less than a few cm between them
   for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
-	auto diffInf = vSeeds[iSeed]-vSeeds[iSeed-1];
-	const double lim = SQRT2*500.; // 50cm
-	if(diffInf.Mag() < lim)
-	  vSeeds.erase(vSeeds.begin()+iSeed);
+    auto diffInf = vSeeds[iSeed]-vSeeds[iSeed-1];
+    const double lim = GetSQRT2()*500.; // 50cm
+    if(diffInf.Mag() < lim)
+      vSeeds.erase(vSeeds.begin()+iSeed);
 
   }
 
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const TVector3& v1, const TVector3& v2){
-	return GetNLL(vHits, hPDF, v1, TGuess, fweight, wPower) < GetNLL(vHits, hPDF, v2, TGuess, fweight, wPower);
+    return GetNLL(vHits, hPDF, v1, TGuess, fweight, wPower) < GetNLL(vHits, hPDF, v2, TGuess, fweight, wPower);
   });
 
   if(vSeeds.size() > MaxSeeds)
-	vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
+    vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
 
   return vSeeds;
 
@@ -307,7 +307,7 @@ typedef struct PosT {
   PosT() = default;
   PosT(const TVector3 &pos, double t) : Pos(pos), T(t) {}
   PosT(const TVector3&v, const bnds& b) : Pos(v){
-	T = b.GetDWall(v) / SOL;
+    T = b.GetDWall(v) / GetSOL();
   }
   void Print() const {
     Pos.Print();
@@ -321,212 +321,238 @@ bool operator==(const PosT& s1, const PosT& s2){
 }
 
 std::vector<PosT> GetVPosTSeeds(vHits& vHits,
-								TH1D* hPDF,
-								const bnds& b,
-								const unsigned int& wPower = 1,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
+				TH1D* hPDF,
+				const bnds& b,
+				const unsigned int& wPower = 1,
+				const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
 
   // Get vector of seeds
   std::vector<PosT> vSeeds;
   // auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
   // if(b.IsInPos(CentroidSeed))
-	// vSeeds.emplace_back(CentroidSeed, b);
+  // vSeeds.emplace_back(CentroidSeed, b);
   auto DTSeed = GetDTSeed(vHits, b);
   if(b.IsInPos(DTSeed))
-	vSeeds.emplace_back(DTSeed, b);
+    vSeeds.emplace_back(DTSeed, b);
 
   if(MaxSeeds < 3)
-	return vSeeds;
+    return vSeeds;
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
 
   for(auto i=0; i<nHits; i++) {
-	auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
+    auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
 
-	for(auto &ivSeed:vSubSeeds){
+    for(auto &ivSeed:vSubSeeds){
 
-	  if(ivSeed.empty() || ivSeed.size() < 5)
-		continue;
+      if(ivSeed.empty() || ivSeed.size() < 5)
+	continue;
 
-	  auto PosSeed = GetDTSeed(ivSeed, b);
+      auto PosSeed = GetDTSeed(ivSeed, b);
 
-	  if(b.IsInPos(PosSeed))
-		vSeeds.emplace_back(PosSeed, b);
+      if(b.IsInPos(PosSeed))
+	vSeeds.emplace_back(PosSeed, b);
 
-	}
+    }
+
+  }
+
+  auto PrintSeeds = [&vSeeds](){
+    std::cout << std::endl;
+    for(const auto& s: vSeeds){
+      s.Pos.Print();
+      std::cout << s.T << "ns" << std::endl;
+    }
+    std::cout << std::endl;
+  };
+
+  // PrintSeeds();
+
+  // Clear vector of seeds for duplicates
+  for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
+    vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
+  }
+
+  // PrintSeeds();
+
+  // Sort by magnitude
+  std::sort(vSeeds.begin(), vSeeds.end(), [](const PosT& v1, const PosT& v2){
+    return v1.Pos.Mag2()<v2.Pos.Mag2();
+  });
+
+  // PrintSeeds();
+
+  // Remove seed guess if less than a few cm between them
+  for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
+    auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
+    const double lim = GetSQRT2()*500.; // 50cm
+    if(diffInf.Mag() < lim)
+      vSeeds.erase(vSeeds.begin()+iSeed);
+
+  }
+
+  // PrintSeeds();
+
+  // for(const auto& s: vSeeds){
+  //   std::cout << GetNLL(vHits, hPDF, s.Pos, -s.T, fweight, wPower) << std::endl;
+  // }
+  // std::cout << std::endl;
+
+  // Sort seeds by flat NLL value
+  std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
+    return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fweight, wPower);
+  });
+
+  // for(const auto& s: vSeeds){
+  //   std::cout << GetNLL(vHits, hPDF, s.Pos, -s.T, fweight, wPower) << std::endl;
+  // }
+  // std::cout << std::endl;
+  
+  if(vSeeds.size() > MaxSeeds)
+    vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
+  
+  return vSeeds;
+
+}
+
+std::vector<PosT> GetVPosTSeeds(vHits& vHits,
+				TH1D* hPDF,
+				const bnds& b,
+				const double& SoL,
+				const unsigned int& wPower = 1,
+				const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
+
+  // Get vector of seeds
+  std::vector<PosT> vSeeds;
+  // auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
+  // if(b.IsInPos(CentroidSeed))
+  // vSeeds.emplace_back(CentroidSeed, b.GetDWall(CentroidSeed)/SoL);
+  auto DTSeed = GetDTSeed(vHits, b);
+  if(b.IsInPos(DTSeed))
+    vSeeds.emplace_back(DTSeed, b.GetDWall(DTSeed)/SoL);
+
+  if(MaxSeeds < 3)
+    return vSeeds;
+
+  auto M = GetDMatrix(vHits);
+  auto nHits = vHits.size();
+
+  for(auto i=0; i<nHits; i++) {
+    auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
+
+    for(auto &ivSeed:vSubSeeds){
+
+      if(ivSeed.empty() || ivSeed.size() < 5)
+	continue;
+
+      auto PosSeed = GetDTSeed(ivSeed, b);
+
+      if(b.IsInPos(PosSeed))
+	vSeeds.emplace_back(PosSeed, b.GetDWall(PosSeed)/SoL);
+
+    }
 
   }
 
   // Clear vector of seeds for duplicates
   for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
-	vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
+    vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
   }
 
   // Sort by magnitude
   std::sort(vSeeds.begin(), vSeeds.end(), [](const PosT& v1, const PosT& v2){
-	return v1.Pos.Mag2()<v2.Pos.Mag2();
+    return v1.Pos.Mag2()<v2.Pos.Mag2();
   });
 
   // Remove seed guess if less than a few cm between them
   for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
-	auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
-	const double lim = SQRT2*500.; // 50cm
-	if(diffInf.Mag() < lim)
-	  vSeeds.erase(vSeeds.begin()+iSeed);
+    auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
+    const double lim = GetSQRT2()*500.; // 50cm
+    if(diffInf.Mag() < lim)
+      vSeeds.erase(vSeeds.begin()+iSeed);
 
   }
 
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
-	return GetNLL(vHits, hPDF, v1.Pos, v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, v2.T, fweight, wPower);
+    return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fweight, wPower);
   });
 
   if(vSeeds.size() > MaxSeeds)
-	vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
+    vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
 
   return vSeeds;
 
 }
 
 std::vector<PosT> GetVPosTSeeds(vHits& vHits,
-								TH1D* hPDF,
-								const bnds& b,
-								const double& SoL,
-								const unsigned int& wPower = 1,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
-
-  // Get vector of seeds
-  std::vector<PosT> vSeeds;
-  // auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
-  // if(b.IsInPos(CentroidSeed))
-	// vSeeds.emplace_back(CentroidSeed, b.GetDWall(CentroidSeed)/SoL);
-  auto DTSeed = GetDTSeed(vHits, b);
-  if(b.IsInPos(DTSeed))
-	vSeeds.emplace_back(DTSeed, b.GetDWall(DTSeed)/SoL);
-
-  if(MaxSeeds < 3)
-	return vSeeds;
-
-  auto M = GetDMatrix(vHits);
-  auto nHits = vHits.size();
-
-  for(auto i=0; i<nHits; i++) {
-	auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
-
-	for(auto &ivSeed:vSubSeeds){
-
-	  if(ivSeed.empty() || ivSeed.size() < 5)
-		continue;
-
-	  auto PosSeed = GetDTSeed(ivSeed, b);
-
-	  if(b.IsInPos(PosSeed))
-		vSeeds.emplace_back(PosSeed, b.GetDWall(PosSeed)/SoL);
-
-	}
-
-  }
-
-  // Clear vector of seeds for duplicates
-  for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
-	vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
-  }
-
-  // Sort by magnitude
-  std::sort(vSeeds.begin(), vSeeds.end(), [](const PosT& v1, const PosT& v2){
-	return v1.Pos.Mag2()<v2.Pos.Mag2();
-  });
-
-  // Remove seed guess if less than a few cm between them
-  for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
-	auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
-	const double lim = SQRT2*500.; // 50cm
-	if(diffInf.Mag() < lim)
-	  vSeeds.erase(vSeeds.begin()+iSeed);
-
-  }
-
-
-  // Sort seeds by flat NLL value
-  std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
-	return GetNLL(vHits, hPDF, v1.Pos, v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, v2.T, fweight, wPower);
-  });
-
-  if(vSeeds.size() > MaxSeeds)
-	vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
-
-  return vSeeds;
-
-}
-
-std::vector<PosT> GetVPosTSeeds(vHits& vHits,
-								TH1D* hPDF,
-								const double& TGuess,
-								const bnds& b,
-								const unsigned int& wPower = 1,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
+				TH1D* hPDF,
+				const double& TGuess,
+				const bnds& b,
+				const unsigned int& wPower = 1,
+				const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
 
   // Get vector of seeds
   std::vector<PosT> vSeeds;
   auto CentroidSeed = GetCentroidSeed(vHits, b, 4);
   if(b.IsInPos(CentroidSeed))
-	vSeeds.emplace_back(CentroidSeed, TGuess);
+    vSeeds.emplace_back(CentroidSeed, TGuess);
   auto DTSeed = GetDTSeed(vHits, b);
   if(b.IsInPos(DTSeed))
-	vSeeds.emplace_back(DTSeed, TGuess);
+    vSeeds.emplace_back(DTSeed, TGuess);
 
   if(MaxSeeds < 3)
-	return vSeeds;
+    return vSeeds;
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
 
   for(auto i=0; i<nHits; i++) {
-	auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
+    auto vSubSeeds = GetSetsOfVHits(M, i, vHits);
 
-	for(auto &ivSeed:vSubSeeds){
+    for(auto &ivSeed:vSubSeeds){
 
-	  if(ivSeed.empty() || ivSeed.size() < 5)
-		continue;
+      if(ivSeed.empty() || ivSeed.size() < 5)
+	continue;
 
-	  auto PosSeed = GetDTSeed(ivSeed, b);
+      auto PosSeed = GetDTSeed(ivSeed, b);
 
-	  if(b.IsInPos(PosSeed))
-		vSeeds.emplace_back(PosSeed, TGuess);
+      if(b.IsInPos(PosSeed))
+	vSeeds.emplace_back(PosSeed, TGuess);
 
-	}
+    }
 
   }
 
   // Clear vector of seeds for duplicates
   for(auto itSeed = vSeeds.begin(); itSeed != vSeeds.end(); itSeed++){
-	vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
+    vSeeds.erase(std::remove(itSeed+1, vSeeds.end(), *itSeed), vSeeds.end());
   }
 
   // Sort by magnitude
   std::sort(vSeeds.begin(), vSeeds.end(), [](const PosT& v1, const PosT& v2){
-	return v1.Pos.Mag2()<v2.Pos.Mag2();
+    return v1.Pos.Mag2()<v2.Pos.Mag2();
   });
 
   // Remove seed guess if less than a few cm between them
   for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
-	auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
-	const double lim = SQRT2*500.; // 50cm
-	if(diffInf.Mag() < lim)
-	  vSeeds.erase(vSeeds.begin()+iSeed);
+    auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
+    const double lim = GetSQRT2()*500.; // 50cm
+    if(diffInf.Mag() < lim)
+      vSeeds.erase(vSeeds.begin()+iSeed);
 
   }
 
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
-	return GetNLL(vHits, hPDF, v1.Pos, v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, v2.T, fweight, wPower);
+    return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fweight, wPower);
   });
 
   if(vSeeds.size() > MaxSeeds)
-	vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
+    vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
 
   return vSeeds;
 

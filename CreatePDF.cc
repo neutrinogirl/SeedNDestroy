@@ -79,6 +79,9 @@ int main(int argc, char *argv[]){
   TH1D* hNHits = new TH1D("hNHits", "NHits per event ; NHits ; ",
 			  axNHits.nBins, axNHits.min, axNHits.max);
 
+  TH1D* hN400 = new TH1D("hN400", "N_{400} per event ; N_{400} ; ",
+			 axNHits.nBins, axNHits.min, axNHits.max);
+
   enum { kTHIT, kTOF };
   std::vector< std::vector<TH2D*> > vvHPDFs;
   vvHPDFs.reserve(vPower.size());
@@ -108,27 +111,13 @@ int main(int argc, char *argv[]){
     b->Print();
 
   const double MaxDWall = b->GetMaxDWall();
-
-  const int RoundedRho = static_cast<int>(std::round(b->GetTVector3().Perp()*1.e-3/2)*1.e3*2);
-  const int RoundedZ   = static_cast<int>(std::round(b->GetTVector3().z()*1.e-3/2)*1.e3*2);
-  AxisGrid<int> agRho({0, RoundedRho}, 1.e3);
-  AxisGrid<int> agZ({0, RoundedZ}, 1.e3);
-
-  TrigTimePDF TTPDF(agRho.GetVCenters(), agZ.GetVCenters());
-
+  const double ScaleDWall = 1.5;
 
   auto hDWallVSTTime = new TH2D("hDWallVSTTime", "TRUE d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
 				20, b->vT.min, b->vT.max,
-				20, 0., MaxDWall);
+				20*ScaleDWall, 0., MaxDWall*ScaleDWall);
 
-  auto hRDWallVSTTime = new TH2D("hRDWallVSTTime", "TRUE d_{Wall} from R vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-				 20, b->vT.min, b->vT.max,
-				 20, 0., MaxDWall);
-
-  auto hZDWallVSTTime = new TH2D("hZDWallVSTTime", "TRUE d_{Wall} from Z vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-				 20, b->vT.min, b->vT.max,
-				 20, 0., MaxDWall);
-
+  
   // ######################################## //
   // Loop and get vector of NHits
   ProgressBar progress_bar(nEvts, 70);
@@ -143,30 +132,32 @@ int main(int argc, char *argv[]){
     // Get number of trigger associated with an event
     // i.e, number of EV inside the rat DS
     auto nTriggers = w_rat.GetNTriggers();
-    nTriggers = nTriggers > 1 ? 1 : nTriggers;
+
+    // Assume only single particle are generated
+    const int iParticle = 0;
 
     for(auto iTrigger=0; iTrigger<nTriggers; iTrigger++){
 
       double TrigTime = 0;
 
       // Get True info to build PDFs
-      const auto PosTrue = ANNIEShift(w_rat.GetPosTrue(0));
-      const auto DirTrue = ANNIEDirShift(w_rat.GetDirTrue(0));
-      const auto TTrue = w_rat.GetTTrue(0);
+      const auto PosTrue = ANNIEShift(w_rat.GetPosTrue(iParticle));
+      const auto DirTrue = ANNIEDirShift(w_rat.GetDirTrue(iParticle));
+      const auto TTrue = w_rat.GetTTrue(iParticle);
 
       // Get vector of hits
       std::vector<Hit> vHits = w_rat.GetVHits(iTrigger);
       if(vHits.empty())
 	continue;
       ReTriggerVHits(vHits, 2., TrigTime);
-      // std::sort(vHits.begin(), vHits.end());
 
       //
       // DO STUFF
       //
 
       // GetNHits per evt
-      hNHits->Fill(GetNPrompts(vHits, 400));
+      hN400->Fill(GetNPrompts(vHits, 400));
+      hNHits->Fill(GetNPrompts(vHits));
 
       for(auto iPower = 0; iPower<vPower.size(); iPower++){
 
@@ -187,17 +178,8 @@ int main(int argc, char *argv[]){
       }
 
 
-      TTPDF.Fill(PosTrue, TrigTime);
-
-      std::size_t idx = 0;
-      double dWall = GetDWall(PosTrue, 1516.6, 1973.8, idx);
-
+      double dWall = b->GetDWall(PosTrue);
       hDWallVSTTime->Fill(TrigTime, dWall);
-      if(idx==0)
-	hRDWallVSTTime->Fill(TrigTime, dWall);
-      else if(idx==1)
-	hZDWallVSTTime->Fill(TrigTime, dWall);
-
 
       // ...
 
@@ -221,51 +203,11 @@ int main(int argc, char *argv[]){
   ScaleHist(hNHits, static_cast<double>(nEvts));
   hNHits->Write();
 
+  ScaleHist(hN400, static_cast<double>(nEvts));
+  hN400->Write();
+
   ScaleHist(hDWallVSTTime, static_cast<double>(nEvts));
   hDWallVSTTime->Write();
-
-  //
-  // ####
-  //
-
-  TF1 *fpol = new TF1("fpol", "pol1", -1, 1);
-  fpol->SetLineWidth(2);
-  fpol->SetParNames("B [ns]", "A [ns/mm]");
-
-  auto hProf = hDWallVSTTime->ProfileY();
-  hProf->Write();
-  TFitResultPtr fr = hProf->Fit(fpol, "V");
-
-  // Save fit in ttree
-  typedef struct PolFitResults {
-    double A, AErr, B, BErr, Chi2NDF;
-  } PolFitResults;
-
-  PolFitResults pfr;
-  TTree T("pfr", "Linear fit results of d_Wall VS TTrig");
-  T.Branch("A", &pfr.A, "A/D");
-  T.Branch("AErr", &pfr.AErr, "AErr/D");
-  T.Branch("B", &pfr.B, "B/D");
-  T.Branch("BErr", &pfr.BErr, "BErr/D");
-  T.Branch("Chi2NDF", &pfr.Chi2NDF, "Chi2NDF/D");
-  pfr.Chi2NDF = fpol->GetChisquare() / fpol->GetNDF();
-  pfr.B = fpol->GetParameter(0); pfr.BErr = fpol->GetParError(0);
-  pfr.A = fpol->GetParameter(1); pfr.AErr = fpol->GetParError(1);
-  T.Fill();
-  T.Write();
-
-  // /*Create a histogram to hold the confidence intervals*/
-  // TH1D *hDWallVSTTime_Prof_Err = new TH1D("hDWallVSTTime_Prof_Err",
-  // 						"TRUE d_{Wall} vs T_{Trig} ;  d_{Wall} [mm] ;",
-  // 						hProf->GetNbinsX(), hProf->GetXaxis()->GetXmin(), hProf->GetXaxis()->GetXmax());
-  // (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hDWallVSTTime_Prof_Err, 0.997);
-  // hDWallVSTTime_Prof_Err->SetStats(kFALSE);
-  // hDWallVSTTime_Prof_Err->SetFillColor(2);
-  // hDWallVSTTime_Prof_Err->Write();
-
-
-  hRDWallVSTTime->Write();
-  hZDWallVSTTime->Write();
 
   for(auto& vHPDFs:vvHPDFs){
 
@@ -280,14 +222,6 @@ int main(int argc, char *argv[]){
     vHPDFs[kTOF]->ProjectionY()->Write();
 
   }
-
-  for(auto& m : TTPDF.GetMT()){
-    for(auto & mm : m.second){
-      mm.second->Write();
-    }
-  }
-
-  TTPDF.Save();
 
   fOut.Close();
 
