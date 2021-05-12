@@ -8,6 +8,7 @@
 
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TF1.h>
 
 #include <Wrapper.hh>
 #include <ProgressBar.hpp>
@@ -62,11 +63,14 @@ int main(int argc, char *argv[]){
 
   // ######################################## //
   // DET Boundaries
-  const std::vector<double> DetBnds = {args.bnds.x(), args.bnds.y(), args.bnds.z()};
-  const std::vector<double> TBnds = {-10., args.bnds.Mag() / SOL};
-  Bnds bnds = {DetBnds, TBnds};
+  bnds *b;
+  if(args.isBox){
+	b = new BoxBnds( { args.bnds[0] , args.bnds[1] , args.bnds[2] });
+  } else{
+	b = new CylBnds(args.bnds[0], args.bnds[1]);
+  }
   if(args.isVerbose)
-	std::cout << "DET BNDS SET: Rho=" << bnds.GetTVector3().Perp() << " z=" << bnds.GetTVector3().z() << std::endl;
+	b->Print();
 
 
   // ######################################## //
@@ -75,6 +79,19 @@ int main(int argc, char *argv[]){
   TimePDF.Load(pdf);
   if(args.isVerbose)
 	std::cout << "TimePDF LOADED" << std::endl;
+
+  const PolFitResults pfr = GetSOL(pdf);
+
+  // ######################################## //
+  // Create structure holding boundaries
+  DetParams dp = {b, pfr.A};
+
+  const double MaxDWall = b->GetMaxDWall();
+  if(args.isVerbose)
+	std::cout << MaxDWall << std::endl;
+  TF1 fDWallVSTTrig("fDWallVSTTrig", "pol1", 0, MaxDWall);
+  fDWallVSTTrig.SetParameter(0, pfr.B); fDWallVSTTrig.SetParError(0, pfr.BErr);
+  fDWallVSTTrig.SetParameter(1, pfr.A); fDWallVSTTrig.SetParError(1, pfr.AErr);
 
   // ######################################## //
   // OUTPUT Tree

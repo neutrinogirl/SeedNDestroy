@@ -31,21 +31,17 @@ TGraph *GetInt(const std::string& tag, TH2D* h){
 
 int main(){
 
-  const std::string path = "outputs/electrons_5MeV_Fill_TrigThresh8_dWall_9000_35000_TTrigCut0_m50_p100";
-  const std::string detname = "theia_90pct_9000_35000_wbls_3pct";
+  const std::string path = "outputs/savio/";
 
   const std::vector<std::string> vComponents {
 	  "geoneutrino",
 	  "pmt_*"
-	  // "pmt_bi214",
-	  // "pmt_tl208",
-	  // "pmt_k40",
   };
 
   const std::string signame = vComponents[0];
 
-  const int weight = 1;
-  const std::string pdfweight = Form("_*_dWall_*_W%d_*.root", weight);
+  const int weight = 0;
+  const std::string pdfweight = Form("/*_W%d_CVG20_GridSeed_Rec.root", weight);
 
   std::map<std::string, TChain*> vCh;
 
@@ -82,7 +78,8 @@ int main(){
 				   AxRec.nBins, AxRec.min, AxRec.max)
 
 	  );
-	  std::string filenames = path + "/" + detname + "_" + name + pdfweight;
+	  std::string filenames = path + name + pdfweight;
+	  std::cout << filenames << std::endl;
 	  vCh[name] = new TChain("T", "");
 	  vCh[name]->Add(filenames.c_str());
 	  vCh[name]->Draw(Form("mc%s-rec%s:chi2>>h_%s",axName.c_str(), axName.c_str(), name.c_str()), "", "GOFF");

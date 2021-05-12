@@ -63,17 +63,14 @@ int main(int argc, char *argv[]){
 
   // ######################################## //
   // DET Boundaries
-  const std::vector<double> DetBnds =
-	  args.isBox ?
-	  std::vector<double>({args.bnds.x(), args.bnds.y(), args.bnds.z()}) :
-	  std::vector<double>({args.bnds.Perp(), args.bnds.Perp(), args.bnds.z()});
-  const std::vector<double> TBnds =
-	  args.isBox ?
-	  std::vector<double>({0., args.bnds.Mag() / SOL}) :
-	  std::vector<double>({0., sqrt(2*std::pow(args.bnds.Perp(), 2) + std::pow(args.bnds.z(), 2)) / SOL});
-  Bnds bnds = {DetBnds, TBnds};
+  bnds *b;
+  if(args.isBox){
+	b = new BoxBnds( { args.bnds[0] , args.bnds[1] , args.bnds[2] });
+  } else{
+	b = new CylBnds(args.bnds[0], args.bnds[1]);
+  }
   if(args.isVerbose)
-	std::cout << "DET BNDS SET: Rho=" << bnds.GetTVector3().Perp() << " z=" << bnds.GetTVector3().z() << std::endl;
+	b->Print();
 
 
   // ######################################## //
@@ -83,27 +80,15 @@ int main(int argc, char *argv[]){
   if(args.isVerbose)
 	std::cout << "TimePDF LOADED" << std::endl;
 
-  // Save fit in ttree
-  typedef struct PolFitResults {
-	double A, AErr, B, BErr, Chi2NDF;
-  } PolFitResults;
-  PolFitResults pfr;
-  TFile file(pdf.c_str(), "READ");
-  auto T = file.Get<TTree>("pfr");
-  T->SetBranchAddress("A", &pfr.A);
-  T->SetBranchAddress("AErr", &pfr.AErr);
-  T->SetBranchAddress("B", &pfr.B);
-  T->SetBranchAddress("BErr", &pfr.BErr);
-  T->GetEntry(0);
-  delete T;
-  file.Close();
-  std::cout << pfr.A << "[ns/mm]" << std::endl;
+  const PolFitResults pfr = GetSOL(pdf);
 
   // ######################################## //
   // Create structure holding boundaries
-  DetParams dp = {args.bnds.Perp(), args.bnds.z(), pfr.A};
+  DetParams dp = {b, pfr.A};
 
-  const double MaxDWall = *std::min_element(DetBnds.begin(), DetBnds.end());
+  const double MaxDWall = b->GetMaxDWall();
+  if(args.isVerbose)
+	std::cout << MaxDWall << std::endl;
   TF1 fDWallVSTTrig("fDWallVSTTrig", "pol1", 0, MaxDWall);
   fDWallVSTTrig.SetParameter(0, pfr.B); fDWallVSTTrig.SetParError(0, pfr.BErr);
   fDWallVSTTrig.SetParameter(1, pfr.A); fDWallVSTTrig.SetParError(1, pfr.AErr);
@@ -166,16 +151,14 @@ int main(int argc, char *argv[]){
 	  // #### #### #### TIME SEEDING #### #### #### //
 	  //
 
-	  auto CentroidSeed = GetCentroidSeed(vHits, bnds, 2);
-	  if(!bnds.IsIn(CentroidSeed)){
+	  auto CentroidSeed = GetCentroidSeed(vHits, *b, 4);
+	  if(!b->IsInPos(CentroidSeed)){
 		std::cerr << "NASTY Centroid seed" << std::endl;
 		continue;
 	  }
-
-	  const double DWallSeed = GetDWall(CentroidSeed, args.bnds.Perp(), args.bnds.z());
+	  const double DWallSeed = b->GetDWall(CentroidSeed);
 	  const double TDWallSeed = fDWallVSTTrig.Eval(DWallSeed);
 
-	  // const double TSeed = TimePDF.GetTrigTime(CentroidSeed, TBounds);
 	  const double TSeed = TDWallSeed;
 
 	  //
@@ -183,7 +166,7 @@ int main(int argc, char *argv[]){
 	  //
 
 	  const std::size_t MaxSeeds = 5;
-	  std::vector<TVector3> vSeeds = GetVSeeds(vHits, hPDF_TRes, -TSeed, bnds, wPower, MaxSeeds);
+	  std::vector<TVector3> vSeeds = GetVSeeds(vHits, hPDF_TRes, -TSeed, *b, wPower, MaxSeeds);
 
 	  //
 	  // #### #### #### Time to fit some sinsemilia #### #### #### //
@@ -199,7 +182,7 @@ int main(int argc, char *argv[]){
 
 		// Recon
 		// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
-		auto x = ReconPosTime(ds, bnds, dp, Seed, -TSeed);
+		auto x = ReconPosTime(ds, *b, dp, Seed, -TSeed);
 		vX.emplace_back(x);
 
 	  }

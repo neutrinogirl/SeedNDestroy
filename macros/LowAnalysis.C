@@ -34,26 +34,27 @@ TGraph* GetInt(TH1D* h, const std::string& tag = ""){
 
 void LLA(const std::string& histname = "nhits", const zAxis& Ax = {1000, 0., 10000.}){
 
-  const std::string path = "outputs/electrons_5MeV_Fill_TrigThresh8_dWall_9000_35000_TTrigCut0_m50_p100/wGridSearch/";
-  const std::string detname = "theia_90pct_9000_35000_wbls_3pct";
+  const std::string path = "outputs/savio/";
 
   const std::vector<std::string> vComponents {
 	  "geoneutrino",
-	  "reactorWorld",
-	  "pmt_bi214*"
+	  "pmt_bi214",
+	  "pmt_tl208",
+	  "pmt_k40",
   };
 
   const std::vector<int> ColPalette {
     kBlue-4,
     kRed-4,
-    kGreen+1
+    kGreen+1,
+    kBlack
   };
 
   const std::string signame = vComponents[0];
   const std::vector< std::string > vSigNames = {signame};
 
-  const int weight = 1;
-  const std::string pdfweight = Form("_*_dWall_*_W%d_*.root", weight);
+  const int weight = 0;
+  const std::string pdfweight = Form("/*_W%d_GridSeed_Rec.root", weight);
 
   std::map<std::string, TChain*> vCh;
   std::map<std::string, TH1D*> vHist;
@@ -72,7 +73,7 @@ void LLA(const std::string& histname = "nhits", const zAxis& Ax = {1000, 0., 100
 						   Ax.nBins, Ax.min, Ax.max);
     SetBasicTStyle(vHist[name], ColPalette[iCounter]);
 
-	std::string filenames = path + "/" + detname + "_" + name + pdfweight;
+	std::string filenames = path + name + pdfweight;
 	vCh[name] = new TChain("T", "");
 	vCh[name]->Add(filenames.c_str());
 
@@ -120,22 +121,21 @@ void LLA(const std::string& histname = "nhits", const zAxis& Ax = {1000, 0., 100
   for(const auto& pt:vPts) {
 
 	// BCKG
-	double bckgfrac = 1.;
+	double bckgfrac = 0.;
 	for(const auto& name:vComponents){
 	  for(const auto& sname:vSigNames){
 		if(name != sname){
-		  bckgfrac -= vGr[name]->Eval(pt);
+		  bckgfrac += vGr[name]->Eval(pt);
 		}
 	  }
 	}
 
 	// SIG
-	double sigfrac = 1-vGr[signame]->Eval(pt);
+	double sigfrac = vGr[signame]->Eval(pt);
 
 	// DEBUG
 	// std::cout << bckgfrac << " " << sigfrac << std::endl;
 
-	double disci = 0;
 	const double discri = bckgfrac != 0 ? std::abs(sigfrac / bckgfrac) : bckgfrac;
 	if(discri > maxDiscri){
 	  maxDiscri = discri;
