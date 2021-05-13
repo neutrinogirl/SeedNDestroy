@@ -29,6 +29,8 @@ typedef struct DataStruct1D : public DataStruct, Recorder {
 
 const double PosScale = 1.e-1;
 const double TScale   = 1.e1;
+// const double PosScale = 1.;
+// const double TScale   = 1.;
 
 typedef struct DetParams {
   bnds *b;

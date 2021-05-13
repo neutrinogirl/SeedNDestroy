@@ -27,7 +27,7 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   double minf;
 
   // Create minimizer obj
-  nlopt::opt opt_local(nlopt::LN_NEWUOA_BOUND, nDimf);
+  nlopt::opt opt_local(nlopt::LN_COBYLA, nDimf);
   opt_local.set_min_objective(fPosT, &DS);
   // Create result obj
   nlopt::result result;
@@ -47,7 +47,7 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   opt_local.set_lower_bounds(lb);
   opt_local.set_upper_bounds(ub);
   // Set T constraints
-  // opt_local.add_inequality_constraint(fPosTC, &DP, 1.e-12);
+  opt_local.add_inequality_constraint(fPosTC, &DP, 1.e-12);
   // Set stopping criteria
   opt_local.set_xtol_rel(1.e-12);
   opt_local.set_ftol_rel(1.e-12);

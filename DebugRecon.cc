@@ -182,7 +182,7 @@ int main(int argc, char *argv[]){
 
 	  // DEBUG PRINTS
 	  if(args.isDDebug){
-		PrintDD("TRUTH", PosTrue, TTrue, b->GetDWall(PosTrue));
+		PrintDD("TRUTH", PosTrue, -(TTrue-TrigTime), b->GetDWall(PosTrue));
 	  }
 
 	  LoadVHits(evt, vHits);
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]){
 	  // #### #### #### POS SEEDING #### #### #### //
 	  //
 
-	  const std::size_t MaxSeeds = 5;
+	  const auto MaxSeeds = std::numeric_limits<unsigned int>::max();
 	  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, wPower, MaxSeeds);
 	  if(!vSeeds.empty())
 		seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
