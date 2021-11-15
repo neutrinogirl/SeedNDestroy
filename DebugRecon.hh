@@ -63,6 +63,8 @@ typedef struct Args{
 
   bool useGridSearch = false;
 
+  bool isUnbinned = false;
+
   double cvg = 0.;
 
 } Args;
@@ -88,6 +90,7 @@ static void ShowUsage(const std::string& name){
 	    << "\t--nthreads\tSet nThread to run in parallel (default 1) \n"
 
 	    << "\t-g\tGrid search seeding (default false) \n"
+	    << "\t-u\tUnbinned fit (default false) \n"
 
 	    << "\t--dir\tRead all .root files in directory \n"
 
@@ -127,6 +130,9 @@ static void ProcessArgs(TApplication &theApp,
 
     } else if (boost::iequals(arg, "-g")) {
       args.useGridSearch=true;
+
+    } else if (boost::iequals(arg, "-u")) {
+      args.isUnbinned=true;
 
     } else if (boost::iequals(arg, "-b")) {
       args.bnds.resize(3);

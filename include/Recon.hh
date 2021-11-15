@@ -49,10 +49,10 @@ std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
   // Set T constraints
   opt_local.add_inequality_constraint(fPosTC, &DP, 1.e-12);
   // Set stopping criteria
-  opt_local.set_xtol_rel(1.e-12);
-  opt_local.set_ftol_rel(1.e-12);
+  opt_local.set_xtol_rel(1.e-18);
+  opt_local.set_ftol_rel(1.e-18);
   // Set limits
-  opt_local.set_maxtime(1./*sec*/);
+  opt_local.set_maxtime(2./*sec*/);
   // Set step size
   opt_local.get_initial_step_({
       10., 10., 10.,

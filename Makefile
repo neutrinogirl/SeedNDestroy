@@ -8,7 +8,7 @@ CXX = g++
 NAME = $(shell uname -n)
 
 DEBUG_LEVEL    = -g
-EXTRA_CCFLAGS  = -std=c++11 -Wall
+EXTRA_CCFLAGS  = -std=c++11
 CPPFLAGS       = $(DEBUG_LEVEL) $(EXTRA_CCFLAGS)
 CCFLAGS        = $(CPPFLAGS)
 
