@@ -7,7 +7,7 @@ CXX = g++
 ### Machine name
 NAME = $(shell uname -n)
 
-DEBUG_LEVEL    = -g
+DEBUG_LEVEL    = -g -Wall
 EXTRA_CCFLAGS  = -std=c++11
 CPPFLAGS       = $(DEBUG_LEVEL) $(EXTRA_CCFLAGS)
 CCFLAGS        = $(CPPFLAGS)
@@ -39,7 +39,6 @@ else ($(findstring brc,$(NAME)))
 NLOPTCFLAGS := -I/global/scratch/maskins/PathBWbls/off_recon_nlopt/nlopt-install/include
 NLOPTLIBS   := -L/global/scratch/maskins/PathBWbls/off_recon_nlopt/nlopt-install/lib64 -lnlopt -lm
 else
-# NLOPTCFLAGS := -I/usr/include # No need to add it, g++ will find it
 NLOPTLIBS   := -lnlopt -lm
 endif
 
@@ -64,25 +63,10 @@ help:
 all: CreatePDF
 
 CreatePDF: 
-	$(CXX) $(CPPFLAGS) -o CreatePDF CreatePDF.cc $(OBJS) $(EXTRALIBS)
-
-CreatePDF_LetterBox: 
-	$(CXX) $(CPPFLAGS) -o CreatePDF_LetterBox CreatePDF_LetterBox.cc $(OBJS) $(EXTRALIBS)
+	$(CXX) $(CPPFLAGS) -o CreatePDF CreatePDF.cc include/Args.cc $(OBJS) $(EXTRALIBS)
 
 DebugRecon: 
-	$(CXX) $(CPPFLAGS) -o DebugRecon DebugRecon.cc $(OBJS) $(EXTRALIBS)
-
-Recon:
-	$(CXX) $(CPPFLAGS) -o Recon Recon.cc $(OBJS) $(EXTRALIBS)
-
-Recon_LetterBox:
-	$(CXX) $(CPPFLAGS) -o Recon_LetterBox Recon_LetterBox.cc $(OBJS) $(EXTRALIBS)
-
-ReconFlat:
-	$(CXX) $(CPPFLAGS) -o ReconFlat ReconFlat.cc $(OBJS) $(EXTRALIBS)
-
-ReconThread:
-	$(CXX) $(CPPFLAGS) -o ReconThread ReconThread.cc $(OBJS) $(EXTRALIBS)
+	$(CXX) $(CPPFLAGS) -o DebugRecon DebugRecon.cc include/Args.cc $(OBJS) $(EXTRALIBS)
 
 clean:
-	$(RM) $(OBJS) CreatePDF DebugRecon Recon ReconFlat ReconThread
+	$(RM) $(OBJS) CreatePDF DebugRecon
