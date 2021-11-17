@@ -14,15 +14,10 @@
 int main(int argc, char *argv[]){
 
   // ######################################## //
-  // Create TApp
-  TApplication theApp("App", &argc, argv);
-
-
-  // ######################################## //
   // Parse arguments
   // Simple struct containing filename and verbosity level
   CreatePDFArgs args;
-  args(theApp);
+  args(argc, argv);
 
 
   // ######################################## //
@@ -173,8 +168,6 @@ int main(int argc, char *argv[]){
   }
 
   fOut.Close();
-
-  theApp.Terminate();
 
   return EXIT_SUCCESS;
 }

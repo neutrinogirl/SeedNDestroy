@@ -9,8 +9,6 @@
 #include <vector>
 #include <iostream>
 
-#include <TApplication.h>
-
 //
 //
 //
@@ -19,7 +17,7 @@ struct BaseArg {
   BaseArg(const std::string &flag_short, const std::string &flag_long)
 	  : flag_short(flag_short), flag_long(flag_long) {}
   virtual bool operator()(const std::string &arg,
-						  const TApplication &theApp, int &i) = 0;
+						  const int& argc, char *argv[], int &i) = 0;
   virtual ~BaseArg() = default;
 };
 template <typename T>
@@ -38,9 +36,9 @@ typedef struct sArg : public TArg<std::string>{
   sArg(const std::string &flag_short, const std::string &flag_long, const std::string &val)
 	  : TArg(flag_short, flag_long, val) {}
   bool operator()(const std::string &arg,
-				  const TApplication &theApp, int &i) override {
+				  const int& argc, char *argv[], int &i) override {
 	if (boost::iequals(arg, flag_short) || boost::iequals(arg, flag_long)) {
-	  val=theApp.Argv(++i);
+	  val=argv[++i];
 	  return true;
 	} else {
 	  return false;
@@ -51,7 +49,7 @@ typedef struct bArg : public TArg<bool>{
   bArg(const std::string &flag_short, const std::string &flag_long)
 	  : TArg(flag_short, flag_long) { val = false;}
   bool operator()(const std::string &arg,
-				  const TApplication &theApp, int &i) override {
+				  const int& argc, char *argv[], int &i) override {
 	if (boost::iequals(arg, flag_short) || boost::iequals(arg, flag_long)) {
 	  val=true;
 	  return true;
@@ -66,9 +64,9 @@ typedef struct iArg : public TArg<int>{
   iArg(const std::string &flag_short, const std::string &flag_long, int val)
 	  : TArg(flag_short, flag_long, val) {}
   bool operator()(const std::string &arg,
-				  const TApplication &theApp, int &i) override {
+				  const int& argc, char *argv[], int &i) override {
 	if (boost::iequals(arg, flag_short) || boost::iequals(arg, flag_long)) {
-	  val=std::stoi(theApp.Argv(++i));
+	  val=std::stoi(argv[++i]);
 	  return true;
 	} else {
 	  return false;
@@ -81,27 +79,27 @@ typedef struct fArg : public TArg<float>{
   fArg(const std::string &flag_short, const std::string &flag_long, float val)
 	  : TArg(flag_short, flag_long, val) {}
   bool operator()(const std::string &arg,
-				  const TApplication &theApp, int &i) override {
+				  const int& argc, char *argv[], int &i) override {
 	if (boost::iequals(arg, flag_short) || boost::iequals(arg, flag_long)) {
-	  val=std::stof(theApp.Argv(++i));
+	  val=std::stof(argv[++i]);
 	  return true;
 	} else {
 	  return false;
 	}
   }
 } fArg;
- typedef struct vfArg : public TArg<std::vector<float>>{
-   vfArg(const std::string &flag_short, const std::string &flag_long)
-	   : TArg(flag_short, flag_long) {}
-   vfArg(const std::string &flag_short, const std::string &flag_long, const std::vector<float> &val)
-	   : TArg(flag_short, flag_long, val) {}
-   bool operator()(const std::string &arg,
-				  const TApplication &theApp, int &i) override {
+typedef struct vfArg : public TArg<std::vector<float>>{
+  vfArg(const std::string &flag_short, const std::string &flag_long)
+	  : TArg(flag_short, flag_long) {}
+  vfArg(const std::string &flag_short, const std::string &flag_long, const std::vector<float> &val)
+	  : TArg(flag_short, flag_long, val) {}
+  bool operator()(const std::string &arg,
+				  const int& argc, char *argv[], int &i) override {
 	if (boost::iequals(arg, flag_short) || boost::iequals(arg, flag_long)) {
-	  for(++i; i<theApp.Argc(); ++i){
-		if( std::strcmp(reinterpret_cast<const char *>(theApp.Argv(i)[0]), "-") == 0 )
+	  for(++i; i<argc; ++i){
+		if( std::strcmp(reinterpret_cast<const char *>(argv[i][0]), "-") == 0 )
 		  break;
-		val.emplace_back(std::stof(theApp.Argv(i)));
+		val.emplace_back(std::stof(argv[i]));
 	  }
 	  return !val.empty();
 	} else {
@@ -120,9 +118,9 @@ typedef struct Args {
   explicit Args(const std::vector<BaseArg *> &v) : v(v) {}
   //
   virtual void ShowUsage(const std::string &name) = 0;
-  void ProcessArgs(const TApplication &theApp);
-  void operator()(const TApplication &theApp) {
-	ProcessArgs(theApp);
+  void ProcessArgs(const int& argc, char *argv[]);
+  void operator()(const int& argc, char *argv[]) {
+	ProcessArgs(argc, argv);
   }
 } Args;
 

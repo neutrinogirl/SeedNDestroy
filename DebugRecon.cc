@@ -33,9 +33,6 @@ int main(int argc, char *argv[]){
   std::cout << "USING ROOT V:" << ROOTVERSION << std::endl;
 
 
-  // ######################################## //
-  // Create TApp
-  TApplication theApp("App", &argc, argv);
   gROOT->SetBatch(true);
   if(ROOTVERSION>6.)
 	gStyle->SetPalette(kInvertedDarkBodyRadiator);
@@ -45,7 +42,7 @@ int main(int argc, char *argv[]){
   // Parse arguments
   // Simple struct containing filename and verbosity level
   ReconArgs args;
-  args(theApp);
+  args(argc, argv);
 
 
   // ######################################## //
@@ -428,8 +425,6 @@ int main(int argc, char *argv[]){
   cDRho->Write();
 
   fOut.Close();
-
-  theApp.Terminate();
 
   return EXIT_SUCCESS;
 }

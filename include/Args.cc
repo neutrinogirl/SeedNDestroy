@@ -4,25 +4,25 @@
 
 #include <Args.hh>
 
-void Args::ProcessArgs(const TApplication &theApp) {
+void Args::ProcessArgs(const int& argc, char *argv[]) {
 
   // Reading user input parameters
-  if (theApp.Argc() < 2) {
-	ShowUsage(theApp.Argv(0));
+  if (argc < 2) {
+	ShowUsage(argv[0]);
 	exit(0);
   }
 
-  for (int i = 1; i < theApp.Argc(); i++) {
+  for (int i = 1; i < argc; i++) {
 
-	std::string arg = theApp.Argv(i);
+	std::string arg = argv[i];
 	if ((arg == "-h") || (arg == "--help")) {
-	  ShowUsage(theApp.Argv(0));
+	  ShowUsage(argv[0]);
 	  exit(0);
 	}
 
 	if(std::none_of(v.begin(), v.end(),
-				   [&arg, &theApp, &i](BaseArg *ArgPtr){
-					 return (*ArgPtr)(arg, theApp, i);
+				   [&arg, &argc, &argv, &i](BaseArg *ArgPtr){
+					 return (*ArgPtr)(arg, argc, argv, i);
 				   }))
 	  std::cerr << "Unkown parameter: " << arg << std::endl;
 
