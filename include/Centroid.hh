@@ -11,24 +11,24 @@
 #include "MathUtils.hh"
 
 TVector3 GetCentroidSeed(const std::vector<Hit>& vHits, const bnds& b,
-			 const unsigned int& wPower = 0){
+						 const unsigned int& wPower = 0){
 
-  TVector3 Seed(0.,0.,0.);
+  TVector3 seed = std::accumulate(vHits.begin(), vHits.end(),
+								  TVector3(),
+								  [](const TVector3 &lhs, const Hit &rhs){
+									return lhs+rhs.PMTPos;
+								  }
+  );
+  double norm = std::accumulate(vHits.begin(), vHits.end(),
+								0.,
+								[&wPower](const double &lhs, const Hit &rhs){
+								  return lhs+fweight(rhs, wPower);
+								}
+  );
 
-  double NormQ = 0.;
-  for(const auto& hit:vHits)
-    NormQ += fweight(hit, wPower);
-  double Norm = NormQ;
+  seed *= 1 / norm;
 
-  // ##################################### //
-  // ### #### ### FIND SEED #### #### #### //
-  // ##################################### //
-
-  for(const auto& hit:vHits)
-    Seed+=hit.PMTPos*fweight(hit, wPower);
-  Seed *= 1 / Norm;
-
-  return b.IsInPos(Seed) ? Seed : b.GetTVector3();
+  return b.IsInPos(seed) ? seed : b.GetTVector3();
 
 }
 

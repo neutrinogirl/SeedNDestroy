@@ -68,7 +68,7 @@ double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 
 
   // GetNLL
-  return isUnbinned ? UnbinnedLL(hPDF, vTRes) :  -CalculateLL(hPDF, &hExp, false);
+  return isUnbinned ? UnbinnedLL(hPDF, vTRes) : -CalculateLL(hPDF, &hExp, false);
 
 }
 

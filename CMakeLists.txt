@@ -17,8 +17,11 @@ if(NOT ROOT_FOUND)
     return()
 endif()
 
+##
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 
+set(NLOPT_INCLUDE_DIRS ${NLOPT_ROOT}/include)
+set(NLOPT_LIB ${NLOPT_ROOT}/lib)
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
 # ## NOT NEEDED FOR DICT
@@ -28,38 +31,21 @@ include_directories(
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         $ENV{RATROOT}/include
-        /usr/include/c++/4.9
-        /usr/include/x86_64-linux-gnu/c++/4.9
+        ${NLOPT_INCLUDE_DIRS}
 )
 
 #----------------------------------------------------------------------------
 # Locate RATROOT Libs
 #
 LINK_DIRECTORIES($ENV{RATROOT}/lib)
-LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/lib)
+LINK_DIRECTORIES($ENV{G4LIB}/Linux-g++)
+LINK_DIRECTORIES(${NLOPT_LIB})
 
-#----------------------------------------------------------------------------
-# Locate sources and headers for this project
-# NB: headers are included so they will show up in IDEs
-#
-file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
-file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
+# Sets up global settings
+include("${ROOT_USE_FILE}")
 
-add_executable(CreatePDF CreatePDF.cc)
-add_executable(CreatePDF_LetterBox CreatePDF_LetterBox.cc)
-add_executable(DebugRecon DebugRecon.cc)
-add_executable(Recon Recon.cc)
-add_executable(Recon_LetterBox Recon_LetterBox.cc)
-add_executable(ReconFlat ReconFlat.cc)
-add_executable(ReconThread ReconThread.cc)
+add_executable(CreatePDF CreatePDF.cc include/Args.cc)
+target_link_libraries(CreatePDF PUBLIC ${ROOT_LIBRARIES} ${ROOT_EXE_LINKER_FLAGS} RATEvent G4zlib)
 
-add_executable(Dev include/Recorder.hh)
-set_target_properties(Dev PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(ComparePDF macros/ComparePDF.C)
-set_target_properties(ComparePDF PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(Chi2Cut macros/Chi2Cut.C)
-set_target_properties(Chi2Cut PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(LLA macros/LowAnalysis.C)
-set_target_properties(LLA PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(DrawTRes macros/DrawTRes.C)
-set_target_properties(DrawTRes PROPERTIES LINKER_LANGUAGE CXX)
+add_executable(Recon DebugRecon.cc include/Args.cc)
+target_link_libraries(Recon PUBLIC ${ROOT_LIBRARIES} ${ROOT_EXE_LINKER_FLAGS} RATEvent G4zlib nlopt)
