@@ -268,6 +268,11 @@ int main(int argc, char *argv[]){
 
 		delete localb;
 
+		if(x[4] < NLLSeed)
+		  vX.emplace_back(x);
+		else
+		  vX.emplace_back(std::vector<double>({Seed.Pos[0], Seed.Pos[1], Seed.Pos[2], -Seed.T, NLLSeed, 666.}));
+
 	  }
 
 	  std::sort(vX.begin(), vX.end(), [](const std::vector<double>& v1, const std::vector<double>& v2){

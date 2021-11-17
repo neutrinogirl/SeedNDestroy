@@ -93,7 +93,7 @@ double UnbinnedLL(TH1D *hPDF, const std::vector<double> &vTRes){
   double Chi2 = 0.f;
   for(const auto& TRes:vTRes){
     const double P_TRes = hPDF->Interpolate(TRes);
-    Chi2 += P_TRes <= 0.f ? 1.f : -TMath::Log(P_TRes/hPDF->Integral());
+    Chi2 += P_TRes <= 0.f ? vTRes.size() : -TMath::Log(P_TRes/hPDF->Integral());
   }
   return Chi2;
   
