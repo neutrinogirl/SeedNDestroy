@@ -38,7 +38,7 @@ include_directories(
 # Locate RATROOT Libs
 #
 LINK_DIRECTORIES($ENV{RATROOT}/lib)
-LINK_DIRECTORIES($ENV{G4LIB}/Linux-g++)
+LINK_DIRECTORIES($ENV{GEANT4SYS}/lib)
 LINK_DIRECTORIES(${NLOPT_LIB})
 
 # Sets up global settings
