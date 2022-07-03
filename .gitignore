@@ -84,6 +84,9 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+#
+build/
+
 # User EXE
 CreatePDF
 DebugRecon

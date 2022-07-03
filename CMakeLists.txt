@@ -1,23 +1,21 @@
 cmake_minimum_required(VERSION 3.5)
-project(SeedNDestroy)
+project(wRATter VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-## You need to tell CMake where to find the ROOT installation. This can be done in a number of ways:
-##   - ROOT built with classic configure/make use the provided $ROOTSYS/etc/cmake/FindROOT.cmake
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROOTSYS}/etc/cmake)
-###   - ROOT built with CMake. Add in CMAKE_PREFIX_PATH the installation prefix for ROOT
-#list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
-
+list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
-find_package(ROOT REQUIRED COMPONENTS RIO Net)
+find_package(ROOT 6.24 CONFIG REQUIRED)
 if(NOT ROOT_FOUND)
     message(STATUS "ROOT package not found.")
     return()
 endif()
 
-find_package(Boost COMPONENTS system filesystem REQUIRED)
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.50 REQUIRED COMPONENTS filesystem)
+message(STATUS "Boost version: ${Boost_VERSION}")
 
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
@@ -28,8 +26,6 @@ include_directories(
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         $ENV{RATROOT}/include
-        /usr/include/c++/4.9
-        /usr/include/x86_64-linux-gnu/c++/4.9
 )
 
 #----------------------------------------------------------------------------
@@ -44,22 +40,3 @@ LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/lib)
 #
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
-
-add_executable(CreatePDF CreatePDF.cc)
-add_executable(CreatePDF_LetterBox CreatePDF_LetterBox.cc)
-add_executable(DebugRecon DebugRecon.cc)
-add_executable(Recon Recon.cc)
-add_executable(Recon_LetterBox Recon_LetterBox.cc)
-add_executable(ReconFlat ReconFlat.cc)
-add_executable(ReconThread ReconThread.cc)
-
-add_executable(Dev include/Recorder.hh)
-set_target_properties(Dev PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(ComparePDF macros/ComparePDF.C)
-set_target_properties(ComparePDF PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(Chi2Cut macros/Chi2Cut.C)
-set_target_properties(Chi2Cut PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(LLA macros/LowAnalysis.C)
-set_target_properties(LLA PROPERTIES LINKER_LANGUAGE CXX)
-add_executable(DrawTRes macros/DrawTRes.C)
-set_target_properties(DrawTRes PROPERTIES LINKER_LANGUAGE CXX)
