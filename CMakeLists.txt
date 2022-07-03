@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
-project(wRATter VERSION 1.0)
+project(SnD VERSION 1.0)
 
 set(CMAKE_CXX_STANDARD 11)
+
+add_subdirectory(external/wRATter)
+add_subdirectory(external/Argz)
 
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
@@ -22,7 +25,8 @@ message(STATUS "Boost version: ${Boost_VERSION}")
 # ## NOT NEEDED FOR DICT
 include_directories(
         ${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/wRATter/include
+        ${PROJECT_SOURCE_DIR}/external/wRATter/include
+        ${PROJECT_SOURCE_DIR}/external/Argz/include
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         $ENV{RATROOT}/include
@@ -40,3 +44,5 @@ LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/lib)
 #
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
+
+add_executable(CreatePDF.cc src/SnD/CreatePDF.cc)
