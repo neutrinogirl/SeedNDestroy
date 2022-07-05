@@ -2,17 +2,7 @@
 // Created by zsoldos on 1/5/21.
 //
 
-#include <EventDisplay.hh>
-
-#include <iostream>
-
-#include <TH1D.h>
-#include <TH2D.h>
 #include <TFile.h>
-#include <TF1.h>
-#include <TRandom3.h>
-#include <TProfile.h>
-#include <TVirtualFitter.h>
 
 #include <Wrapper.hh>
 #include <Hit.hh>
@@ -24,23 +14,16 @@
 int main(int argc, char *argv[]){
 
   // ######################################## //
-  // Create TApp
-  TApplication theApp("App", &argc, argv);
-
-
-  // ######################################## //
   // Parse arguments
   // Simple struct containing filename and verbosity level
-  Args args;
-  ProcessArgs(theApp, args);
-  const bool isVerbose = args.isVerbose;
-  const std::string output = args.outname;
+  CreatePDFArgs args;
+  args(argc, argv);
 
 
   // ######################################## //
   // Create wrapper object
-  wRAT w_rat(args.filename);
-  const unsigned long int nEvts = args.nEvts > 0 ? args.nEvts : w_rat.GetNEvts();
+  wRAT w_rat(args.GetInput());
+  const unsigned long nEvts = args.GetNEvts() > 0 ? args.GetNEvts() : w_rat.GetNEvts();
 
 
   // ######################################## //
@@ -52,9 +35,9 @@ int main(int argc, char *argv[]){
   // #### #### #### HISTOGRAMS #### #### #### //
   // ######################################## //
 
-  const zAxis axTRes(250, -50., 200.);
-  const zAxis axCosT(24, -1., 1.);
-  const zAxis axNHits(1000, 0., 2000.);
+  const zAxis axTRes(args.GetTResBins()[0], args.GetTResBins()[1], args.GetTResBins()[2]);
+  const zAxis axCosT(12, -1., 1.);
+  const zAxis axNHits(1000, 0., 1000.);
 
   TH1D* hNHits = new TH1D("hNHits", "NHits per event ; NHits ; ",
 						  axNHits.nBins, axNHits.min, axNHits.max);
@@ -81,21 +64,9 @@ int main(int argc, char *argv[]){
 
   // ######################################## //
   // DET Boundaries
-  bnds *b;
-  if(args.isBox){
-	b = new BoxBnds( { args.bnds[0] , args.bnds[1] , args.bnds[2] });
-  } else{
-	b = new CylBnds(args.bnds[0], args.bnds[1]);
-  }
-  if(args.isVerbose)
+  bnds *b = new CylBnds(args.GetRadius(), args.GetHHeight());
+  if(args.GetVerbose())
 	b->Print();
-
-  const double MaxDWall = b->GetMaxDWall();
-  const double ScaleDWall = 1.5;
-
-  auto hDWallVSTTime = new TH2D("hDWallVSTTime", "TRUE d_{Wall} vs T_{Trig} ; T_{Trig} [ns] ; d_{Wall} [mm]",
-								20, b->vT.min, b->vT.max,
-								20*ScaleDWall, 0., MaxDWall*ScaleDWall);
 
 
   // ######################################## //
@@ -157,20 +128,16 @@ int main(int argc, char *argv[]){
 
 	  }
 
-
-	  double dWall = b->GetDWall(PosTrue);
-	  hDWallVSTTime->Fill(TrigTime, dWall);
-
 	  // ...
 
 	}
 
-	if(isVerbose)
+	if(args.GetVerbose())
 	  progress_bar.display();
 
   }
 
-  if(isVerbose)
+  if(args.GetVerbose())
 	progress_bar.done();
 
   // #################################### //
@@ -178,16 +145,13 @@ int main(int argc, char *argv[]){
   // #################################### //
 
 
-  TFile fOut(output.c_str(), "RECREATE");
+  TFile fOut(args.GetOutput(), "RECREATE");
 
   ScaleHist(hNHits, static_cast<double>(nEvts));
   hNHits->Write();
 
   ScaleHist(hN400, static_cast<double>(nEvts));
   hN400->Write();
-
-  ScaleHist(hDWallVSTTime, static_cast<double>(nEvts));
-  hDWallVSTTime->Write();
 
   for(auto& vHPDFs:vvHPDFs){
 
@@ -204,8 +168,6 @@ int main(int argc, char *argv[]){
   }
 
   fOut.Close();
-
-  theApp.Terminate();
 
   return EXIT_SUCCESS;
 }

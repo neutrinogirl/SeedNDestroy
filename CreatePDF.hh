@@ -2,137 +2,64 @@
 // Created by zsoldos on 1/5/21.
 //
 
-#ifndef _READFILE_HH_
-#define _READFILE_HH_
-
-// ####################################### //
-// #### #### ####   C/C++   #### #### #### //
-// ####################################### //
-#include <iostream>
-#include <utility>
-
-// ####################################### //
-// #### #### ####   BOOST   #### #### #### //
-// ####################################### //
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-
-// ####################################### //
-// #### #### ####   ROOT    #### #### #### //
-// ####################################### //
-#include <TApplication.h>
+#ifndef _CREATEPDF_HH_
+#define _CREATEPDF_HH_
 
 // ####################################### //
 // #### #### ####   USER    #### #### #### //
 // ####################################### //
-#include <Utils.hh>
-#include <MathUtils.hh>
-
-std::vector<std::string> GetFilesInDir(const boost::filesystem::path& dir, const std::string& ext = ".root"){
-  std::vector<std::string> vPaths;
-
-  if(boost::filesystem::exists(dir) && boost::filesystem::is_directory(dir)){
-    for(const auto& entry: boost::filesystem::recursive_directory_iterator(dir)){
-	  if (boost::filesystem::is_regular_file(entry) && entry.path().extension() == ext){
-		vPaths.push_back(dir.string() + "/" + entry.path().filename().string());
-	  }
-    }
-
+#include <Args.hh>
+typedef struct CreatePDFArgs : public Args {
+  CreatePDFArgs() {
+	v = {
+		new bArg("-v", "--verbose"),
+		new sArg("-i", "--input"),
+		new sArg("-o", "--output"),
+		new iArg("-n", "--nevts", 0),
+		new fArg("-r", "--radius"),
+		new fArg("-hh", "--half-height"),
+		new vfArg("-t", "--tres", {250., -5., 20.})
+	};
   }
+  CreatePDFArgs(const std::vector<BaseArg *> &v) : Args(v) {}
+  void ShowUsage(const std::string &name) override {
+	std::cout << "Usage: " << name
+			  << " <option(s)>"
+			  << " -r (--radius) R "
+			  << " -hh (--half-height) HH "
+			  << " -i (--input) INPUT.root "
+			  << " -o (--output) OUT. root\n\n"
 
-  return vPaths;
+			  << "Options: [default]\n\n"
 
-}
+			  << "\t-h (--help)\tShow this help message\n"
+			  << "\t-v (--verbose)\tSet verbosity level true\n"
+			  << "\t-n (--nevts) N\tSet n evts to process (default process all evts)\n"
+			  << "\t-t (--tres) nBins min max\tSet bins for TRes hist (default 250, -5., 20.)\n"
 
-typedef struct Args{
-  bool isVerbose = false;
-  std::vector<std::string> filename;
-  std::string outname = "PDF.root";
-  unsigned int nEvts = 0;
-  std::vector<double> bnds = {10.e3, 10.e3};
-  bool isBox = false;
-} Args;
-
-static void ShowUsage(const std::string& name){
-
-  std::cerr << "Usage: " << name << " <option(s)> -i (--input) IN.root -o (--output) OUT.root" << std::endl
-			<< "Options:\n"
-
-			<< "\t-h\tShow this help message\n"
-			<< "\t-v\tSet verbose mode (display progress bar)\n"
-			<< "\t-n <nEvts>\tSet nEvts to process\n"
-			<< "\t-b <XX YY ZZ>\tSet boundaries for box geom (in mm) \n"
-			<< "\t-c <R H>\tSet boundaries for cylinder geom (in mm) \n"
-
-			<< "\t--dir\tRead all .root files in directory \n"
-
-
-			<< std::endl;
-
-}
-
-static void ProcessArgs(TApplication &theApp,
-						Args &args) {
-
-  // Reading user input parameters
-  if (theApp.Argc() < 2) {
-	ShowUsage(theApp.Argv(0));
-	exit(0);
+			  << std::endl;
   }
-
-  for (int i = 1; i < theApp.Argc(); i++) {
-	std::string arg = theApp.Argv(i);
-	if ((arg == "-h") || (arg == "--help")) {
-	  ShowUsage(theApp.Argv(0));
-	  exit(0);
-	} else if (boost::iequals(arg, "-v")) {
-	  args.isVerbose=true;
-	} else if (boost::iequals(arg, "-n")) {
-	  args.nEvts=std::stoi(theApp.Argv(++i));
-	} else if (boost::iequals(arg, "-b")) {
-	  args.bnds.resize(3);
-	  args.bnds[0] = (std::stod(theApp.Argv(++i)));
-	  args.bnds[1] = (std::stod(theApp.Argv(++i)));
-	  args.bnds[2] = (std::stod(theApp.Argv(++i)));
-	  std::cout << "Setting box geom boundaries" << std::endl;
-	  args.isBox = true;
-	} else if (boost::iequals(arg, "-c")) {
-	  args.bnds.resize(2);
-	  args.bnds[0] = (std::stod(theApp.Argv(++i)));
-	  args.bnds[1] = (std::stod(theApp.Argv(++i)));
-	  std::cout << "Setting cylinder geom boundaries" << std::endl;
-	  args.isBox = false;
-	} else if (boost::iequals(arg,"-i") || boost::iequals(arg,"--input")) {
-	  args.filename.emplace_back(theApp.Argv(++i));
-	} else if (boost::iequals(arg,"--dir")) {
-	  auto v = GetFilesInDir(theApp.Argv(++i));
-	  std::merge(args.filename.begin(), args.filename.end(), v.begin(), v.end(), std::back_inserter(args.filename));
-	} else if (boost::iequals(arg,"-o") || boost::iequals(arg,"--output")) {
-	  args.outname=theApp.Argv(++i);
-
-	} else {
-	  std::cout << "Unkown parameter" << std::endl;
-	  continue;
-	}
-
+  bool GetVerbose() const {
+	return reinterpret_cast<bArg*>(v[0])->val;
   }
-
-
-  auto RemoveEmptyFile = [](std::vector<std::string>& v){
-	for(auto itFile=v.begin(); itFile!=v.end(); itFile++){
-	  if(!IsFileExist((*itFile).c_str())){
-		v.erase(itFile);
-	  }
-	}
+  const char *GetInput() const {
+	return reinterpret_cast<sArg*>(v[1])->val.c_str();
+  }
+  const char *GetOutput() const {
+	return reinterpret_cast<sArg*>(v[2])->val.c_str();
+  }
+  int GetNEvts() const {
+	return reinterpret_cast<iArg*>(v[3])->val;
+  }
+  float GetRadius() const {
+	return reinterpret_cast<fArg*>(v[4])->val;
+  }
+  float GetHHeight() const {
+	return reinterpret_cast<fArg*>(v[5])->val;
+  }
+  std::vector<float> GetTResBins() const {
+	return reinterpret_cast<vfArg*>(v[6])->val;
   };
+} CreatePDFArgs;
 
-  RemoveEmptyFile(args.filename);
-
-  if(args.filename.empty()){
-	std::cerr << "ERROR: No input file provided!" << std::endl;
-	exit(EXIT_FAILURE);
-  }
-
-}
-
-#endif //_READFILE_HH_
+#endif //_CREATEPDF_HH_

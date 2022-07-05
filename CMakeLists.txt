@@ -20,6 +20,9 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.50 REQUIRED COMPONENTS filesystem)
 message(STATUS "Boost version: ${Boost_VERSION}")
 
+set(NLOPT_INCLUDE_DIRS ${NLOPT_ROOT}/include)
+set(NLOPT_LIB ${NLOPT_ROOT}/lib)
+
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
 # ## NOT NEEDED FOR DICT
@@ -27,8 +30,10 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/external/wRATter/include
         ${PROJECT_SOURCE_DIR}/external/Argz/include
+        ${PROJECT_SOURCE_DIR}/external/ProgressBar/include
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
+        ${NLOPT_INCLUDE_DIRS}
         $ENV{RATROOT}/include
 )
 
@@ -36,13 +41,8 @@ include_directories(
 # Locate RATROOT Libs
 #
 LINK_DIRECTORIES($ENV{RATROOT}/lib)
-LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/lib)
+LINK_DIRECTORIES($ENV{GEANT4SYS}/lib)
+LINK_DIRECTORIES(${NLOPT_LIB})
 
-#----------------------------------------------------------------------------
-# Locate sources and headers for this project
-# NB: headers are included so they will show up in IDEs
-#
-file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
-file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
-
-add_executable(CreatePDF.cc src/SnD/CreatePDF.cc)
+add_executable(TApp src/SnD/TApp.cc)
+target_link_libraries(TApp Argz wRATter ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)

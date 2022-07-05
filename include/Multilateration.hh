@@ -178,8 +178,9 @@ bool operator==(const PosT& s1, const PosT& s2){
 std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 								TH1D* hPDF,
 								const bnds& b,
-								const unsigned int& wPower = 1,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max()){
+								const unsigned int& wPower = 0,
+								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max(),
+								const bool &isUnbinned = false){
 
   // Get vector of seeds
   std::vector<PosT> vSeeds;
@@ -229,7 +230,7 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
-	return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fweight, wPower) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fweight, wPower);
+      return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fweight, wPower, isUnbinned) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fweight, wPower, isUnbinned);
   });
 
   if(vSeeds.size() > MaxSeeds)

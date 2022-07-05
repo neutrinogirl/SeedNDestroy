@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <TFile.h>
 #include <TROOT.h>
 #include <TH1D.h>
 #include <TH2D.h>
@@ -32,9 +33,6 @@ int main(int argc, char *argv[]){
   std::cout << "USING ROOT V:" << ROOTVERSION << std::endl;
 
 
-  // ######################################## //
-  // Create TApp
-  TApplication theApp("App", &argc, argv);
   gROOT->SetBatch(true);
   if(ROOTVERSION>6.)
 	gStyle->SetPalette(kInvertedDarkBodyRadiator);
@@ -43,44 +41,35 @@ int main(int argc, char *argv[]){
   // ######################################## //
   // Parse arguments
   // Simple struct containing filename and verbosity level
-  Args args;
-  ProcessArgs(theApp, args);
-  const bool isVerbose = args.isVerbose;
-  const std::string pdf = args.pdfname;
-  const std::string output = args.outname;
-  const unsigned int wPower = args.wPower;
+  ReconArgs args;
+  args(argc, argv);
 
 
   // ######################################## //
   // Load PDF
-  auto hPDF = GetRootHisto<TH2D>(pdf.c_str(), Form("hCTVSTResPDF_TTOF_QW%d", wPower));
+  auto hPDF = GetRootHisto<TH2D>(args.GetPDF(), Form("hCTVSTResPDF_TTOF_QW%d", args.GetWeight()));
   TH1D *hPDF_TRes = hPDF->ProjectionX();
-  if(args.isVerbose)
+  if(args.GetVerbose())
 	std::cout << "PDF LOADED: " << hPDF_TRes->GetName() << std::endl;
 
 
   // ######################################## //
   // Create wrapper object
-  wRAT w_rat(args.filename);
-  const unsigned long int nEvts = args.nEvts > 0 ? args.nEvts : w_rat.GetNEvts();
-  if(args.isVerbose)
-	std::cout << "INPUT FILE LOADED: " << args.filename.front() << std::endl;
+  wRAT w_rat(args.GetInput());
+  const unsigned long int nEvts = args.GetNEvts() > 0 ? args.GetNEvts() : w_rat.GetNEvts();
+  if(args.GetVerbose())
+	std::cout << "INPUT FILE LOADED: " << args.GetInput() << std::endl;
 
 
   // ######################################## //
   // Create structure holding data
-  DataStruct1D ds = {hPDF_TRes, wPower};
+  DataStruct1D ds = {static_cast<unsigned int>(args.GetWeight()), args.GetUnbinned(), hPDF_TRes};
 
 
   // ######################################## //
   // DET Boundaries
-  bnds *b;
-  if(args.isBox){
-	b = new BoxBnds( { args.bnds[0] , args.bnds[1] , args.bnds[2] });
-  } else{
-	b = new CylBnds(args.bnds[0], args.bnds[1]);
-  }
-  if(args.isVerbose)
+  bnds *b = new CylBnds(args.GetRadius(), args.GetHHeight());
+  if(args.GetVerbose())
 	b->Print();
 
 
@@ -88,7 +77,7 @@ int main(int argc, char *argv[]){
   // Create structure holding boundaries
   DetParams dp = {b, GetSOL()};
   const double MaxDWall = b->GetMaxDWall();
-  if(args.isVerbose)
+  if(args.GetVerbose())
 	std::cout << MaxDWall << std::endl;
 
 
@@ -113,7 +102,7 @@ int main(int argc, char *argv[]){
 
   // ######################################## //
   // Output file
-  TFile fOut(output.c_str(), "RECREATE");
+  TFile fOut(args.GetOutput(), "RECREATE");
   fOut.Close();
   // ######################################## //
   // OUTPUT Tree
@@ -147,7 +136,7 @@ int main(int argc, char *argv[]){
 	  evt.iTrig = iTrig;
 
 	  // DEBUG PRINTS
-	  if(args.isDDebug){
+	  if(args.GetDDebug()){
 		std::cout << std::endl;
 		std::cout << tag << std::endl;
 		std::cout << std::endl;
@@ -157,10 +146,12 @@ int main(int argc, char *argv[]){
 	  const auto TrigTime = w_rat.GetTriggerTime(iTrig);
 	  // Get vector of hits
 	  std::vector<Hit> vHits = w_rat.GetVHits(iTrig);
-	  if(args.cvg > 0)
-		SlimVHits(vHits, args.cvg);
-	  if(vHits.empty())
+	  if(vHits.empty()){
+		std::cerr << "Trigger with no hits !?" << std::endl;
 		continue;
+	  }
+	  if(args.GetCvg() > 0)
+		SlimVHits(vHits, args.GetCvg());
 
 	  // Try to guess which particle is attached to this trigger
 	  // Make sense only for IBD gen, when n capture will be >> in T that prompt event
@@ -181,7 +172,7 @@ int main(int argc, char *argv[]){
 	  const std::vector<double> xTrue = {PosTrue[0], PosTrue[1], PosTrue[2], TTrue-TrigTime};
 
 	  // DEBUG PRINTS
-	  if(args.isDDebug){
+	  if(args.GetDDebug()){
 		PrintDD("TRUTH", PosTrue, -(TTrue-TrigTime), b->GetDWall(PosTrue));
 	  }
 
@@ -206,20 +197,22 @@ int main(int argc, char *argv[]){
 	  auto CentroidSeed = GetCentroidSeed(vHits, *b, 0);
 	  if(!b->IsInPos(CentroidSeed)){
 		std::cerr << "NASTY Centroid seed" << std::endl;
+		for(auto &h:vHits)
+		  h.Print();
 		continue;
 	  }
 	  double DWallSeed = b->GetDWall(CentroidSeed);
 	  double TDWallSeed = DWallSeed/GetSOL();
 
 	  auto TDwallSeedBnds = GetTBndsLocal(TDWallSeed, {b->vT.min, b->vT.max});
-	  if(args.isDDebug) {
+	  if(args.GetDDebug()) {
 		std::cout << "[" << TDwallSeedBnds[0] << "," << TDwallSeedBnds[1] << "]: " << TDWallSeed << std::endl;
 	  }
 
 	  // DEBUG PRINTS
-	  if(args.isDDebug){
+	  if(args.GetDDebug()){
 		PrintDD("CENTROID", CentroidSeed, TDWallSeed, DWallSeed,
-				GetNLL(vHits, hPDF_TRes, CentroidSeed, -TDWallSeed, fweight, wPower));
+				GetNLL(vHits, hPDF_TRes, CentroidSeed, -TDWallSeed, fweight, args.GetDDebug(), args.GetUnbinned()));
 	  }
 
 	  //
@@ -227,32 +220,17 @@ int main(int argc, char *argv[]){
 	  //
 
 	  const auto MaxSeeds = std::numeric_limits<unsigned int>::max();
-	  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, wPower, MaxSeeds);
+	  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF_TRes, *b, args.GetWeight(), MaxSeeds, args.GetUnbinned());
 	  if(!vSeeds.empty())
-		seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
+	  	seed_perf_monitor.Fill(vSeeds.front().Pos, PosTrue);
+	  else
+	  	std::cerr << "Seeding algo empty" << std::endl;
 
 	  vSeeds.emplace_back(CentroidSeed, TDWallSeed);
 
 	  //
-	  // #### GRID SEARCH
 	  //
-
-	  if(args.useGridSearch){
-
-		map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, wPower);
-		vSeeds.emplace_back(map_nll.GetVMinNll(), TDWallSeed);
-		gridTDWall_seed_perf_monitor.Fill(map_nll.GetVMinNll(), PosTrue);
-		// RESET
-		map_nll.ResetGrid();
-
-		// DEBUG PRINTS
-		if(args.isDDebug){
-		  PrintDD("GRIDSEED", map_nll.GetVMinNll(), TDWallSeed, b->GetDWall(map_nll.GetVMinNll()),
-				  GetNLL(vHits, hPDF_TRes, map_nll.GetVMinNll(), -TDWallSeed, fweight, wPower));
-		}
-
-	  }
-
+	  //
 
 	  std::vector< std::vector<double> > vX;
 	  vX.reserve(vSeeds.size());
@@ -260,9 +238,9 @@ int main(int argc, char *argv[]){
 	  for(auto &Seed: vSeeds){
 
 		// DEBUG PRINTS
-		if(args.isDDebug){
+		if(args.GetDDebug()){
 		  PrintDD("SEEDS", Seed.Pos, Seed.T, b->GetDWall(Seed.Pos),
-				  GetNLL(vHits, hPDF_TRes, Seed.Pos, -Seed.T, fweight, wPower));
+				  GetNLL(vHits, hPDF_TRes, Seed.Pos, -Seed.T, fweight, args.GetWeight(), args.GetUnbinned()));
 		}
 
 		// Prep Recon
@@ -270,23 +248,19 @@ int main(int argc, char *argv[]){
 
 		// GetLocalBnds
 		std::vector<double> vT = GetTBndsLocal(Seed.T, {b->vT.min, b->vT.max});
-		bnds *localb;
-		if(args.isBox)
-		  localb = new BoxBnds(*b);
-		else
-		  localb = new CylBnds(*b);
+		bnds *localb = new CylBnds(*b);
 
 		localb->vT.min = vT[0];
 		localb->vT.max = vT[1];
 
-		double NLLSeed = GetNLL(vHits, hPDF_TRes, Seed.Pos, -Seed.T, fweight, wPower);
+		double NLLSeed = GetNLL(vHits, hPDF_TRes, Seed.Pos, -Seed.T, fweight, args.GetWeight(), args.GetUnbinned());
 
 		// Recon
 		// X = {XRec, YRec, ZRec, TRec, NLL, NLOPT::Results}
-		auto x = ReconPosTime(ds, *localb, dp, Seed.Pos, -Seed.T, NLLSeed);
+		auto x = ReconPosTime(ds, *localb, dp, Seed.Pos, -Seed.T);
 
 		// DEBUG PRINTS
-		if(args.isDDebug){
+		if(args.GetDDebug()){
 		  PrintDD("REC", TVector3(x[0], x[1], x[2]), -x[3], b->GetDWall(TVector3(x[0], x[1], x[2])),
 				  x[4]);
 		  std::cout << "NLOPT RETURN: " << x[5] << std::endl;
@@ -324,7 +298,7 @@ int main(int argc, char *argv[]){
 		// #### #### #### PLOTTING #### #### #### //
 		// ###################################### //
 
-		if(args.isDebug){
+		if(args.GetDDebug()){
 
 		  //
 		  // EV DISPLAY
@@ -332,7 +306,7 @@ int main(int argc, char *argv[]){
 
 		  auto m_hits = w_rat.GetMHits(iTrig);
 		  Save2ROOT( GetEventDisplay(w_rat.GetMHits(iTrig), pmt_grid, tag, 4.0),
-					 output );
+					 args.GetOutput() );
 
 		  //
 		  // TRes Hist
@@ -342,25 +316,25 @@ int main(int argc, char *argv[]){
 		  const std::vector<double> xCentroidSeed = {CentroidSeed[0], CentroidSeed[1], CentroidSeed[2], -TDWallSeed};
 		  Save2ROOT( GetTResHist(tag+"_CentroidSeedTDWall", vHits,
 								 xTrue, xCentroidSeed,
-								 wPower, hPDF_TRes), output);
+								 args.GetWeight(), hPDF_TRes), args.GetOutput());
 
 		  // Grid dWall
 		  const std::vector<double> xGridSeedDWall = {vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2], -TDWallSeed};
 		  Save2ROOT( GetTResHist(tag+"_GridTDWallSeed", vHits,
 								 xTrue, xGridSeedDWall,
-								 wPower, hPDF_TRes), output);
+								 args.GetWeight(), hPDF_TRes), args.GetOutput());
 
 
 		  // SEED
 		  const std::vector<double> xSeed = {vSeeds.front().Pos[0], vSeeds.front().Pos[1], vSeeds.front().Pos[2], -vSeeds.front().T};
 		  Save2ROOT( GetTResHist(tag+"_BestSeed", vHits,
 								 xTrue, xSeed,
-								 wPower, hPDF_TRes), output);
+								 args.GetWeight(), hPDF_TRes), args.GetOutput());
 
 		  // REC
 		  Save2ROOT( GetTResHist(tag, vHits,
 								 xTrue, vX.front(),
-								 wPower, hPDF_TRes) , output);
+								 args.GetWeight(), hPDF_TRes) , args.GetOutput());
 
 		  //
 		  // MAP NLL SPACE
@@ -370,40 +344,40 @@ int main(int argc, char *argv[]){
 		  map_nll.ResetGrid();
 
 		  // TCentroid
-		  map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, wPower);
+		  map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.GetWeight());
 		  Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, CentroidSeed} ,
 								 Form("cMAP_CentroidSeedTDWall_%s", tag.c_str())),
-					 output );
+					 args.GetOutput() );
 		  // HGrid GARBAGE COLLECTOR
 		  HGridGarbageCollector();
 		  // RESET
 		  map_nll.ResetGrid();
 
 		  // TCentroid
-		  map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, wPower);
+		  map_nll.Fill(vHits, -TDWallSeed, hPDF_TRes, args.GetWeight());
 		  Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, TVector3(vSeeds[vSeeds.size()-2].Pos[0], vSeeds[vSeeds.size()-2].Pos[1], vSeeds[vSeeds.size()-2].Pos[2])} ,
 								 Form("cMAP_GridTDWallSeed_%s", tag.c_str())),
-					 output );
+					 args.GetOutput() );
 		  // HGrid GARBAGE COLLECTOR
 		  HGridGarbageCollector();
 		  // RESET
 		  map_nll.ResetGrid();
 
 		  // TSeed
-		  map_nll.Fill(vHits, -vSeeds.front().T, hPDF_TRes, wPower);
+		  map_nll.Fill(vHits, -vSeeds.front().T, hPDF_TRes, args.GetWeight());
 		  Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, vSeeds.front().Pos} ,
 								 Form("cMAP_BestSeed_%s", tag.c_str())),
-					 output );
+					 args.GetOutput() );
 		  // HGrid GARBAGE COLLECTOR
 		  HGridGarbageCollector();
 		  // RESET
 		  map_nll.ResetGrid();
 
 		  // TTrue
-		  map_nll.Fill(vHits, -TTrue, hPDF_TRes, wPower);
+		  map_nll.Fill(vHits, -TTrue, hPDF_TRes, args.GetWeight());
 		  Save2ROOT( GetMapPlots(map_nll.GetHGrid(), {PosTrue, PosRec, vSeeds.front().Pos} ,
 								 Form("cTrue_%s", tag.c_str())),
-					 output );
+					 args.GetOutput() );
 		  // HGrid GARBAGE COLLECTOR
 		  HGridGarbageCollector();
 		  // RESET
@@ -426,15 +400,15 @@ int main(int argc, char *argv[]){
 
 	}
 
-	if(isVerbose)
+	if(args.GetVerbose())
 	  progress_bar.display();
 
   }
 
-  if(isVerbose)
+  if(args.GetVerbose())
 	progress_bar.done();
 
-  fOut.OpenFile(output.c_str(), "UPDATE");
+  fOut.OpenFile(args.GetOutput(), "UPDATE");
 
   tree.Write();
 
@@ -450,21 +424,12 @@ int main(int argc, char *argv[]){
   auto cDRhoSeed = seed_perf_monitor.GetDRhoPlot();
   cDRhoSeed->Write();
 
-  if(args.useGridSearch){
-	auto cGSeed = gridTDWall_seed_perf_monitor.GetPlot(true);
-	cGSeed->Write();
-	auto cDRhoGSeed = gridTDWall_seed_perf_monitor.GetDRhoPlot();
-	cDRhoGSeed->Write();
-  }
-
   auto cFit = recon_perf_monitor.GetPlot(true);
   cFit->Write();
   auto cDRho = recon_perf_monitor.GetDRhoPlot();
   cDRho->Write();
 
   fOut.Close();
-
-  theApp.Terminate();
 
   return EXIT_SUCCESS;
 }

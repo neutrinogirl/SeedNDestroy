@@ -49,7 +49,8 @@ double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
 
 double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 	      const TVector3& Pos, const double& T,
-	      double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1){
+	      double(*fW)(const Hit&, const unsigned int&) = fweight, const unsigned int& wPower = 1,
+	      const bool &isUnbinned = false){
 
   // Get hPDF info to create hExp with same parameters
   zAxis xa(hPDF->GetXaxis());
@@ -57,13 +58,17 @@ double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
   TH1D hExp(random_string().c_str(), "",
 	    xa.nBins, xa.min, xa.max);
 
+  std::vector<double> vTRes;
+  
   // Fill histogram to calculate NLL TRes
   for(auto& hit:vHits){
     hExp.Fill(hit.GetTRes(Pos, T), fW(hit, wPower));
+    vTRes.emplace_back(hit.GetTRes(Pos, T));
   }
 
+
   // GetNLL
-  return -CalculateLL(hPDF, &hExp, false);
+  return isUnbinned ? UnbinnedLL(hPDF, vTRes) : -CalculateLL(hPDF, &hExp, false);
 
 }
 

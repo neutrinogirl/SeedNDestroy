@@ -88,6 +88,17 @@ double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
 
 }
 
+double UnbinnedLL(TH1D *hPDF, const std::vector<double> &vTRes){
+
+  double Chi2 = 0.f;
+  for(const auto& TRes:vTRes){
+    const double P_TRes = hPDF->Interpolate(TRes);
+    Chi2 += P_TRes <= 0.f ? vTRes.size() : -TMath::Log(P_TRes/hPDF->Integral());
+  }
+  return Chi2;
+  
+}
+
 typedef std::vector<std::vector<double> > Matrix_t;
 
 struct Matrix {

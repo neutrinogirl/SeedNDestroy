@@ -17,20 +17,19 @@
 typedef struct DataStruct{
   std::vector<Hit> vHits;
   unsigned int wPower;
-  explicit DataStruct(unsigned int w_power)
-    : wPower(w_power) {}
+  bool isUnbinned;
+  DataStruct(unsigned int w_power, bool is_unbinned)
+	  : wPower(w_power), isUnbinned(is_unbinned) {}
 } DataStruct;
 
 typedef struct DataStruct1D : public DataStruct, Recorder {
   TH1D* hPDF;
-  DataStruct1D(TH1D *h_pdf, unsigned int w_power)
-    : hPDF(h_pdf), DataStruct(w_power), Recorder() {}
+  DataStruct1D(unsigned int w_power, bool is_unbinned, TH1D *h_pdf)
+	  : DataStruct(w_power, is_unbinned), hPDF(h_pdf), Recorder() {}
 } DataStruct1D;
 
 const double PosScale = 1.e-1;
 const double TScale   = 1.e1;
-// const double PosScale = 1.;
-// const double TScale   = 1.;
 
 typedef struct DetParams {
   bnds *b;
@@ -44,8 +43,7 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
   double TGuess = x[3] / TScale;
   double dWall = d->b->GetDWall(PosGuess);
 
-  return -TGuess - dWall/d->SoL;
-
+  return dWall < 0.f? dWall : std::abs(TGuess) - dWall/d->SoL;
 }
 
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data){
@@ -56,7 +54,7 @@ double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data
   double TGuess = x[3] / TScale;
 
   // Calculate NLL
-  double NLL = GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower);
+  double NLL = GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower, d->isUnbinned);
 
   // Record
   d->iCall++;
@@ -78,7 +76,7 @@ double fPosTSmear(const std::vector<double> &x, std::vector<double> &grad, void 
     // Create object to calculate TRes histogram
     TVector3 PosGuess(xx[0] / PosScale, xx[1] / PosScale, xx[2] / PosScale);
     double TGuess = xx[3] / TScale;
-    NLL += GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower) / static_cast<double>(vx.size());
+    NLL += GetNLL(d->vHits, d->hPDF, PosGuess, TGuess, fweight, d->wPower, true) / static_cast<double>(vx.size());
   }
 
   return NLL;
