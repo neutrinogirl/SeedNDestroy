@@ -34,9 +34,12 @@ typedef struct Hit {
   explicit Hit(const double &t) : Hit() { T = t; }
   Hit(const double &q, const double &t) : Hit() { Q = q; T = t; }
   Hit(const TVector3& pos, const double& q, const double& t)
-	  : PMTPos(pos), Q(q), T(t){
+	  : PMTPos(pos), Q(q), T(t){ };
 
-  };
+  // ######################################################## //
+  // #### #### #### ####   OPERATORS  ## #### #### #### ####  //
+  // ######################################################## //
+
   double GetD(const TVector3& OrigPos) const {
 	return (PMTPos - OrigPos).Mag();
   };
@@ -53,5 +56,10 @@ typedef struct Hit {
   }
 
 } Hit;
+
+// Generate comparison between two hits based on T
+bool operator<(const Hit& h1, const Hit& h2){
+  return h1.T < h2.T;
+}
 
 #endif //WRATTER_INCLUDE_WRATTER_HIT_HH_

@@ -88,10 +88,6 @@ _deps
 build/
 
 # User EXE
-CreatePDF
-DebugRecon
-Recon
-ReconFlat
 macros/*
 
 # USER OUT
