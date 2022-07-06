@@ -5,8 +5,6 @@
 #include "TApp.hh"
 #include "ZAxis.hh"
 
-#include <SnD/Hit.hh>
-
 double GetNPrompts(const std::vector<Hit>& vHits, const double& T){
   double NPrompts = 0.;
   for(auto& hit: vHits){
@@ -19,16 +17,6 @@ double GetNPrompts(const std::vector<Hit>& vHits, const double& T){
 double fWeight(const Hit& h, const int& P){
   return std::pow(h.Q, P);
 }
-
-class RATData {
- public:
-  double TrigTime = 0.f;
-  TVector3 Pos = TVector3(0.f, 0.f, 0.f);
-  TVector3 Dir = TVector3(0.f, 0.f, 0.f);
-  double T = 0.f;
-  double E = 0.f;
-  std::vector<Hit> vHits;
-};
 
 Analysis::Analysis(const TAppArgs &args) {
   const zAxis axTRes(args.GetTResBins()[0], args.GetTResBins()[1], args.GetTResBins()[2]);
@@ -85,6 +73,21 @@ void Analysis::Do(void *Data) {
 
   }
 
+  delete RData;
+
+}
+#include <TFile.h>
+void Analysis::Export(const std::string &filename) {
+  TFile f(filename.c_str(), "RECREATE");
+  f.cd();
+  hNHits->Write();
+  hN400->Write();
+  for(auto& vHPDF : vvHPDFs){
+	for(auto& hPDF : vHPDF){
+	  hPDF->Write();
+	}
+  }
+  f.Close();
 }
 
 RATReader::RATReader(const TAppArgs &args) {
@@ -92,6 +95,7 @@ RATReader::RATReader(const TAppArgs &args) {
   w_rat.Set();
   progress_bar_.Set(w_rat.GetNEvts(), 70);
   verbose_ = args.GetVerbose();
+  d = new RATData();
 }
 bool RATReader::GetNextEvent() {
   w_rat.GetNextEvent();
@@ -101,7 +105,7 @@ bool RATReader::GetNextTrigger() {
 }
 void *RATReader::GetData() {
 
-  auto *d = new RATData();
+  d->Clear();
   w_rat.GetPrimaryParticleInfo(d->TrigTime, d->Pos, d->Dir, d->E, d->T);
   auto EV = w_rat.GetDS()->GetEV(w_rat.GetITrig());
   auto nPMTs = EV->GetPMTCount();
@@ -142,6 +146,9 @@ int main(int argc, char **argv) {
   RATReader R(Args);
   R.Read(&Ana);
 
+  // ######################################## //
+  // Export results
+  Ana.Export(Args.GetOutput());
 
   return EXIT_SUCCESS;
 }

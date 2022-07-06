@@ -58,6 +58,27 @@ class Analysis : public TAnalysis {
  public:
   explicit Analysis(const TAppArgs &args);
   void Do(void* Data) override;
+  void Export(const std::string &filename);
+};
+
+#include <SnD/Hit.hh>
+
+class RATData {
+ public:
+  double TrigTime = 0.f;
+  TVector3 Pos = TVector3(0.f, 0.f, 0.f);
+  TVector3 Dir = TVector3(0.f, 0.f, 0.f);
+  double T = 0.f;
+  double E = 0.f;
+  std::vector<Hit> vHits;
+  void Clear(){
+	TrigTime = 0.f;
+	Pos = TVector3(0.f, 0.f, 0.f);
+	Dir = TVector3(0.f, 0.f, 0.f);
+	T = 0.f;
+	E = 0.f;
+	vHits.clear();
+  }
 };
 
 #include <wRATter/Wrapper.hh>
@@ -65,6 +86,7 @@ class Analysis : public TAnalysis {
 class RATReader : public TReader {
  private:
   wRAT w_rat;
+  RATData *d;
   ProgressBar progress_bar_;
   bool verbose_;
  protected:
@@ -75,7 +97,7 @@ class RATReader : public TReader {
   bool GetVerbosity() override { return verbose_; }
  public:
   explicit RATReader(const TAppArgs &args);
-  ~RATReader() = default;
+  ~RATReader() { delete d; };
 };
 
 
