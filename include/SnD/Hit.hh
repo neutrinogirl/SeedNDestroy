@@ -57,9 +57,9 @@ typedef struct Hit {
 
 } Hit;
 
-// Generate comparison between two hits based on T
-bool operator<(const Hit& h1, const Hit& h2){
-  return h1.T < h2.T;
-}
+bool operator<(const Hit& h1, const Hit& h2);
+
+double GetNPrompts(const std::vector<Hit>& vHits, const double& T);
+double fWeight(const Hit& h, const int& P);
 
 #endif //WRATTER_INCLUDE_WRATTER_HIT_HH_

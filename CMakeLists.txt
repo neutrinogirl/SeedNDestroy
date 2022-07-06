@@ -44,5 +44,13 @@ LINK_DIRECTORIES($ENV{RATROOT}/lib)
 LINK_DIRECTORIES($ENV{GEANT4SYS}/lib)
 LINK_DIRECTORIES(${NLOPT_LIB})
 
-add_executable(TApp src/SnD/TApp.cc)
-target_link_libraries(TApp Argz wRATter ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
+###
+# ${ROOT_LIBRARIES} ${Boost_LIBRARIES} ${NLOPT_LIB}
+
+add_library(Hit src/SnD/Hit.cc)
+target_link_libraries(Hit ROOT::Physics)
+add_library(RATReader src/SnD/RATReader.cc)
+target_link_libraries(RATReader wRATter)
+
+add_executable(TApp src/SnD/TApp.cc src/SnD/PDFAnalysis.cc)
+target_link_libraries(TApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
