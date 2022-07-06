@@ -8,7 +8,7 @@ class ProgressBar {
 private:
     unsigned int ticks = 0;
 
-    unsigned int total_ticks=-1;
+    unsigned int total_ticks=0;
     unsigned int bar_width=70;
     const char complete_char = '=';
     const char incomplete_char = ' ';
@@ -31,7 +31,7 @@ public:
 
     void display() const
     {
-        float progress = (float) ticks / total_ticks;
+      float progress = (float) ticks / (float) total_ticks;
         int pos = (int) (bar_width * progress);
 
         std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
