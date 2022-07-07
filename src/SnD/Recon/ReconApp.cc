@@ -22,6 +22,9 @@ int main(int argc, char **argv) {
   RATReader R(Args.GetInput(), Args.GetVerbose());
   R.Read(&Ana);
 
+  // ######################################## //
+  // Export results
+  Ana.Export(Args.GetOutput());
 
   return EXIT_SUCCESS;
 }
