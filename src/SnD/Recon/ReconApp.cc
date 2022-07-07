@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Run analysis
-  RATReader R(Args.GetInput(), Args.GetVerbose());
+  RATReader R(Ana.Tree, Args.GetInput(), Args.GetVerbose());
   R.Read(&Ana);
 
   // ######################################## //

@@ -16,9 +16,7 @@ ReconAnalysis::ReconAnalysis(TH1D* h, Cylinder* c, const std::string& treename) 
 void ReconAnalysis::Do(void *Data) {
 
   // Get Data
-  std::cout << Data << std::endl;
   auto *RData = static_cast<RATData*>(Data);
-  std::cout << RData << std::endl;
 
   // // Get centroid seed
   // TVector3 Centroid = GetCentroid(RData->vHits);
