@@ -18,9 +18,10 @@ class ReconAnalysis : public TAnalysis {
   TTree* Tree;
  public:
   ReconAnalysis() = default;
-  ReconAnalysis(TH1D* h, Cylinder* c, const std::string& treename);
+  ReconAnalysis(const char *filename, const double &R, const double &HH, const std::string& treename);
   void Do(void *Data) override;
   void Export(const char* filename);
+  ~ReconAnalysis();
 };
 
 #endif //SND_SRC_SND_RECONANALYSIS_HH_

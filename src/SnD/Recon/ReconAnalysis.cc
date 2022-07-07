@@ -7,10 +7,17 @@
 #include <SnD/RATData.hh>
 #include <SnD/Multilateration.hh>
 
-ReconAnalysis::ReconAnalysis(TH1D* h, Cylinder* c, const std::string& treename) {
-  hPDF = h;
-  Cyl = c;
+#include <ROOT/Utils.hh>
+
+ReconAnalysis::ReconAnalysis(const char *filename, const double &R, const double &HH, const std::string& treename){
+  hPDF = GetROOTObj<TH1D>(filename, "");
+  Cyl = new Cylinder(R, HH);
   Tree = new TTree(treename.c_str(), treename.c_str());
+}
+ReconAnalysis::~ReconAnalysis(){
+  delete Tree;
+  delete Cyl;
+  delete hPDF;
 }
 
 void ReconAnalysis::Do(void *Data) {
@@ -18,12 +25,12 @@ void ReconAnalysis::Do(void *Data) {
   // Get Data
   auto *RData = static_cast<RATData*>(Data);
 
-  // // Get centroid seed
-  // TVector3 Centroid = GetCentroid(RData->vHits);
-  //
-  // // Get time seed
-  // double TSeed = Cyl->GetDWall(Centroid);
-  //
+  // Get centroid seed
+  TVector3 Centroid = GetCentroid(RData->vHits);
+
+  // Get time seed
+  double TSeed = Cyl->GetDWall(Centroid);
+
   // // Get SnD seeds
   // std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
 

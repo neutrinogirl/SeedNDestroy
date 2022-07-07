@@ -31,6 +31,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/external/wRATter/include
         ${PROJECT_SOURCE_DIR}/external/Argz/include
         ${PROJECT_SOURCE_DIR}/external/ProgressBar/include
+        ${PROJECT_SOURCE_DIR}/external/ROOT/include
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
         ${NLOPT_INCLUDE_DIRS}
