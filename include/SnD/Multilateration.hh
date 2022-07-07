@@ -151,23 +151,8 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 
 }
 
-typedef struct PosT {
-  TVector3 Pos;
-  double T;
-  PosT(const TVector3 &pos, double t) : Pos(pos), T(t) {}
-  void Print() const {
-	Pos.Print();
-	std::cout << T << "ns" << std::endl;
-  }
-
-} PosT;
-
-bool operator==(const PosT& s1, const PosT& s2){
-  return s1.Pos == s2.Pos;
-}
-
 #include <TH1D.h>
-
+#include "PosT.hh"
 std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 								TH1D* hPDF,
 								Bnd* b,

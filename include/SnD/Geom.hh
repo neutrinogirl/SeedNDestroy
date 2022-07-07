@@ -32,7 +32,7 @@ class Cylinder : public Bnd {
 	return pos.Perp() < R && std::abs(pos.z()) < HH;
   }
   TVector3 GetEdge() override {
-	return {R, 0.f, HH};
+	return {R, R, HH};
   }
 };
 

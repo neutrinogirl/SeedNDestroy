@@ -13,6 +13,7 @@ ReconAnalysis::ReconAnalysis(const char *filename, const double &R, const double
   hPDF = GetROOTObj<TH1D>(filename, "");
   Cyl = new Cylinder(R, HH);
   Tree = new TTree(treename.c_str(), treename.c_str());
+  Seed.SetTree(Tree);
 }
 ReconAnalysis::~ReconAnalysis(){
   delete Tree;
@@ -31,8 +32,12 @@ void ReconAnalysis::Do(void *Data) {
   // Get time seed
   double TSeed = Cyl->GetDWall(Centroid);
 
-  // // Get SnD seeds
-  // std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
+  // Read
+  Seed.Pos = Centroid;
+  Seed.T = TSeed;
+
+  // Get SnD seeds
+  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
 
   // Fill Tree
   Tree->Fill();

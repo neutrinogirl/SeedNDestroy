@@ -7,6 +7,7 @@
 
 #include <SnD/TAnalysis.hh>
 #include <SnD/Geom.hh>
+#include <SnD/PosT.hh>
 
 #include <TH1D.h>
 #include <TTree.h>
@@ -16,6 +17,7 @@ class ReconAnalysis : public TAnalysis {
   TH1D* hPDF;
   Cylinder* Cyl;
   TTree* Tree;
+  PosT Seed;
  public:
   ReconAnalysis() = default;
   ReconAnalysis(const char *filename, const double &R, const double &HH, const std::string& treename);
