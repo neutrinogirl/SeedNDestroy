@@ -35,7 +35,7 @@ Analysis::Analysis(const unsigned int& TResBins, const float& TResMin, const flo
 #include "SnD/RATData.hh"
 void Analysis::Do(void *Data) {
 
-  auto *RData = reinterpret_cast<RATData*>(Data);
+  auto *RData = static_cast<RATData*>(Data);
 
   std::sort(RData->vHits.begin(), RData->vHits.end());
 

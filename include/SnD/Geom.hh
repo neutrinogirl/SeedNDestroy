@@ -21,6 +21,7 @@ class Cylinder : public Bnd {
   double R, HH;
   double T;
  public:
+  Cylinder(double r, double hh, double t) : R(r), HH(hh) { T = Cylinder::GetTWall(TVector3(0, 0, 0)); }
   double GetDWall(const TVector3& pos) override {
 	std::min(R - pos.Perp(), HH - std::abs(pos.z()));
   };

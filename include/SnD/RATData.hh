@@ -34,4 +34,12 @@ class RATData {
   }
 };
 
+void SetTTree(TTree *Tree, RATData &Data) {
+  Tree->Branch("TrigTime", &Data.TrigTime, "TrigTime/D");
+  Tree->Branch("Pos", &Data.Pos, "Pos[3]/D");
+  Tree->Branch("Dir", &Data.Dir, "Dir[3]/D");
+  Tree->Branch("T", &Data.T, "T/D");
+  Tree->Branch("E", &Data.E, "E/D");
+}
+
 #endif //SND_SRC_SND_RATDATA_HH_

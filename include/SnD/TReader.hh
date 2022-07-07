@@ -5,6 +5,14 @@
 #ifndef SND_SRC_SND_TREADER_HH_
 #define SND_SRC_SND_TREADER_HH_
 
+#include <csignal>
+namespace{
+volatile std::sig_atomic_t gSignalStatus;
+}
+void signal_handler(int signal){
+  gSignalStatus = signal;
+}
+
 #include "TAnalysis.hh"
 
 #include "ProgressBar/ProgressBar.hpp"
