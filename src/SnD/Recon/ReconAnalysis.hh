@@ -20,6 +20,7 @@ class ReconAnalysis : public TAnalysis {
   ReconAnalysis() = default;
   ReconAnalysis(TH1D* h, Cylinder* c, const std::string& treename);
   void Do(void *Data) override;
+  void Export(const char* filename);
 };
 
 #endif //SND_SRC_SND_RECONANALYSIS_HH_

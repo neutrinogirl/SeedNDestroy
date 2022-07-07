@@ -31,3 +31,10 @@ void ReconAnalysis::Do(void *Data) {
   Tree->Fill();
 
 }
+
+#include <TFile.h>
+void ReconAnalysis::Export(const char *filename) {
+  TFile f(filename, "RECREATE");
+  Tree->Write();
+  f.Close();
+}
