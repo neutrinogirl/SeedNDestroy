@@ -15,7 +15,7 @@ typedef struct ReconAppArgs : public Args {
 		new sArg("-p", "--pdf"),
 		new sArg("-o", "--output"),
 		new fArg("-r", "--radius"),
-		new fArg("-h", "--hheight"),
+		new fArg("-hh", "--hheight"),
 		new bArg("-u", "--unbinned")
 	};
   }
@@ -23,9 +23,9 @@ typedef struct ReconAppArgs : public Args {
   void ShowUsage(const std::string &name) override {
 	std::cout << "Usage: " << name
 			  << " <option(s)>"
-			  << " -r (--radius) R "
-			  << " -hh (--half-height) HH "
-			  << " -i (--input) INPUT.root "
+			  << " -r (--radius) R"
+			  << " -hh (--half-height) HH"
+			  << " -i (--input) INPUT.root"
 			  << " -o (--output) OUT.root\n\n"
 
 			  << "Options: [default]\n\n"
