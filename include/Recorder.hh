@@ -18,7 +18,7 @@
 #include <TCanvas.h>
 #include <TMarker.h>
 
-#include "NLL.hh"
+#include "SnD/NLL.hh"
 
 typedef struct Recorder {
 

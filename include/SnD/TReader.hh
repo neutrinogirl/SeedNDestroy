@@ -7,7 +7,7 @@
 
 #include "TAnalysis.hh"
 
-#include <ProgressBar/ProgressBar.hpp>
+#include "ProgressBar/ProgressBar.hpp"
 
 class TReader {
  protected:

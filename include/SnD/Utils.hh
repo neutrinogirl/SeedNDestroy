@@ -15,6 +15,7 @@ class Csts {
   static double GetRIndex()     {return Get().RINDEX();};
   static double GetSoL_vacuum() {return Get().SOL_VACUUM();};
   static double GetSoL()        {return Get().SOL();};
+  static double GetSqrt2()      {return Get().SQRT2();};
  private:
   double RINDEX() const {return mRIndex;}
   double mRIndex = 1.33;
@@ -22,6 +23,8 @@ class Csts {
   double mSoL_vacuum = 299.792; // mm/ns;
   double SOL() const {return mSoL;}
   double mSoL = mSoL_vacuum/mRIndex; // mm/ns;
+  double SQRT2() const {return mSqrt2;}
+  double mSqrt2 = 1.41421356237; // sqrt(2);
   Csts() = default;
 };
 

@@ -15,7 +15,7 @@
 // ####################################### //
 #include <TVector3.h>
 
-#include "Utils.hh"
+#include <SnD/Utils.hh>
 
 typedef struct Hit {
   TVector3 PMTPos;
@@ -61,5 +61,7 @@ bool operator<(const Hit& h1, const Hit& h2);
 
 double GetNPrompts(const std::vector<Hit>& vHits, const double& T);
 double fWeight(const Hit& h, const int& P);
+
+TVector3 GetCentroid(const std::vector<Hit>& vHits);
 
 #endif //WRATTER_INCLUDE_WRATTER_HIT_HH_

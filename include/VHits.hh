@@ -5,7 +5,7 @@
 #ifndef SND_INCLUDE_SND_VHITS_HH_
 #define SND_INCLUDE_SND_VHITS_HH_
 
-#include "Hit.hh"
+#include "SnD/Hit.hh"
 
 class VHits {
  private:

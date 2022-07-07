@@ -52,5 +52,8 @@ target_link_libraries(Hit ROOT::Physics)
 add_library(RATReader src/SnD/RATReader.cc)
 target_link_libraries(RATReader wRATter)
 
-add_executable(TApp src/SnD/TApp.cc src/SnD/PDFAnalysis.cc)
+add_executable(TApp src/SnD/CreatePDF/TApp.cc src/SnD/CreatePDF/PDFAnalysis.cc)
 target_link_libraries(TApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
+
+add_executable(ReconApp src/SnD/Recon/ReconApp.cc src/SnD/Recon/ReconAnalysis.cc)
+target_link_libraries(ReconApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)

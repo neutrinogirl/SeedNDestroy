@@ -22,3 +22,13 @@ double GetNPrompts(const std::vector<Hit>& vHits, const double& T){
 double fWeight(const Hit& h, const int& P){
   return std::pow(h.Q, P);
 }
+
+// Calculate centroid of a vector of hits
+TVector3 GetCentroid(const std::vector<Hit>& vHits){
+  TVector3 centroid(0., 0., 0.);
+  for(auto& hit: vHits){
+	centroid += hit.PMTPos;
+  }
+  centroid.SetMag(centroid.Mag()/vHits.size());
+  return centroid;
+}

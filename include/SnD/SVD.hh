@@ -5,7 +5,10 @@
 #ifndef _SVD_HH_
 #define _SVD_HH_
 
-#include "MathUtils.hh"
+#include <limits>
+#include <cmath>
+
+#include <SnD/Matrix.hh>
 
 // macro-like inline functions
 

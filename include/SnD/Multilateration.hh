@@ -7,17 +7,13 @@
 
 #include <numeric>
 
-#include <Hit.hh>
+#include <SnD/Matrix.hh>
+#include <SnD/SVD.hh>
+#include <SnD/Hit.hh>
+#include <SnD/Geom.hh>
+#include <SnD/NLL.hh>
 
-#include "Centroid.hh"
-#include "SVD.hh"
-#include "MathUtils.hh"
-#include "PathFit.hh"
-
-typedef std::vector<Hit> vHits;
-typedef std::vector<vHits> vvHits;
-
-Matrix GetDMatrix(vHits& vHits){
+Matrix GetDMatrix(std::vector<Hit>& vHits){
 
   auto nHits = vHits.size();
   Matrix M(nHits, nHits);
@@ -25,7 +21,7 @@ Matrix GetDMatrix(vHits& vHits){
   std::sort(vHits.begin(), vHits.end());
 
   auto ScaleFromSoL = [](const double& v){
-	return (v / GetSOL());
+	return (v / Csts::GetSoL());
   };
 
   for(auto i=0; i<nHits; i++){
@@ -41,7 +37,7 @@ Matrix GetDMatrix(vHits& vHits){
 
 }
 
-vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
+std::vector< std::vector<Hit> > GetSetsOfVHits(Matrix& M, int& i, std::vector<Hit>& vHits){
 
   static int dVBins = 50;
   static double dVMin = 1.e-2;
@@ -49,7 +45,7 @@ vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
   static double dVStep = (dVMax-dVMin) / static_cast<double>(dVBins);
 
   // Prepare vectors of vHits to be returned
-  vvHits vvHits(dVBins);
+  std::vector< std::vector<Hit> > vvHits(dVBins);
   std::vector<double> dVVal(dVBins, 0);
   std::iota(dVVal.begin(), dVVal.end(), 0);
   std::transform(dVVal.begin(), dVVal.end(), dVVal.begin(), [](double dV){
@@ -76,11 +72,11 @@ vvHits GetSetsOfVHits(Matrix& M, int& i, vHits& vHits){
 
 }
 
-TVector3 GetDTSeed(vHits& vHits, const bnds& b){
+TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 
   std::size_t nDim = 3;
   if(vHits.size() < nDim)
-	return b.GetTVector3();
+	return b->GetEdge();
 
   std::sort(vHits.begin(), vHits.end());
   auto itHit0 = std::lower_bound(vHits.begin(), vHits.end(), vHits[0]);
@@ -99,17 +95,17 @@ TVector3 GetDTSeed(vHits& vHits, const bnds& b){
   };
 
   auto GetACoeff = [&GetTau, &Hit1](Hit& h, std::size_t iDim){
-	return (2*h.PMTPos[iDim] / (GetSOL()*GetTau(h))) - (2 * Hit1.PMTPos[iDim] / (GetSOL()*GetTau(Hit1)));
+	return (2*h.PMTPos[iDim] / (Csts::GetSoL()*GetTau(h))) - (2 * Hit1.PMTPos[iDim] / (Csts::GetSoL()*GetTau(Hit1)));
   };
 
   auto GetBCoeff = [&GetTau, &Hit1](Hit& h){
-	return GetSOL()*(GetTau(h) - GetTau(Hit1)) - h.PMTPos.Mag2()/(GetSOL()*GetTau(h)) + Hit1.PMTPos.Mag2()/(GetSOL()*GetTau(Hit1));
+	return Csts::GetSoL()*(GetTau(h) - GetTau(Hit1)) - h.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(h)) + Hit1.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(Hit1));
   };
 
   std::size_t nEq = vHits.size() - iHit1 - 1;
 
   if(nEq < nDim)
-	return b.GetTVector3();
+	return b->GetEdge();
 
   Matrix A(nEq, nDim);
   DiagMatrix B(nEq);
@@ -144,13 +140,12 @@ TVector3 GetDTSeed(vHits& vHits, const bnds& b){
 
   } catch ( const char* e) {
 
-	// std::cout << "svd failed: " << e << std::endl;
-	return b.GetTVector3();
+	return b->GetEdge();
 
   }
 
-  if(!b.IsInPos(TVector3(X[0], X[1], X[2])))
-	return b.GetTVector3();
+  if(TVector3(X[0], X[1], X[2]).Mag() > b->GetEdge().Mag())
+	return b->GetEdge();
 
   return TVector3(X[0], X[1], X[2]);
 
@@ -159,11 +154,7 @@ TVector3 GetDTSeed(vHits& vHits, const bnds& b){
 typedef struct PosT {
   TVector3 Pos;
   double T;
-  PosT() = default;
   PosT(const TVector3 &pos, double t) : Pos(pos), T(t) {}
-  PosT(const TVector3&v, const bnds& b) : Pos(v){
-	T = b.GetDWall(v) / GetSOL();
-  }
   void Print() const {
 	Pos.Print();
 	std::cout << T << "ns" << std::endl;
@@ -175,9 +166,11 @@ bool operator==(const PosT& s1, const PosT& s2){
   return s1.Pos == s2.Pos;
 }
 
-std::vector<PosT> GetVPosTSeeds(vHits& vHits,
+#include <TH1D.h>
+
+std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 								TH1D* hPDF,
-								const bnds& b,
+								Bnd* b,
 								const unsigned int& wPower = 0,
 								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max(),
 								const bool &isUnbinned = false){
@@ -185,8 +178,8 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
   // Get vector of seeds
   std::vector<PosT> vSeeds;
   auto DTSeed = GetDTSeed(vHits, b);
-  if(b.IsInPos(DTSeed))
-	vSeeds.emplace_back(DTSeed, b);
+  if(b->IsInside(DTSeed))
+	vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed));
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
@@ -201,8 +194,8 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 
 	  auto PosSeed = GetDTSeed(ivSeed, b);
 
-	  if(b.IsInPos(PosSeed))
-		vSeeds.emplace_back(PosSeed, b);
+	  if(b->IsInside(PosSeed))
+		vSeeds.emplace_back(PosSeed, b->GetTWall(PosSeed));
 
 	}
 
@@ -222,7 +215,7 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
   // Remove seed guess if less than a few cm between them
   for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
 	auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
-	const double lim = GetSQRT2()*500.; // 50cm
+	const double lim = Csts::GetSqrt2()*100.; // 10cm
 	if(diffInf.Mag() < lim)
 	  vSeeds.erase(vSeeds.begin()+iSeed);
 
@@ -230,7 +223,7 @@ std::vector<PosT> GetVPosTSeeds(vHits& vHits,
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
-      return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fweight, wPower, isUnbinned) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fweight, wPower, isUnbinned);
+	return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fWeight, wPower, isUnbinned) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fWeight, wPower, isUnbinned);
   });
 
   if(vSeeds.size() > MaxSeeds)

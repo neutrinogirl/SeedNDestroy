@@ -5,7 +5,7 @@
 #ifndef SND_SRC_SND_RATDATA_HH_
 #define SND_SRC_SND_RATDATA_HH_
 
-#include <TVector3.h>
+#include <TTree.h>
 
 #include <SnD/Hit.hh>
 
@@ -24,6 +24,13 @@ class RATData {
 	T = 0.f;
 	E = 0.f;
 	vHits.clear();
+  }
+  void SetTTree(TTree *Tree){
+	Tree->Branch("TrigTime", &this->TrigTime, "TrigTime/D");
+	Tree->Branch("Pos", &this->Pos, "Pos[3]/D");
+	Tree->Branch("Dir", &this->Dir, "Dir[3]/D");
+	Tree->Branch("T", &this->T, "T/D");
+	Tree->Branch("E", &this->E, "E/D");
   }
 };
 

@@ -3,8 +3,8 @@
 //
 
 #include "TApp.hh"
-#include "RATReader.hh"
 #include "PDFAnalysis.hh"
+#include "../RATReader.hh"
 
 int main(int argc, char **argv) {
 
@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Create analysis class
-  Analysis Ana(Args.GetTResBins()[0], Args.GetTResBins()[1], Args.GetTResBins()[2]);
+  Analysis Ana(static_cast<unsigned int>(Args.GetTResBins()[0]), Args.GetTResBins()[1], Args.GetTResBins()[2]);
 
   // ######################################## //
   // Run analysis

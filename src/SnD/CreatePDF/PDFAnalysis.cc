@@ -4,7 +4,8 @@
 
 #include "PDFAnalysis.hh"
 
-#include "ZAxis.hh"
+#include "SnD/ZAxis.hh"
+
 Analysis::Analysis(const unsigned int& TResBins, const float& TResMin, const float& TResMax) {
   const zAxis axTRes(TResBins, TResMin, TResMax);
   const zAxis axCosT(12, -1., 1.);
@@ -31,7 +32,7 @@ Analysis::Analysis(const unsigned int& TResBins, const float& TResMin, const flo
   }
 }
 
-#include "RATData.hh"
+#include "SnD/RATData.hh"
 void Analysis::Do(void *Data) {
 
   auto *RData = reinterpret_cast<RATData*>(Data);

@@ -6,8 +6,8 @@
 #define SND_SRC_SND_RATANALYSIS_HH_
 
 #include <wRATter/Wrapper.hh>
-#include "TReader.hh"
-#include "RATData.hh"
+#include "SnD/TReader.hh"
+#include "SnD/RATData.hh"
 class RATReader : public TReader {
  private:
   wRAT w_rat;
@@ -22,6 +22,7 @@ class RATReader : public TReader {
   bool GetVerbosity() override { return verbose_; }
  public:
   explicit RATReader(const char *filename, const bool &verbose = false);
+  explicit RATReader(TTree *tree, const char *filename, const bool &verbose = false);
   ~RATReader() { delete d; };
 };
 

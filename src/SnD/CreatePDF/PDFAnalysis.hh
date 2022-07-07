@@ -8,7 +8,7 @@
 #include <TH2D.h>
 #include <TH1D.h>
 
-#include "TAnalysis.hh"
+#include "SnD/TAnalysis.hh"
 
 class Analysis : public TAnalysis {
  private:

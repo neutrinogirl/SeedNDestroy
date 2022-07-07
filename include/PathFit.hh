@@ -12,7 +12,7 @@
 #include <TRandom3.h>
 #include "MathUtils.hh"
 #include "Recorder.hh"
-#include "NLL.hh"
+#include "SnD/NLL.hh"
 
 typedef struct DataStruct{
   std::vector<Hit> vHits;

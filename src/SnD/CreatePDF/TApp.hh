@@ -5,7 +5,7 @@
 #ifndef SND_SRC_SND_TAPP_HH_
 #define SND_SRC_SND_TAPP_HH_
 
-#include <Argz/Args.hh>
+#include "Argz/Args.hh"
 
 typedef struct TAppArgs : public Args {
   TAppArgs() {

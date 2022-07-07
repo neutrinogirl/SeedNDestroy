@@ -11,6 +11,10 @@ RATReader::RATReader(const char *filename, const bool &verbose) {
   verbose_ = verbose;
   d = new RATData();
 }
+RATReader::RATReader(TTree *tree, const char *filename, const bool &verbose)
+	: RATReader(filename, verbose) {
+  d->SetTTree(tree);
+}
 bool RATReader::GetNextEvent() {
   w_rat.GetNextEvent();
 }
