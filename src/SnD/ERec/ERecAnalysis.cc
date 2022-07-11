@@ -72,11 +72,11 @@ void ERecAnalysis::Export(const char *filename) {
 	v2DWall[i]->Write();
 	if(v2D[i]->GetEntries()>0){
 	  TFitResultPtr r = v2D[i]->ProjectionX()->Fit("gaus", "SQ");
-	  gNHits.SetPoint(gNHits.GetN(), vEdges[i], r->Parameter(2)/r->Parameter(1));
-	  gNHits.SetPointError(gNHits.GetN()-1, 0., GetErr(r->Parameter(2), r->Parameter(1)));
+	  gNHits.SetPoint(gNHits.GetN(), vEdges[i], 100*r->Parameter(2)/r->Parameter(1));
+	  gNHits.SetPointError(gNHits.GetN()-1, 0., 100*GetErr(r->Parameter(2), r->Parameter(1)));
 	  r = v2D[i]->ProjectionY()->Fit("gaus", "SQ");
-	  gQ.SetPoint(gQ.GetN(), vEdges[i], r->Parameter(2)/r->Parameter(1));
-	  gQ.SetPointError(gQ.GetN()-1, 0., GetErr(r->Parameter(2), r->Parameter(1)));
+	  gQ.SetPoint(gQ.GetN(), vEdges[i], 100*r->Parameter(2)/r->Parameter(1));
+	  gQ.SetPointError(gQ.GetN()-1, 0., 100*GetErr(r->Parameter(2), r->Parameter(1)));
 	}
   }
   gNHits.Write();
