@@ -17,12 +17,16 @@ class RATData {
   double T = 0.f;
   double E = 0.f;
   std::vector<Hit> vHits;
+  double Q = 0.f;
+  double NHits = 0.f;
   void Clear(){
 	TrigTime = 0.f;
 	Pos = TVector3(0.f, 0.f, 0.f);
 	Dir = TVector3(0.f, 0.f, 0.f);
 	T = 0.f;
 	E = 0.f;
+	Q = 0.f;
+	NHits = 0.f;
 	vHits.clear();
   }
   void SetTTree(TTree *Tree){
@@ -31,6 +35,8 @@ class RATData {
 	Tree->Branch("DirTrue", &this->Dir, "DirTrue[3]/D");
 	Tree->Branch("T", &this->T, "T/D");
 	Tree->Branch("E", &this->E, "E/D");
+	Tree->Branch("Q", &this->Q, "Q/D");
+	Tree->Branch("NHits", &this->NHits, "NHits/D");
   }
 };
 

@@ -6,8 +6,9 @@
 #define SND_SRC_SND_RATANALYSIS_HH_
 
 #include <wRATter/Wrapper.hh>
-#include "SnD/TReader.hh"
-#include "SnD/RATData.hh"
+#include <SnD/TReader.hh>
+#include <SnD/RATData.hh>
+
 class RATReader : public TReader {
  private:
   wRAT w_rat;

@@ -58,3 +58,6 @@ target_link_libraries(TApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO
 
 add_executable(ReconApp src/SnD/Recon/ReconApp.cc src/SnD/Recon/ReconAnalysis.cc src/SnD/PosT.cc)
 target_link_libraries(ReconApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
+
+add_executable(ERec src/SnD/ERec/TApp.cc)
+target_link_libraries(ERec Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)

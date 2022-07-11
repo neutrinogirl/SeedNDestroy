@@ -25,6 +25,8 @@ void *RATReader::GetData() {
 
   d->Clear();
   w_rat.GetPrimaryParticleInfo(d->TrigTime, d->Pos, d->Dir, d->E, d->T);
+  d->Q = w_rat.GetQ();
+  d->NHits = w_rat.GetNHits();
   auto EV = w_rat.GetDS()->GetEV(w_rat.GetITrig());
   auto nPMTs = EV->GetPMTCount();
 
