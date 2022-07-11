@@ -15,6 +15,7 @@ class ERecAnalysis : public TAnalysis{
  private:
   std::vector<double> vEdges;
   std::vector< TH2D* > v2D;
+  std::vector< TH2D* > v2DWall;
   int GetInterval(const double& E);
  public:
   ERecAnalysis();

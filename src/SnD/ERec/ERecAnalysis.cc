@@ -8,9 +8,9 @@ ERecAnalysis::ERecAnalysis() {
   vEdges = {0., 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0};
 
   for(const auto& E: vEdges){
-	v2D.push_back(new TH2D(Form("h2D_E%.1f", E), Form("E=%.1f ; N_{hits} ; Q ", E), 100, 0., 2000., 100, 0., 2000.));
+	v2D.push_back(new TH2D(Form("h2D_E%.1f", E), Form("E=%.1f ; N_{hits} ; Q ", E), 50, 0., 2000., 50, 0., 2000.));
+	v2DWall.push_back(new TH2D(Form("h2D_E%.1f_Wall", E), Form("E=%.1f ; N_{hits} ; Q ", E), 50, 0., 2000., 50, 0., 2000.));
   }
-
 
 }
 // 0 == underflow
@@ -30,7 +30,10 @@ void ERecAnalysis::Do(void *Data) {
   const int EBin = GetInterval(RData->E);
 
   if(EBin > 0 && EBin <= vEdges.size()) {
-	v2D[EBin-1]->Fill(RData->NHits, RData->Q);
+	if(RData->Pos.Mag() < 3.e3)
+	  v2D[EBin-1]->Fill(RData->NHits, RData->Q);
+	else
+	  v2DWall[EBin-1]->Fill(RData->NHits, RData->Q);
   }
 
 }
@@ -39,6 +42,9 @@ void ERecAnalysis::Export(const char *filename) {
 
   TFile *f = new TFile(filename, "RECREATE");
   for(const auto& h: v2D) {
+	h->Write();
+  }
+  for(const auto& h: v2DWall) {
 	h->Write();
   }
   f->Close();
