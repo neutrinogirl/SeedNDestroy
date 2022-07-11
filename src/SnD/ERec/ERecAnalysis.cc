@@ -52,12 +52,14 @@ static double GetErr(double X, double Y){
 void ERecAnalysis::Export(const char *filename) {
 
   TGraphErrors gNHits;
+  gNHits.SetName("gNHits");
   gNHits.SetLineWidth(2);
   gNHits.SetMarkerSize(2);
   gNHits.SetMarkerStyle(kPlus);
   gNHits.SetMarkerColor(kBlue-4);
   gNHits.SetLineColor(kBlue-4);
   TGraphErrors gQ;
+  gQ.SetName("gQ");
   gQ.SetLineWidth(2);
   gQ.SetMarkerSize(2);
   gQ.SetMarkerStyle(kPlus);
