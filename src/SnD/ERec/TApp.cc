@@ -4,6 +4,7 @@
 
 #include "TApp.hh"
 #include "../RATReader.hh"
+#include "ERecAnalysis.hh"
 
 int main(int argc, char **argv) {
 
@@ -14,6 +15,7 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Create analysis class
+  ERecAnalysis Ana;
 
   // ######################################## //
   // Run analysis
