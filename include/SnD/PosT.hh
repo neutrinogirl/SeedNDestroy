@@ -24,7 +24,7 @@ class PosT{
 	Tree->Branch("Pos", &this->Pos, "Pos[3]/D");
 	Tree->Branch("T", &this->T, "T/D");
   }
-  void Print(){
+  void Print() const{
 	std::cout << "Pos: " << Pos.X() << " " << Pos.Y() << " " << Pos.Z() << std::endl;
 	std::cout << "T: " << T << std::endl;
   }

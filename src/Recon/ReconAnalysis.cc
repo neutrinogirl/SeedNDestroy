@@ -49,9 +49,6 @@ void ReconAnalysis::Do(void *Data) {
 	Tree->Fill();
   }
 
-  // Fill Tree
-  Tree->Fill();
-
 }
 
 #include <TFile.h>
