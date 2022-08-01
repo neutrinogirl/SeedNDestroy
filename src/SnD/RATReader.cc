@@ -30,6 +30,10 @@ void *RATReader::GetData() {
   auto EV = w_rat.GetDS()->GetEV(w_rat.GetITrig());
   auto nPMTs = EV->GetPMTCount();
 
+  d->Pos.Print();
+  d->Dir.Print();
+  std::cout << std::endl;
+
   for (auto iPMT = 0; iPMT < nPMTs; iPMT++) {
 
 	auto PMT = EV->GetPMT(iPMT);
