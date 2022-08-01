@@ -22,7 +22,7 @@ int ERecAnalysis::GetInterval(const double& E) {
   return std::upper_bound(vEdges.begin(), vEdges.end(), E) - vEdges.begin();
 }
 
-#include <SnD/RATData.hh>
+#include "SnD/RATData.hh"
 void ERecAnalysis::Do(void *Data) {
 
   RATData *RData = static_cast<RATData*>(Data);
@@ -42,13 +42,10 @@ void ERecAnalysis::Do(void *Data) {
 #include <TFitResultPtr.h>
 #include <TGraphErrors.h>
 #include <TF1.h>
-#include <TF2.h>
-
 // Calculate the error of a ratio of two double
 static double GetErr(double X, double Y){
   return std::sqrt(X)/Y + X*std::sqrt(Y)/std::pow(Y, 2);
 }
-
 void ERecAnalysis::Export(const char *filename) {
 
   TGraphErrors gNHits;

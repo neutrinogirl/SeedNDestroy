@@ -48,16 +48,28 @@ LINK_DIRECTORIES(${NLOPT_LIB})
 ###
 # ${ROOT_LIBRARIES} ${Boost_LIBRARIES} ${NLOPT_LIB}
 
+#----------------------------------------------------------------------------
+# LIBRARIES
+#
 add_library(Hit src/SnD/Hit.cc)
 target_link_libraries(Hit ROOT::Physics)
+
 add_library(RATReader src/SnD/RATReader.cc)
 target_link_libraries(RATReader wRATter)
 
-add_executable(TApp src/SnD/CreatePDF/TApp.cc src/SnD/CreatePDF/PDFAnalysis.cc)
+add_library(SVD src/SnD/SVD.cc)
+
+add_library(Multilateration src/SnD/Multilateration.cc)
+target_link_libraries(Multilateration ROOT::Physics ROOT::Hist)
+
+#----------------------------------------------------------------------------
+# EXECUTABLES
+#
+add_executable(TApp src/CreatePDF/TApp.cc src/CreatePDF/PDFAnalysis.cc)
 target_link_libraries(TApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
 
-add_executable(ReconApp src/SnD/Recon/ReconApp.cc src/SnD/Recon/ReconAnalysis.cc src/SnD/PosT.cc)
-target_link_libraries(ReconApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
+add_executable(ReconApp src/Recon/ReconApp.cc src/Recon/ReconAnalysis.cc src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc)
+target_link_libraries(ReconApp Argz RATReader Hit SVD ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
 
-add_executable(ERec src/SnD/ERec/TApp.cc src/SnD/ERec/ERecAnalysis.cc)
+add_executable(ERec src/ERec/TApp.cc src/ERec/ERecAnalysis.cc)
 target_link_libraries(ERec Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)

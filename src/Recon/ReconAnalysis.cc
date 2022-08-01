@@ -4,10 +4,10 @@
 
 #include "ReconAnalysis.hh"
 
-#include <SnD/RATData.hh>
-#include <SnD/Multilateration.hh>
+#include "SnD/RATData.hh"
+#include "SnD/Multilateration.hh"
 
-#include <ROOT/Utils.hh>
+#include "ROOT/Utils.hh"
 
 ReconAnalysis::ReconAnalysis(const char *filename, const double &R, const double &HH, const std::string& treename){
   hPDF = GetROOTObj<TH1D>(filename, "");
@@ -38,6 +38,10 @@ void ReconAnalysis::Do(void *Data) {
 
   // Get SnD seeds
   std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
+
+  for(const auto& Seed : vSeeds){
+	Tree->Fill();
+  }
 
   // Fill Tree
   Tree->Fill();

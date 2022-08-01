@@ -5,7 +5,7 @@
 #ifndef SND_SRC_SND_EREC_ERECANALYSIS_HH_
 #define SND_SRC_SND_EREC_ERECANALYSIS_HH_
 
-#include <SnD/TAnalysis.hh>
+#include "SnD/TAnalysis.hh"
 
 #include <vector>
 #include <TH1D.h>

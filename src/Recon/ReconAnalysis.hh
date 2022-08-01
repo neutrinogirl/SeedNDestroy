@@ -5,9 +5,9 @@
 #ifndef SND_SRC_SND_RECONANALYSIS_HH_
 #define SND_SRC_SND_RECONANALYSIS_HH_
 
-#include <SnD/TAnalysis.hh>
-#include <SnD/Geom.hh>
-#include <SnD/PosT.hh>
+#include "SnD/TAnalysis.hh"
+#include "SnD/Geom.hh"
+#include "SnD/PosT.hh"
 
 #include <TH1D.h>
 #include <TTree.h>

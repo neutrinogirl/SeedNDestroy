@@ -2,7 +2,7 @@
 // Created by Stephane Zsoldos on 7/5/22.
 //
 
-#include "RATReader.hh"
+#include "SnD/RATReader.hh"
 
 RATReader::RATReader(const char *filename, const bool &verbose) {
   w_rat.ReadFile(filename);

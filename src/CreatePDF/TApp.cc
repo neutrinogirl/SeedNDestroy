@@ -2,24 +2,24 @@
 // Created by Stephane Zsoldos on 7/3/22.
 //
 
-#include "ReconAnalysis.hh"
-#include "ReconApp.hh"
-#include "../RATReader.hh"
+#include "TApp.hh"
+#include "PDFAnalysis.hh"
+#include "SnD/RATReader.hh"
 
 int main(int argc, char **argv) {
 
   // ######################################## //
   // Read arguments
-  ReconAppArgs Args;
+  TAppArgs Args;
   Args.ProcessArgs(argc, argv);
 
   // ######################################## //
-  // Create ReconAnalysis
-  ReconAnalysis Ana(Args.GetPDF(), Args.GetRadius(), Args.GetHHeight(), "T");
+  // Create analysis class
+  Analysis Ana(static_cast<unsigned int>(Args.GetTResBins()[0]), Args.GetTResBins()[1], Args.GetTResBins()[2]);
 
   // ######################################## //
   // Run analysis
-  RATReader R(Ana.Tree, Args.GetInput(), Args.GetVerbose());
+  RATReader R(Args.GetInput(), Args.GetVerbose());
   R.Read(&Ana);
 
   // ######################################## //

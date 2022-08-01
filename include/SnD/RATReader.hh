@@ -5,9 +5,9 @@
 #ifndef SND_SRC_SND_RATANALYSIS_HH_
 #define SND_SRC_SND_RATANALYSIS_HH_
 
-#include <wRATter/Wrapper.hh>
-#include <SnD/TReader.hh>
-#include <SnD/RATData.hh>
+#include "wRATter/Wrapper.hh"
+#include "TReader.hh"
+#include "RATData.hh"
 
 class RATReader : public TReader {
  private:
