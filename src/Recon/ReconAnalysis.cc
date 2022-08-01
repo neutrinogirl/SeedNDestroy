@@ -43,11 +43,11 @@ void ReconAnalysis::Do(void *Data) {
   Tree->Fill();
 
   // Get SnD seeds
-  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
-  Seed.Pos = vSeeds.front().Pos;
-  Seed.T = vSeeds.front().T;
-
-  Tree->Fill();
+  // std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
+  // Seed.Pos = vSeeds.front().Pos;
+  // Seed.T = vSeeds.front().T;
+  //
+  // Tree->Fill();
 
 }
 
