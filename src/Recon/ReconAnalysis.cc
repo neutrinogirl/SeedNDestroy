@@ -2,6 +2,8 @@
 // Created by Stephane Zsoldos on 7/6/22.
 //
 
+#include <TH2D.h>
+
 #include "ReconAnalysis.hh"
 
 #include "SnD/RATData.hh"
@@ -9,10 +11,12 @@
 
 #include "ROOT/Utils.hh"
 
-ReconAnalysis::ReconAnalysis(const char *filename, const double &R, const double &HH, const std::string& treename){
-  hPDF = GetROOTObj<TH1D>(filename, "");
+ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname,
+							 const double &R, const double &HH,
+							 const char *treename){
+  hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   Cyl = new Cylinder(R, HH);
-  Tree = new TTree(treename.c_str(), treename.c_str());
+  Tree = new TTree(treename, treename);
   Seed.SetTree(Tree);
 }
 ReconAnalysis::~ReconAnalysis(){
@@ -32,14 +36,16 @@ void ReconAnalysis::Do(void *Data) {
   // Get time seed
   double TSeed = Cyl->GetDWall(Centroid);
 
-  // Read
-  Seed.Pos = Centroid;
-  Seed.T = TSeed;
+  // // Read
+  // Seed.Pos = Centroid;
+  // Seed.T = TSeed;
 
   // Get SnD seeds
   std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
+  vSeeds.emplace_back(Centroid, TSeed);
 
-  for(const auto& Seed : vSeeds){
+  for(const auto &S : vSeeds){
+	Seed = S;
 	Tree->Fill();
   }
 

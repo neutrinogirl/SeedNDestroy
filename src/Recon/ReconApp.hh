@@ -10,13 +10,14 @@
 typedef struct ReconAppArgs : public Args {
   ReconAppArgs() {
 	v = {
-		new bArg("-v", "--verbose"),
-		new sArg("-i", "--input"),
-		new sArg("-p", "--pdf"),
-		new sArg("-o", "--output"),
-		new fArg("-r", "--radius"),
+		new bArg("-v",  "--verbose"),
+		new sArg("-i",  "--input"),
+		new sArg("-p",  "--pdf"),
+		new sArg("-o",  "--output"),
+		new fArg("-r",  "--radius"),
 		new fArg("-hh", "--hheight"),
-		new bArg("-u", "--unbinned")
+		new bArg("-u",  "--unbinned"),
+		new sArg("-pn", "--pdf-name", "hCTVSTResPDF_TTOF_QW0"),
 	};
   }
   ReconAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -25,14 +26,16 @@ typedef struct ReconAppArgs : public Args {
 			  << " <option(s)>"
 			  << " -r (--radius) R"
 			  << " -hh (--half-height) HH"
+			  << " -p (--pdf) PDF.root"
 			  << " -i (--input) INPUT.root"
 			  << " -o (--output) OUT.root\n\n"
 
 			  << "Options: [default]\n\n"
 
-			  << "\t-h (--help)\tShow this help message\n"
-			  << "\t-v (--verbose)\tSet verbosity level true\n"
-			  << "\t-u (--unbinned)\tSet unbinned TRes fit\n"
+			  << "\t-h  (--help)    \tShow this help message\n"
+			  << "\t-v  (--verbose) \tSet verbosity level true\n"
+			  << "\t-u  (--unbinned)\tSet unbinned TRes fit\n"
+			  << "\t-pn (--pdf-name)\tSet PDF hist name\n"
 
 			  << std::endl;
   }
@@ -56,6 +59,9 @@ typedef struct ReconAppArgs : public Args {
   }
   bool GetUnbinned() const {
 	return reinterpret_cast<bArg*>(v[6])->val;
+  }
+  const char *GetPDFName() const {
+	return reinterpret_cast<sArg*>(v[7])->val.c_str();
   }
 } ReconAppArgs;
 

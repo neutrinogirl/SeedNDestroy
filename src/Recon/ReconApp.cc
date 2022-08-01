@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Create ReconAnalysis
-  ReconAnalysis Ana(Args.GetPDF(), Args.GetRadius(), Args.GetHHeight(), "T");
+  ReconAnalysis Ana(Args.GetPDF(), Args.GetPDFName(),
+					Args.GetRadius(), Args.GetHHeight(), "T");
 
   // ######################################## //
   // Run analysis

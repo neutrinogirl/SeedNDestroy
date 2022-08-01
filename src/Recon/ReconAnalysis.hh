@@ -20,7 +20,9 @@ class ReconAnalysis : public TAnalysis {
   PosT Seed;
  public:
   ReconAnalysis() = default;
-  ReconAnalysis(const char *filename, const double &R, const double &HH, const std::string& treename);
+  ReconAnalysis(const char *pdfname, const char *histname,
+				const double &R, const double &HH,
+				const char *treename);
   void Do(void *Data) override;
   void Export(const char* filename);
   ~ReconAnalysis();
