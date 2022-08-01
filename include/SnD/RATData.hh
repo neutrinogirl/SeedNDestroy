@@ -33,8 +33,8 @@ class RATData {
 	Tree->Branch("TrigTime", &this->TrigTime, "TrigTime/D");
 	Tree->Branch("PosTrue", &this->Pos, "PosTrue[3]/D");
 	Tree->Branch("DirTrue", &this->Dir, "DirTrue[3]/D");
-	Tree->Branch("T", &this->T, "T/D");
-	Tree->Branch("E", &this->E, "E/D");
+	Tree->Branch("TTrue", &this->T, "T/D");
+	Tree->Branch("ETrue", &this->E, "E/D");
 	Tree->Branch("Q", &this->Q, "Q/D");
 	Tree->Branch("NHits", &this->NHits, "NHits/D");
   }
