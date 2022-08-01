@@ -208,6 +208,6 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
   if(vSeeds.size() > MaxSeeds)
 	vSeeds.erase(vSeeds.begin()+MaxSeeds, vSeeds.end());
 
-  return {vSeeds.front()};
+  return vSeeds;
 
 }

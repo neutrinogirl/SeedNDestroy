@@ -36,18 +36,17 @@ void ReconAnalysis::Do(void *Data) {
   // Get time seed
   double TSeed = Cyl->GetDWall(Centroid);
 
-  // // Read
-  // Seed.Pos = Centroid;
-  // Seed.T = TSeed;
+  // Read
+  Seed.Pos = Centroid;
+  Seed.T = TSeed;
+
+  Tree->Fill();
 
   // Get SnD seeds
   std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
-  vSeeds.emplace_back(Centroid, TSeed);
+  Seed = vSeeds.front();
 
-  for(const auto &S : vSeeds){
-	Seed = S;
-	Tree->Fill();
-  }
+  Tree->Fill();
 
 }
 
