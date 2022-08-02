@@ -57,10 +57,10 @@ double UnbinnedLL(TH1D *hPDF, const std::vector<double> &vTRes);
 
 double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
 			  const TVector3& Pos, const double& T, const TVector3& Dir,
-			  double(*fW)(const Hit&, const int&) = fWeight, const int& wPower = 1);
+			  double(*fW)(const Hit&, const int&) = fWeight, const int& wPower = 0);
 double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 			  const TVector3& Pos, const double& T,
-			  double(*fW)(const Hit&, const int&) = fWeight, const int& wPower = 1,
+			  double(*fW)(const Hit&, const int&) = fWeight, const int& wPower = 0,
 			  const bool &isUnbinned = false);
 
 #endif //SEEDNDESTROY_INCLUDE_NLL_HH_

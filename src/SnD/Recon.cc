@@ -48,7 +48,7 @@ RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
   opt.set_xtol_rel(1.e-18);
   opt.set_ftol_rel(1.e-18);
   // Set limits
-  opt.set_maxtime(10./*sec*/);
+  opt.set_maxtime(1./*sec*/);
 
   std::vector< RecT > vResults;
 
@@ -63,8 +63,7 @@ RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
 		} catch (std::exception &e) {
 		  std::cout << "nlopt failed: " << e.what() << std::endl;
 		}
-		RecT buf(x[0], x[1], x[2], x[3], minf);
-		return buf;
+		return RecT(x[0], x[1], x[2], x[3], minf);
 	  }
   );
 
