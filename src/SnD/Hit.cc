@@ -31,6 +31,8 @@ TVector3 GetCentroid(const std::vector<Hit>& vHits){
 	centroid[0] += hit.PMTPos.x() / NHits;
 	centroid[1] += hit.PMTPos.y() / NHits;
 	centroid[2] += hit.PMTPos.z() / NHits;
+	centroid.Print();
   }
+  std::cout << std::endl;
   return centroid;
 }
