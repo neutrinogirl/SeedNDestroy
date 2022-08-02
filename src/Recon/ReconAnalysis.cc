@@ -42,7 +42,8 @@ void ReconAnalysis::Do(void *Data) {
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  RT = Recon(RData->vHits, hPDF, Cyl, vSeeds);
+  auto rt = Recon(RData->vHits, hPDF, Cyl, vSeeds);
+
 
   // Fill
   Tree->Fill();

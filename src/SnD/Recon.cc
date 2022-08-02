@@ -54,7 +54,7 @@ RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
 
   std::transform(
 	  vSeeds.begin(), vSeeds.end(),
-	  vResults.begin(),
+	  std::back_inserter(vResults),
 	  [&](const PosT &s) {
 		double minf=std::numeric_limits<double>::max();
 		std::vector<double> x = s.GetStdVec();
@@ -74,6 +74,6 @@ RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
 		  }
   );
 
-  return vResults[0];
+  return vResults.front();
 }
 
