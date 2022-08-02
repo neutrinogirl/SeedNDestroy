@@ -18,8 +18,10 @@ class PosT{
   //
   PosT() : Pos(0.f, 0.f, 0.f), T(0.f) {}
   //
-  PosT(const TVector3& Pos, const double& T)
-	  : Pos(Pos), T(T) {}
+  PosT(const TVector3& P, const double& t){
+	Pos = P;
+	T = t;
+  }
   explicit PosT(const std::vector<double> &x)
 	  : Pos(x[0], x[1], x[2]), T(x[3]) {}
   PosT(const double &x1, const double &x2, const double &x3, const double &x4)
