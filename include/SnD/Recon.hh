@@ -21,10 +21,8 @@ double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data
 double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
 typedef struct FitResults {
-  double NLL=0.f;
+  double NLL;
   PosT RecT;
-  FitResults() = default;
-  FitResults(double NLL, PosT RecT) : NLL(NLL), RecT(RecT) {}
   void SetTTree(TTree *t){
 	t->Branch("NLL", &NLL, "NLL/D");
   }
