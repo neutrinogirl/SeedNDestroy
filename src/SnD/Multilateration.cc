@@ -188,12 +188,12 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 
   // Sort by magnitude
   std::sort(vSeeds.begin(), vSeeds.end(), [](const PosT& v1, const PosT& v2){
-	return v1.Pos.Mag2()<v2.Pos.Mag2();
+	return v1.GetTVector3().Mag2()<v2.GetTVector3().Mag2();
   });
 
   // Remove seed guess if less than a few cm between them
   for(auto iSeed=1; iSeed<vSeeds.size(); iSeed++){
-	auto diffInf = vSeeds[iSeed].Pos-vSeeds[iSeed-1].Pos;
+	auto diffInf = vSeeds[iSeed].GetTVector3()-vSeeds[iSeed-1].GetTVector3();
 	const double lim = Csts::GetSqrt2()*100.; // 10cm
 	if(diffInf.Mag() < lim)
 	  vSeeds.erase(vSeeds.begin()+iSeed);
@@ -202,7 +202,7 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
-	return GetNLL(vHits, hPDF, v1.Pos, -v1.T, fWeight, wPower, isUnbinned) < GetNLL(vHits, hPDF, v2.Pos, -v2.T, fWeight, wPower, isUnbinned);
+	return GetNLL(vHits, hPDF, v1.GetTVector3(), -v1.T, fWeight, wPower, isUnbinned) < GetNLL(vHits, hPDF, v2.GetTVector3(), -v2.T, fWeight, wPower, isUnbinned);
   });
 
   if(vSeeds.size() > MaxSeeds)

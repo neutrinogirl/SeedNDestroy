@@ -5,5 +5,9 @@
 #include <SnD/PosT.hh>
 
 bool operator==(const PosT& s1, const PosT& s2){
-  		return s1.Pos == s2.Pos && s1.T == s2.T;
+  return
+	  (std::round(s1.X) == std::round(s2.X)) &&
+	  (std::round(s1.Y) == std::round(s2.Y)) &&
+	  (std::round(s1.Z) == std::round(s2.Z)) &&
+	  (std::round(s1.T) == std::round(s2.T));
 }
