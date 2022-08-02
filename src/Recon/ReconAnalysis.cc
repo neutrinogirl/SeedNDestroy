@@ -42,12 +42,10 @@ void ReconAnalysis::Do(void *Data) {
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  auto rt = Recon(RData->vHits, hPDF, Cyl, vSeeds);
-
+  RT = Recon(RData->vHits, hPDF, Cyl, vSeeds);
 
   // Fill
   Tree->Fill();
-
 }
 
 #include <TFile.h>
