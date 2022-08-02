@@ -8,7 +8,6 @@
 
 #include <SnD/RATData.hh>
 #include <SnD/Multilateration.hh>
-#include <SnD/PathFit.hh>
 #include <SnD/Recon.hh>
 
 #include <ROOT/Utils.hh>
