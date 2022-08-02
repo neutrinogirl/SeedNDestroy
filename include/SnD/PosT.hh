@@ -11,23 +11,32 @@
 #include <TTree.h>
 
 class PosT{
+ protected:
  public:
-  TVector3 Pos = TVector3(0.f, 0.f, 0.f);
-  double T = 0.f;
+  TVector3 Pos;
+  double T=0.f;
+  //
   PosT() = default;
-  PosT(const TVector3& Pos, const double& T) : Pos(Pos), T(T) {}
-  explicit PosT(const std::vector<double> &x) : Pos(x[0], x[1], x[2]), T(x[3]) {}
+  PosT(const PosT &PosT) = default;
+  //
+  PosT(const TVector3& Pos, const double& T)
+	  : Pos(Pos), T(T) {}
+  explicit PosT(const std::vector<double> &x)
+	  : Pos(x[0], x[1], x[2]), T(x[3]) {}
+  PosT(const double &x1, const double &x2, const double &x3, const double &x4)
+	  : Pos(x1, x2, x3), T(x4) {}
+  //
   void Clear(){
 	Pos = TVector3(0.f, 0.f, 0.f);
 	T = 0.f;
   }
-  void SetTree(TTree *Tree){
+  virtual void SetTree(TTree *Tree){
 	Tree->Branch("X", &this->Pos[0], "X/D");
 	Tree->Branch("Y", &this->Pos[1], "Y/D");
 	Tree->Branch("Z", &this->Pos[2], "Z/D");
 	Tree->Branch("T", &this->T, "T/D");
   }
-  void Print() const{
+  virtual void Print() const{
 	std::cout << "Pos: " << Pos.X() << " " << Pos.Y() << " " << Pos.Z() << std::endl;
 	std::cout << "T: " << T << std::endl;
   }
@@ -37,5 +46,31 @@ class PosT{
 };
 
 bool operator==(const PosT& s1, const PosT& s2);
+
+class RecT : public PosT {
+ public:
+  double NLL=0.f;
+  //
+  RecT() = default;
+  RecT(const RecT &RecT) = default;
+  RecT(const PosT &P, const double& minf)
+	  : PosT(P), NLL(minf) {}
+  RecT(const TVector3& Pos, const double& T, const double& minf)
+	  : PosT(Pos, T), NLL(minf) {}
+  explicit RecT(const std::vector<double> &x) {
+	Pos = TVector3(x[0], x[1], x[2]);
+	T = x[3];
+	NLL = x[4];
+  }
+  RecT(const double& x1, const double& y1, const double& z1,
+	   const double& t1,
+	   const double& minf)
+	  : PosT(x1, y1, z1, t1), NLL(minf) {}
+  //
+  void SetTree(TTree *Tree) override{
+	PosT::SetTree(Tree);
+	Tree->Branch("NLL", &this->NLL, "NLL/D");
+  }
+};
 
 #endif //SND_INCLUDE_SND_POST_HH_

@@ -25,7 +25,7 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
   return TGuess > d->GetTEdge() ? -1.f : std::min(TWall, TGuess);
 }
 
-FitResults Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds){
+RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds){
   //
   FitStruct FS = {vHits, hPDF};
   // Create minimizer obj
@@ -50,7 +50,7 @@ FitResults Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<
   // Set limits
   opt.set_maxtime(10./*sec*/);
 
-  std::vector< FitResults > vResults;
+  std::vector< RecT > vResults;
 
   std::transform(
 	  vSeeds.begin(), vSeeds.end(),
@@ -63,12 +63,13 @@ FitResults Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<
 		} catch (std::exception &e) {
 		  std::cout << "nlopt failed: " << e.what() << std::endl;
 		}
-		return FitResults{minf, PosT(x)};
+		RecT buf(x[0], x[1], x[2], x[3], minf);
+		return buf;
 	  }
   );
 
   std::sort(vResults.begin(), vResults.end(),
-		  [](const FitResults &a, const FitResults &b) {
+		  [](const RecT &a, const RecT &b) {
 			return a.NLL < b.NLL;
 		  }
   );

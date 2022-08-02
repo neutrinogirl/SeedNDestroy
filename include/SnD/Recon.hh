@@ -28,6 +28,6 @@ typedef struct FitResults {
   }
 } FitResults;
 
-FitResults Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
+RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
 
 #endif //_RECON_HH_

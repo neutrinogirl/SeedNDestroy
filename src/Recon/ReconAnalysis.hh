@@ -17,7 +17,7 @@ class ReconAnalysis : public TAnalysis {
   TH1D* hPDF;
   Cylinder* Cyl;
   TTree* Tree;
-  PosT RecT;
+  RecT RT;
  public:
   ReconAnalysis() = default;
   ReconAnalysis(const char *pdfname, const char *histname,
