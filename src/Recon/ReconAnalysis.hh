@@ -17,14 +17,14 @@ class ReconAnalysis : public TAnalysis {
   TH1D* hPDF;
   Cylinder* Cyl;
   TTree* Tree;
-  PosT Seed;
+  PosT RecT;
  public:
   ReconAnalysis() = default;
   ReconAnalysis(const char *pdfname, const char *histname,
 				const double &R, const double &HH,
 				const char *treename);
   void Do(void *Data) override;
-  void Export(const char* filename);
+  void Export(const char* filename) const;
   ~ReconAnalysis();
 };
 

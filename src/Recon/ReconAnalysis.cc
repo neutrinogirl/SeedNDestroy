@@ -18,7 +18,7 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname,
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   Cyl = new Cylinder(R, HH);
   Tree = new TTree(treename, treename);
-  Seed.SetTree(Tree);
+  RecT.SetTree(Tree);
 }
 ReconAnalysis::~ReconAnalysis(){
   delete Tree;
@@ -42,7 +42,7 @@ void ReconAnalysis::Do(void *Data) {
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  Seed = Recon(RData->vHits, hPDF, Cyl, vSeeds);
+  RecT = Recon(RData->vHits, hPDF, Cyl, vSeeds);
 
   // Fill
   Tree->Fill();
@@ -50,7 +50,7 @@ void ReconAnalysis::Do(void *Data) {
 }
 
 #include <TFile.h>
-void ReconAnalysis::Export(const char *filename) {
+void ReconAnalysis::Export(const char *filename) const {
   TFile f(filename, "RECREATE");
   Tree->Write();
   f.Close();

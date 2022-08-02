@@ -14,6 +14,7 @@ class Bnd {
   virtual double GetTWall(const TVector3& pos) = 0;
   virtual bool IsInside(const TVector3& pos) = 0;
   virtual TVector3 GetEdge() = 0;
+  virtual double GetTEdge() = 0;
 };
 
 class Cylinder : public Bnd {
@@ -33,6 +34,9 @@ class Cylinder : public Bnd {
   }
   TVector3 GetEdge() override {
 	return {R, R, HH};
+  }
+  double GetTEdge() override {
+	return T;
   }
 };
 
