@@ -18,6 +18,7 @@ typedef struct ReconAppArgs : public Args {
 		new fArg("-hh", "--hheight"),
 		new bArg("-u",  "--unbinned"),
 		new sArg("-pn", "--pdf-name", "hCTVSTResPDF_TTOF_QW0"),
+		new iArg("-n", "--n-evts", -1)
 	};
   }
   ReconAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -36,6 +37,7 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-v  (--verbose) \tSet verbosity level true\n"
 			  << "\t-u  (--unbinned)\tSet unbinned TRes fit\n"
 			  << "\t-pn (--pdf-name)\tSet PDF hist name\n"
+			  << "\t-n  (--n-evts)  \tSet n evts to process (default all)\n"
 
 			  << std::endl;
   }
@@ -62,6 +64,9 @@ typedef struct ReconAppArgs : public Args {
   }
   const char *GetPDFName() const {
 	return reinterpret_cast<sArg*>(v[7])->val.c_str();
+  }
+  int GetNEvts() const {
+	return reinterpret_cast<iArg*>(v[8])->val;
   }
 } ReconAppArgs;
 

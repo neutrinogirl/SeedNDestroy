@@ -9,6 +9,9 @@
 
 #include "ProgressBar/ProgressBar.hpp"
 
+#include <csignal>
+#include <cstdio>
+
 class TReader {
  protected:
   virtual bool GetNextEvent() = 0;
@@ -17,8 +20,15 @@ class TReader {
   virtual ProgressBar *GetProgressBar() = 0;
   virtual bool GetVerbosity() = 0;
  public:
+  static volatile sig_atomic_t gSignalStatus;
+  static void MyHandler(int sig){
+	TReader::gSignalStatus = sig;
+  };
   virtual void Read(TAnalysis *Ana){
+	signal(SIGINT, MyHandler);
 	while(this->GetNextEvent()){
+	  if(TReader::gSignalStatus == SIGINT)
+		break;
 	  ++(*GetProgressBar());
 	  while(this->GetNextTrigger()){
 		Ana->Do(this->GetData());

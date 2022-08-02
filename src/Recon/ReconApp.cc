@@ -5,6 +5,9 @@
 #include "ReconAnalysis.hh"
 #include "ReconApp.hh"
 #include "SnD/RATReader.hh"
+#include "SnD/TReader.hh"
+
+volatile sig_atomic_t TReader::gSignalStatus = 0;
 
 int main(int argc, char **argv) {
 
