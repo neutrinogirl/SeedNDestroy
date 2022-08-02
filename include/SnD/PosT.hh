@@ -16,14 +16,15 @@ class PosT{
   double T = 0.f;
   PosT() = default;
   PosT(const TVector3& Pos, const double& T) : Pos(Pos), T(T) {}
+  explicit PosT(const std::vector<double> &x) : Pos(x[0], x[1], x[2]), T(x[3]) {}
   void Clear(){
 	Pos = TVector3(0.f, 0.f, 0.f);
 	T = 0.f;
   }
   void SetTree(TTree *Tree){
-	Tree->Branch("PosX", &this->Pos[0], "PosX/D");
-	Tree->Branch("PosY", &this->Pos[1], "PosY/D");
-	Tree->Branch("PosZ", &this->Pos[2], "PosZ/D");
+	Tree->Branch("X", &this->Pos[0], "X/D");
+	Tree->Branch("Y", &this->Pos[1], "Y/D");
+	Tree->Branch("Z", &this->Pos[2], "Z/D");
 	Tree->Branch("T", &this->T, "T/D");
   }
   void Print() const{

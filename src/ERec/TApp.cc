@@ -6,6 +6,8 @@
 #include "SnD/RATReader.hh"
 #include "ERecAnalysis.hh"
 
+volatile sig_atomic_t TReader::gSignalStatus = 0;
+
 int main(int argc, char **argv) {
 
   // ######################################## //

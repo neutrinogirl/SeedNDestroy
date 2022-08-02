@@ -20,6 +20,16 @@ typedef struct FitStruct{
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data);
 double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
-PosT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
+typedef struct FitResults {
+  double NLL=0.f;
+  PosT RecT;
+  FitResults() = default;
+  FitResults(double NLL, PosT RecT) : NLL(NLL), RecT(RecT) {}
+  void SetTTree(TTree *t){
+	t->Branch("NLL", &NLL, "NLL/D");
+  }
+} FitResults;
+
+FitResults Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
 
 #endif //_RECON_HH_

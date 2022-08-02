@@ -25,7 +25,7 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
   return TGuess > d->GetTEdge() ? -1.f : std::min(TWall, TGuess);
 }
 
-PosT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds){
+FitResults Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds){
   //
   FitStruct FS = {vHits, hPDF};
   // Create minimizer obj
@@ -48,13 +48,13 @@ PosT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
   opt.set_xtol_rel(1.e-18);
   opt.set_ftol_rel(1.e-18);
   // Set limits
-  opt.set_maxtime(1./*sec*/);
+  opt.set_maxtime(10./*sec*/);
 
-  std::map< double, PosT > mRec;
+  std::vector< FitResults > vResults;
 
   std::transform(
 	  vSeeds.begin(), vSeeds.end(),
-	  std::inserter(mRec, mRec.end()),
+	  vResults.begin(),
 	  [&](const PosT &s) {
 		double minf=std::numeric_limits<double>::max();
 		std::vector<double> x = s.GetStdVec();
@@ -63,11 +63,16 @@ PosT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
 		} catch (std::exception &e) {
 		  std::cout << "nlopt failed: " << e.what() << std::endl;
 		}
-		return std::make_pair(minf, PosT(TVector3(x[0], x[1], x[2]), x[3]));
+		return FitResults{minf, PosT(x)};
 	  }
   );
 
-  return mRec.begin()->second;
+  std::sort(vResults.begin(), vResults.end(),
+		  [](const FitResults &a, const FitResults &b) {
+			return a.NLL < b.NLL;
+		  }
+  );
 
+  return vResults.front();
 }
 

@@ -38,11 +38,11 @@ void ReconAnalysis::Do(void *Data) {
   double TSeed = Cyl->GetTWall(Centroid);
 
   // Get SnD seeds
-  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
+  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl, 0, 10);
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  RecT = Recon(RData->vHits, hPDF, Cyl, vSeeds);
+  RecT = Recon(RData->vHits, hPDF, Cyl, vSeeds).RecT;
 
   // Fill
   Tree->Fill();

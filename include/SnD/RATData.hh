@@ -31,12 +31,12 @@ class RATData {
   }
   void SetTTree(TTree *Tree){
 	Tree->Branch("TrigTime", &this->TrigTime, "TrigTime/D");
-	Tree->Branch("PosTrueX", &this->Pos[0], "PosTrueX/D");
-	Tree->Branch("PosTrueY", &this->Pos[1], "PosTrueY/D");
-	Tree->Branch("PosTrueZ", &this->Pos[2], "PosTrueZ/D");
-	Tree->Branch("DirTrueX", &this->Dir[0], "DirTrueX/D");
-	Tree->Branch("DirTrueY", &this->Dir[1], "DirTrueY/D");
-	Tree->Branch("DirTrueZ", &this->Dir[2], "DirTrueZ/D");
+	Tree->Branch("PosX", &this->Pos[0], "PosX/D");
+	Tree->Branch("PosY", &this->Pos[1], "PosY/D");
+	Tree->Branch("PosZ", &this->Pos[2], "PosZ/D");
+	Tree->Branch("DirX", &this->Dir[0], "DirX/D");
+	Tree->Branch("DirY", &this->Dir[1], "DirY/D");
+	Tree->Branch("DirZ", &this->Dir[2], "DirZ/D");
 	Tree->Branch("TTrue", &this->T, "TTrue/D");
 	Tree->Branch("ETrue", &this->E, "ETrue/D");
 	Tree->Branch("Q", &this->Q, "Q/D");
