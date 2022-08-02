@@ -21,7 +21,9 @@ class PosT{
 	T = 0.f;
   }
   void SetTree(TTree *Tree){
-	Tree->Branch("Pos", &this->Pos, "Pos[3]/D");
+	Tree->Branch("PosX", &this->Pos[0], "PosX/D");
+	Tree->Branch("PosY", &this->Pos[1], "PosY/D");
+	Tree->Branch("PosZ", &this->Pos[2], "PosZ/D");
 	Tree->Branch("T", &this->T, "T/D");
   }
   void Print() const{
