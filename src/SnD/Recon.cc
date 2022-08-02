@@ -74,6 +74,6 @@ RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
 		  }
   );
 
-  return vResults.front();
+  return vResults[0];
 }
 
