@@ -16,8 +16,7 @@ class PosT{
   TVector3 Pos;
   double T=0.f;
   //
-  PosT() = default;
-  PosT(const PosT &PosT) = default;
+  PosT() : Pos(0.f, 0.f, 0.f), T(0.f) {}
   //
   PosT(const TVector3& Pos, const double& T)
 	  : Pos(Pos), T(T) {}
@@ -51,17 +50,12 @@ class RecT : public PosT {
  public:
   double NLL=0.f;
   //
-  RecT() = default;
-  RecT(const RecT &RecT) = default;
+  RecT() : PosT(), NLL(0.f) {}
   RecT(const PosT &P, const double& minf)
 	  : PosT(P), NLL(minf) {}
   RecT(const TVector3& Pos, const double& T, const double& minf)
 	  : PosT(Pos, T), NLL(minf) {}
-  explicit RecT(const std::vector<double> &x) {
-	Pos = TVector3(x[0], x[1], x[2]);
-	T = x[3];
-	NLL = x[4];
-  }
+  explicit RecT(const std::vector<double> &x) : PosT(x), NLL(x[4]) {}
   RecT(const double& x1, const double& y1, const double& z1,
 	   const double& t1,
 	   const double& minf)
