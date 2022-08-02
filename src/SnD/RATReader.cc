@@ -37,13 +37,13 @@ void *RATReader::GetData() {
 
 	const auto PMTType = w_rat.GetRun()->GetPMTInfo()->GetType(ID);
 
-	if (PMTType == 1) {
-	  auto T = PMT->GetTime();
-	  auto Pos = w_rat.GetRun()->GetPMTInfo()->GetPosition(ID);
-	  auto QHit = PMT->GetCharge();
-	  Hit hit(Pos, QHit, T);
-	  d->vHits.emplace_back(hit);
-	}
+	// if (PMTType == 1) {
+	auto T = PMT->GetTime();
+	auto Pos = w_rat.GetRun()->GetPMTInfo()->GetPosition(ID);
+	auto QHit = PMT->GetCharge();
+	Hit hit(Pos, QHit, T);
+	d->vHits.emplace_back(hit);
+	// }
 
   }
 

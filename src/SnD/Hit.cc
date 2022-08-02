@@ -28,11 +28,7 @@ TVector3 GetCentroid(const std::vector<Hit>& vHits){
   TVector3 centroid(0., 0., 0.);
   const auto NHits = static_cast<double>(vHits.size());
   for(const auto& hit: vHits){
-	centroid[0] += hit.PMTPos.x() / NHits;
-	centroid[1] += hit.PMTPos.y() / NHits;
-	centroid[2] += hit.PMTPos.z() / NHits;
-	centroid.Print();
+	centroid += hit.PMTPos * (1./NHits);
   }
-  std::cout << std::endl;
   return centroid;
 }
