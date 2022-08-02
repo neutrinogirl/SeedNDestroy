@@ -34,7 +34,7 @@ void ReconAnalysis::Do(void *Data) {
   TVector3 Centroid = GetCentroid(RData->vHits);
 
   // Get time seed
-  double TSeed = Cyl->GetDWall(Centroid);
+  double TSeed = Cyl->GetTWall(Centroid);
 
   // Read
   Seed.Pos = Centroid;
