@@ -141,7 +141,7 @@ std::vector< TCanvas *> GetMap(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *b
 	  h.Fill(x[0], x[1], x[2], NLL);
 	}
 
-	vCanvas.push_back( new TCanvas(Form(""), "", 1800, 600) );
+	vCanvas.push_back( new TCanvas(Form("c_%.1f",t), "", 1800, 600) );
 	vCanvas.back()->Divide(3, 1);
 	vCanvas.back()->cd(1);
 	auto hXY = ProfileH3(&h, {"x", "y"});
