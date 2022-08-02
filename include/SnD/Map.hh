@@ -8,10 +8,11 @@
 #include <vector>
 
 #include <TH1D.h>
+#include <TCanvas.h>
 
 #include <SnD/Hit.hh>
 #include <SnD/Geom.hh>
 
-void Map(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *b);
+std::vector< TCanvas *> GetMap(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *b);
 
 #endif //SND_INCLUDE_SND_MAP_HH_

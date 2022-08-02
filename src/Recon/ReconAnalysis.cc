@@ -9,6 +9,7 @@
 #include <SnD/RATData.hh>
 #include <SnD/Multilateration.hh>
 #include <SnD/Recon.hh>
+#include <SnD/Map.hh>
 
 #include <ROOT/Utils.hh>
 
@@ -43,6 +44,24 @@ void ReconAnalysis::Do(void *Data) {
 
   // Recon
   RT = Recon(RData->vHits, hPDF, Cyl, vSeeds);
+
+  // Map
+  std::vector<TCanvas*> vMap = GetMap(RData->vHits, hPDF, Cyl);
+  TFile f("MAP.root", "UPDATE");
+  for (auto &c : vMap) {
+	c->Write();
+  }
+  f.Close();
+  for (auto &&obj: *gDirectory->GetList()) {
+	if (!std::string(obj->GetName()).find("hGrid_")) {
+	  // std::cout << obj->GetName() << std::endl;
+	  delete obj;
+	}
+  }
+  for(auto &c: vMap) {
+	delete c;
+  }
+  vMap.clear();
 
   // Fill
   Tree->Fill();

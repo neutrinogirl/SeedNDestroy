@@ -53,8 +53,8 @@ double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
   return Chi2 /*/ static_cast<double>(nBinsX + nBinsY)*/;
 
 }
-double UnbinnedLL(TH1D *hPDF, const std::vector<double> &vTRes);
 
+double UnbinnedLL(TH1D *hPDF, const std::vector<double> &vTRes);
 double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
 			  const TVector3& Pos, const double& T, const TVector3& Dir,
 			  double(*fW)(const Hit&, const int&) = fWeight, const int& wPower = 0);

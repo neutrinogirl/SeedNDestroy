@@ -22,6 +22,7 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
   TVector3 PosGuess(x[0], x[1] ,x[2]);
   double TGuess = x[3];
   double TWall = d->GetTWall(PosGuess);
+  //
   return TGuess > d->GetTEdge() ? -1.f : std::min(TWall, TGuess);
 }
 

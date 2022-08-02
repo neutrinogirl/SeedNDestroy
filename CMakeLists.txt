@@ -69,7 +69,7 @@ add_executable(TApp src/CreatePDF/TApp.cc src/CreatePDF/PDFAnalysis.cc)
 target_link_libraries(TApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
 
 add_executable(ReconApp src/Recon/ReconApp.cc src/Recon/ReconAnalysis.cc src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc)
-target_link_libraries(ReconApp Argz RATReader Hit SVD ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree nlopt)
+target_link_libraries(ReconApp Argz RATReader Hit SVD ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree ROOT::Gpad nlopt)
 
 add_executable(ERec src/ERec/TApp.cc src/ERec/ERecAnalysis.cc)
 target_link_libraries(ERec Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
