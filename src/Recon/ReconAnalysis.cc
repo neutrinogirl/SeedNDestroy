@@ -6,10 +6,12 @@
 
 #include "ReconAnalysis.hh"
 
-#include "SnD/RATData.hh"
-#include "SnD/Multilateration.hh"
+#include <SnD/RATData.hh>
+#include <SnD/Multilateration.hh>
+#include <SnD/PathFit.hh>
+#include <SnD/Recon.hh>
 
-#include "ROOT/Utils.hh"
+#include <ROOT/Utils.hh>
 
 ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname,
 							 const double &R, const double &HH,
@@ -36,18 +38,15 @@ void ReconAnalysis::Do(void *Data) {
   // Get time seed
   double TSeed = Cyl->GetTWall(Centroid);
 
-  // Read
-  Seed.Pos = Centroid;
-  Seed.T = TSeed;
-
-  Tree->Fill();
-
   // Get SnD seeds
-  // std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
-  // Seed.Pos = vSeeds.front().Pos;
-  // Seed.T = vSeeds.front().T;
-  //
-  // Tree->Fill();
+  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl);
+  vSeeds.emplace_back(Centroid, TSeed);
+
+  // Recon
+  Seed = Recon(RData->vHits, hPDF, Cyl, vSeeds);
+
+  // Fill
+  Tree->Fill();
 
 }
 

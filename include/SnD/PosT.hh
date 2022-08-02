@@ -30,6 +30,9 @@ class PosT{
 	std::cout << "Pos: " << Pos.X() << " " << Pos.Y() << " " << Pos.Z() << std::endl;
 	std::cout << "T: " << T << std::endl;
   }
+  std::vector<double> GetStdVec() const{
+	return {Pos.X(), Pos.Y(), Pos.Z(), T};
+  }
 };
 
 bool operator==(const PosT& s1, const PosT& s2);

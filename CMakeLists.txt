@@ -21,7 +21,7 @@ find_package(Boost 1.50 REQUIRED COMPONENTS filesystem)
 message(STATUS "Boost version: ${Boost_VERSION}")
 
 set(NLOPT_INCLUDE_DIRS ${NLOPT_ROOT}/include)
-set(NLOPT_LIB ${NLOPT_ROOT}/lib)
+set(NLOPT_LIB ${NLOPT_ROOT}/lib64)
 
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
@@ -69,7 +69,7 @@ add_executable(TApp src/CreatePDF/TApp.cc src/CreatePDF/PDFAnalysis.cc)
 target_link_libraries(TApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
 
 add_executable(ReconApp src/Recon/ReconApp.cc src/Recon/ReconAnalysis.cc src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc)
-target_link_libraries(ReconApp Argz RATReader Hit SVD ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
+target_link_libraries(ReconApp Argz RATReader Hit SVD ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree nlopt)
 
 add_executable(ERec src/ERec/TApp.cc src/ERec/ERecAnalysis.cc)
 target_link_libraries(ERec Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)

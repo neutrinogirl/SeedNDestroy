@@ -5,78 +5,46 @@
 #ifndef _RECON_HH_
 #define _RECON_HH_
 
-#include <iostream>
-
-#include <TVector3.h>
+#include <SnD/PosT.hh>
 
 #include <nlopt.hpp>
 
-#include "PathFit.hh"
-#include "MathUtils.hh"
+PosT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds){
 
+  auto fPosT = [&](const std::vector<double> &x, std::vector<double> &grad, void *data) {
+	// Create object to calculate TRes histogram
+	TVector3 PosGuess(x[0], x[1], x[2]);
+	double TGuess = x[3];
 
-std::vector<double> ReconPosTime(DataStruct1D& DS, const bnds& b, DetParams& DP,
-								 const TVector3& PosSeed, const double& TSeed){
+	// Calculate NLL
+	return GetNLL(vHits, hPDF,
+				  PosGuess, TGuess);
 
-  const unsigned nDimf = 4;
-  std::vector<double> x = {
-	  PosSeed.x() * PosScale, PosSeed.y() * PosScale, PosSeed.z() * PosScale,
-	  TSeed * TScale /* Get same dimensionality as space */
   };
-  double minf;
 
-  // Create minimizer obj
-  nlopt::opt opt_local(nlopt::LN_COBYLA, nDimf);
-  opt_local.set_min_objective(fPosT, &DS);
-  // Create result obj
-  nlopt::result result;
+  nlopt::opt opt(nlopt::LN_NELDERMEAD, 4);
+  opt.set_min_objective(fPosT, nullptr);
 
-  // ######################################## //
-  // Create fitter boundaries
-  std::vector<double> lb = b.GetVLB();
-  std::vector<double> ub = b.GetVUB();
-  for(auto iDim=0; iDim<3; iDim++){
-	lb[iDim] *= PosScale;
-	ub[iDim] *= PosScale;
-  }
-  lb[3] *= TScale;
-  ub[3] *= TScale;
+  std::map< double, PosT > mRec;
 
-  // Set boundaries
-  opt_local.set_lower_bounds(lb);
-  opt_local.set_upper_bounds(ub);
-  // Set T constraints
-  opt_local.add_inequality_constraint(fPosTC, &DP, 1.e-12);
-  // Set stopping criteria
-  opt_local.set_xtol_rel(1.e-18);
-  opt_local.set_ftol_rel(1.e-18);
-  // Set limits
-  opt_local.set_maxtime(1./*sec*/);
-  // Set step size
-  // opt_local.get_initial_step_({
-  //     10., 10., 10.,
-  //     10.
-  //   });
+  std::transform(
+	  vSeeds.begin(), vSeeds.end(),
+	  mRec.begin(),
+	  [&](PosT &s) {
+		double minf=std::numeric_limits<double>::max();
+		int result=0;
+		std::vector<double> x = s.GetStdVec();
+		try{
+		  result = opt_local.optimize(x, minf);
+		} catch (std::exception &e) {
+		  std::cout << "nlopt failed: " << e.what() << std::endl;
+		}
+		return std::make_pair(minf, PosT(TVector3(x[0], x[1], x[2]), x[3]));
+	  }
+  );
 
-  try{
-
-	result = opt_local.optimize(x, minf);
-
-  } catch (std::exception &e) {
-
-	std::cout << "nlopt failed: " << e.what() << std::endl;
-
-  }
-
-  x[0] /= PosScale; x[1] /= PosScale; x[2] /= PosScale;
-  x[3] /= TScale;
-
-  x.emplace_back(minf);
-  x.emplace_back(result);
-
-  return x;
+  return mRec.begin()->second;
 
 }
-
 
 #endif //_RECON_HH_
