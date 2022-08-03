@@ -54,10 +54,10 @@ void ReconAnalysis::Do(void *Data) {
   // Recon
   // RT = Recon(RData->vHits, mPDF1D, Cyl, vSeeds);
   FitStruct FS = {RData->vHits, hPDF};
-  RT = Recon(&FS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosT, SetOPT);
+  RT = Recon(&FS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosT, {SetBounds, SetParsNM});
   RT.Print();
   FitMapStruct FMS = {RData->vHits, mPDF1D};
-  RT = Recon(&FMS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosTPerPMT, SetOPT);
+  RT = Recon(&FMS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosTPerPMT, {SetBounds, SetParsNM});
   RT.Print();
 
   // // Map
