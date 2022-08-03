@@ -80,14 +80,16 @@ void SetParsNM(nlopt::opt &opt, Bnd *c){
   opt.set_maxtime(1./*sec*/);
 }
 
-std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSeeds){
-  //
-  nlopt::result result;
+void SetOPT(nlopt::opt &opt, Bnd *c){
   // Minimizer bounds
   SetBounds(opt, c);
-  // Set T constraints
   // SetParsCOBYLA(opt, c);
   SetParsNM(opt, c);
+}
+
+std::vector<RecT> DoRecon(nlopt::opt &opt, const std::vector<PosT> &vSeeds){
+  //
+  nlopt::result result;
   // Create return object
   std::vector< RecT > vResults;
   // Loop over seeds and recon
@@ -115,22 +117,50 @@ std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSe
   return vResults;
 }
 
-RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds){
+RecT Recon(const std::vector<Hit> &vHits,
+		   TH1D *hPDF,
+		   Bnd *c,
+		   std::vector<PosT> &vSeeds,
+		   void(*fSet)(nlopt::opt &opt, Bnd *c)){
   //
   FitStruct FS = {vHits, hPDF};
   // Create minimizer obj
   nlopt::opt opt(nlopt::LN_NELDERMEAD, 4);
   opt.set_min_objective(fPosT, &FS);
   //
-  return GetRecon(c, opt, vSeeds).front();
+  fSet(opt, c);
+  //
+  return DoRecon(opt, vSeeds).front();
 }
 
-RecT Recon(const std::vector<Hit> &vHits, const std::map<int, TH1D *> &mPDFs, Bnd *c, std::vector<PosT> &vSeeds){
+RecT Recon(const std::vector<Hit> &vHits,
+		   const std::map<int, TH1D *> &mPDFs,
+		   Bnd *c,
+		   std::vector<PosT> &vSeeds,
+		   void(*fSet)(nlopt::opt &opt, Bnd *c)){
   //
   FitMapStruct FMS = {vHits, mPDFs};
   // Create minimizer obj
   nlopt::opt opt(nlopt::LN_NELDERMEAD, 4);
   opt.set_min_objective(fPosTPerPMT, &FMS);
   //
-  return GetRecon(c, opt, vSeeds).front();
+  fSet(opt, c);
+  //
+  return DoRecon(opt, vSeeds).front();
+}
+
+RecT Recon(void* data,
+		   Bnd *c,
+		   std::vector<PosT> &vSeeds,
+		   nlopt::algorithm alg,
+		   double(*fRec)(const std::vector<double> &x, std::vector<double> &grad, void *data),
+		   void(*fSet)(nlopt::opt &opt, Bnd *c)){
+  //
+  // Create minimizer obj
+  nlopt::opt opt(alg, 4);
+  opt.set_min_objective(fRec, data);
+  //
+  fSet(opt, c);
+  //
+  return DoRecon(opt, vSeeds).front();
 }

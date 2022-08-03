@@ -52,7 +52,13 @@ void ReconAnalysis::Do(void *Data) {
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  RT = Recon(RData->vHits, mPDF1D, Cyl, vSeeds);
+  // RT = Recon(RData->vHits, mPDF1D, Cyl, vSeeds);
+  FitStruct FS = {RData->vHits, hPDF};
+  RT = Recon(&FS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosT, SetOPT);
+  RT.Print();
+  FitMapStruct FMS = {RData->vHits, mPDF1D};
+  RT = Recon(&FMS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosTPerPMT, SetOPT);
+  RT.Print();
 
   // Map
   std::vector<TCanvas*> vMap = GetMap(RData->vHits, hPDF, Cyl);

@@ -12,6 +12,10 @@
 
 #include <nlopt.hpp>
 
+typedef struct BaseFitStruct{
+  std::vector<Hit> vHits;
+} BaseFitStruct;
+
 typedef struct FitStruct{
   std::vector<Hit> vHits;
   TH1D *hPDF;
@@ -30,9 +34,26 @@ void SetBounds(nlopt::opt &opt, Bnd *c);
 void SetParsCOBYLA(nlopt::opt &opt, Bnd *c);
 void SetParsNM(nlopt::opt &opt, Bnd *c);
 
-std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSeeds);
+void SetOPT(nlopt::opt &opt, Bnd *c);
 
-RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
-RecT Recon(const std::vector<Hit> &vHits, const std::map<int, TH1D *> &mPDFs, Bnd *c, std::vector<PosT> &vSeeds);
+std::vector<RecT> DoRecon(nlopt::opt &opt, const std::vector<PosT> &vSeeds);
+
+RecT Recon(const std::vector<Hit> &vHits,
+		   TH1D *hPDF,
+		   Bnd *c,
+		   std::vector<PosT> &vSeeds,
+		   void(*fSet)(nlopt::opt &opt, Bnd *c) = SetOPT);
+RecT Recon(const std::vector<Hit> &vHits,
+		   const std::map<int, TH1D *> &mPDFs,
+		   Bnd *c,
+		   std::vector<PosT> &vSeeds,
+		   void(*fSet)(nlopt::opt &opt, Bnd *c) = SetOPT);
+
+RecT Recon(void* data,
+		   Bnd *c,
+		   std::vector<PosT> &vSeeds,
+		   nlopt::algorithm alg,
+		   double(*fRec)(const std::vector<double> &x, std::vector<double> &grad, void *data),
+		   void(*fSet)(nlopt::opt &opt, Bnd *c));
 
 #endif //_RECON_HH_

@@ -20,16 +20,6 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost 1.50 REQUIRED COMPONENTS filesystem)
 message(STATUS "Boost version: ${Boost_VERSION}")
 
-if(NOT DEFINED NLOPT_INCLUDE_DIRS)
-    message(STATUS "Variable NLOPT_INCLUDE_DIRS not defined.")
-    set(NLOPT_INCLUDE_DIRS ${NLOPT_ROOT}/include)
-    return()
-endif()
-if(NOT DEFINED NLOPT_LIB)
-    message(STATUS "Variable NLOPT_LIB not defined.")
-    set(NLOPT_LIB ${NLOPT_ROOT}/lib)
-    return()
-endif()
 
 #----------------------------------------------------------------------------
 # Locate sources and headers for this project
