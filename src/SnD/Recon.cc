@@ -31,6 +31,63 @@ double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void
   return NLL;
 }
 
+std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSeeds){
+  //
+  nlopt::result result;
+  // Minimizer bounds
+  std::vector<double> lb = {
+	  -c->GetEdge().x(), -c->GetEdge().y(), -c->GetEdge().z(), 0.f
+  };
+  std::vector<double> ub = {
+	  c->GetEdge().x(), c->GetEdge().y(), c->GetEdge().z(), c->GetTEdge()
+  };
+  // Set boundaries
+  opt.set_lower_bounds(lb);
+  opt.set_upper_bounds(ub);
+  // Set T constraints
+  opt.add_inequality_constraint(fPosTC, c, 1.e-12);
+  // Set stopping criteria
+  opt.set_xtol_rel(1.e-18);
+  opt.set_ftol_rel(1.e-18);
+  // Set limits
+  opt.set_maxtime(1./*sec*/);
+  // Create return object
+  std::vector< RecT > vResults;
+  // Loop over seeds and recon
+  std::transform(
+	  vSeeds.begin(), vSeeds.end(),
+	  std::back_inserter(vResults),
+	  [&](const PosT &s) {
+		double minf=std::numeric_limits<double>::max();
+		std::vector<double> x = s.GetStdVec();
+		try{
+		  result = opt.optimize(x, minf);
+		} catch (std::exception &e) {
+		  std::cout << "nlopt failed: " << e.what() << std::endl;
+		}
+		return RecT(x[0], x[1], x[2], x[3], minf);
+	  }
+  );
+  // Sort seeds by min NLL value
+  std::sort(vResults.begin(), vResults.end(),
+			[](const RecT &a, const RecT &b) {
+			  return a.NLL < b.NLL;
+			}
+  );
+  // Return results
+  return vResults;
+}
+
+RecT Recon(const std::vector<Hit> &vHits, std::map<int, TH1D *> mPDFs, Bnd *c, std::vector<PosT> &vSeeds){
+  //
+  FitMapStruct FMS = {vHits, mPDFs};
+  // Create minimizer obj
+  nlopt::opt opt(nlopt::LN_COBYLA, 4);
+  opt.set_min_objective(fPosTPerPMT, &FMS);
+  //
+  return GetRecon(c, opt, vSeeds).front();
+}
+
 double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data) {
   //
   auto d = static_cast<Cylinder *>(data);

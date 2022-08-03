@@ -51,7 +51,7 @@ void ReconAnalysis::Do(void *Data) {
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  RT = Recon(RData->vHits, hPDF, Cyl, vSeeds);
+  RT = Recon(RData->vHits, mPDF1D, Cyl, vSeeds);
 
   // Map
   std::vector<TCanvas*> vMap = GetMap(RData->vHits, hPDF, Cyl);
