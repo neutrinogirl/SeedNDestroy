@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   ReconAnalysis Ana(Args.GetPDF(), Args.GetPDFName(), Args.GetPDFPMTName(),
 					Args.GetRadius(), Args.GetHHeight(),
 					Args.GetNEvts(), Args.GetAlgo(), Args.GetMaxSeed(),
-					Args.GetMap(), Args.GetVVerbose());
+					Args.GetMap(), Args.GetMapName(), Args.GetVVerbose());
 
   // ######################################## //
   // Run analysis

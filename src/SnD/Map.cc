@@ -12,6 +12,7 @@
 #include <TH3D.h>
 #include <TH2D.h>
 #include <TAxis.h>
+#include <TFile.h>
 
 //
 static std::vector<double> GetSmplPts(double a=0.f, double b=1.f, int n=2){
@@ -160,4 +161,26 @@ std::vector< TCanvas *> GetMap(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *b
 
   return vCanvas;
 
+}
+
+void SaveMap(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *b,
+			 const char* tag,
+			 const char* filename){
+  std::vector<TCanvas *> vMap = GetMap(vHits, hPDF, b);
+  TFile f(filename, "UPDATE");
+  for (auto &c: vMap) {
+	c->SetName(Form("%s_%s",
+					tag, c->GetName()));
+	c->Write();
+  }
+  f.Close();
+  for (auto &&obj: *gDirectory->GetList()) {
+	if (!std::string(obj->GetName()).find("hGrid_")) {
+	  delete obj;
+	}
+  }
+  for (auto &c: vMap) {
+	delete c;
+  }
+  vMap.clear();
 }

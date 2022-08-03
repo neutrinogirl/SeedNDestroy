@@ -24,9 +24,10 @@ typedef struct ReconAppArgs : public Args {
 		new iArg("-ms",  "--max-seed",     -1),
 		new bArg("-m",   "--map"),
 		new bArg("-vv",  "--vverbose"),
+		new sArg("-mn",  "--map-name",     "MAP.root")
 	};
   }
-  ReconAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
+  explicit ReconAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
   void ShowUsage(const std::string &name) override {
 	std::cout << "Usage: " << name
 			  << " <option(s)>"
@@ -43,11 +44,12 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-vv  (--vverbose)    \tSet MEGA verbosity\n"
 			  << "\t-u   (--unbinned)    \tSet unbinned TRes fit\n"
 			  << "\t-pn  (--pdf-name)    \tSet PDF hist name\n"
-			  << "\t-ppn (--pdf-pmt-name)\tSet PDF hist name\n"
+			  << "\t-ppn (--pdf-pmt-name)\tSet PDFpPMT hist name\n"
 			  << "\t-n   (--n-evts)      \tSet n evts to process (default all)\n"
 			  << "\t-ms  (--max-seed)    \tSelect max seeds to try (default all)\n"
 			  << "\t-m   (--map)         \tPlot and save NLL map in MAP.root\n"
-			  << "\t-a   (--algo)        \tSelect algorithm:\n"
+			  << "\t-mn  (--map-name)    \tSet output name map (default MAP.root)\n"
+			  << "\t-a   (--algo)        \tSelect algorithm (default 0):\n"
 			  << "\t                     \t [0]: nlopt::LN_NELDERMEAD\n"
 			  << "\t                     \t [1]: nlopt::LN_BOBYQA\n"
 			  << "\t                     \t [2]: nlopt::LN_COBYLA\n"
@@ -98,6 +100,9 @@ typedef struct ReconAppArgs : public Args {
   }
   bool GetVVerbose() const {
 	return reinterpret_cast<bArg*>(v[13])->val;
+  }
+  const char *GetMapName() const {
+	return reinterpret_cast<sArg*>(v[14])->val.c_str();
   }
 } ReconAppArgs;
 

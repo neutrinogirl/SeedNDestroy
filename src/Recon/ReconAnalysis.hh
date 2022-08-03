@@ -28,12 +28,14 @@ class ReconAnalysis : public TAnalysis {
   int max_seed;
   bool ismap;
   bool isverbose;
+  std::string mapname;
  public:
   ReconAnalysis() = default;
   ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname,
 				const double &R, const double &HH,
 				int me, int a, int ms,
 				bool im,
+				const char* mn,
 				bool iv,
 				const char *treename = "T");
   void Do(void *Data) override;

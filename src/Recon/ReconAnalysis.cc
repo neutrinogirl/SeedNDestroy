@@ -16,10 +16,10 @@
 ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname ,
 							 const double &R, const double &HH,
 							 int me, int a, int ms,
-							 bool im,
+							 bool im, const char *mn,
 							 bool iv,
 							 const char *treename)
-	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), isverbose(iv){
+	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv){
   //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
@@ -63,7 +63,6 @@ void ReconAnalysis::Do(void *Data) {
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  // RT = Recon(RData->vHits, mPDF1D, Cyl, vSeeds);
   FitStruct FS = {RData->vHits, hPDF};
   RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
   if(isverbose)
@@ -74,25 +73,8 @@ void ReconAnalysis::Do(void *Data) {
 	RT.Print();
 
   // Map
-  if(ismap) {
-	std::vector<TCanvas *> vMap = GetMap(RData->vHits, hPDF, Cyl);
-	TFile f("MAP.root", "UPDATE");
-	for (auto &c: vMap) {
-	  c->SetName(Form("%s_%s",
-					  RData->tag.c_str(), c->GetName()));
-	  c->Write();
-	}
-	f.Close();
-	for (auto &&obj: *gDirectory->GetList()) {
-	  if (!std::string(obj->GetName()).find("hGrid_")) {
-		delete obj;
-	  }
-	}
-	for (auto &c: vMap) {
-	  delete c;
-	}
-	vMap.clear();
-  }
+  if(ismap)
+	SaveMap(RData->vHits, hPDF, Cyl, RData->tag.c_str(), mapname.c_str());
 
   // Fill
   Tree->Fill();
