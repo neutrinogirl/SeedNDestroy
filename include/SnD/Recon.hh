@@ -31,10 +31,12 @@ double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void
 double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
 void SetBounds(nlopt::opt &opt, Bnd *c);
-void SetParsCOBYLA(nlopt::opt &opt, Bnd *c);
-void SetParsNM(nlopt::opt &opt, Bnd *c);
+void SetParsWInequality(nlopt::opt &opt, Bnd *c);
+void SetPars(nlopt::opt &opt, Bnd *c);
 
 std::vector<RecT> DoRecon(nlopt::opt &opt, const std::vector<PosT> &vSeeds);
+
+nlopt::algorithm GetAlgo(const int &a);
 
 RecT Recon(void* data,
 		   Bnd *c,

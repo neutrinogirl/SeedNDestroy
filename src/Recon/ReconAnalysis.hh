@@ -23,11 +23,19 @@ class ReconAnalysis : public TAnalysis {
   Cylinder* Cyl;
   TTree* Tree;
   RecT RT;
+  int nMaxEvts;
+  int algo;
+  int max_seed;
+  bool ismap;
+  bool isverbose;
  public:
   ReconAnalysis() = default;
-  ReconAnalysis(const char *pdfname, const char *histname,
+  ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname,
 				const double &R, const double &HH,
-				const char *treename);
+				int me, int a, int ms,
+				bool im,
+				bool iv,
+				const char *treename = "T");
   void Do(void *Data) override;
   void Export(const char* filename) const;
   ~ReconAnalysis();

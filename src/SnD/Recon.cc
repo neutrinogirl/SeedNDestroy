@@ -58,7 +58,7 @@ void SetBounds(nlopt::opt &opt, Bnd *c){
   opt.set_upper_bounds(ub);
 }
 
-void SetParsCOBYLA(nlopt::opt &opt, Bnd *c){
+void SetParsWInequality(nlopt::opt &opt, Bnd *c){
   // Set T constraints
   opt.add_inequality_constraint(fPosTC, c, 1.e-12);
   // Set stopping criteria
@@ -68,7 +68,7 @@ void SetParsCOBYLA(nlopt::opt &opt, Bnd *c){
   opt.set_maxtime(1./*sec*/);
 }
 
-void SetParsNM(nlopt::opt &opt, Bnd *c){
+void SetPars(nlopt::opt &opt, Bnd *c){
   // Set stopping criteria
   opt.set_xtol_rel(1.e-18);
   opt.set_ftol_rel(1.e-18);
@@ -104,6 +104,32 @@ std::vector<RecT> DoRecon(nlopt::opt &opt, const std::vector<PosT> &vSeeds){
   );
   // Return results
   return vResults;
+}
+
+nlopt::algorithm GetAlgo(const int &a){
+  switch (a) {
+	case 0:
+	  return nlopt::LN_NELDERMEAD;
+	  break;
+	case 1:
+	  return nlopt::LN_BOBYQA;
+	  break;
+	case 2:
+	  return nlopt::LN_COBYLA;
+	  break;
+	case 3:
+	  return nlopt::LN_NEWUOA;
+	  break;
+	case 4:
+	  return nlopt::LN_PRAXIS;
+	  break;
+	case 5:
+	  return nlopt::LN_SBPLX;
+	  break;
+	default:
+	  return nlopt::LN_NELDERMEAD;
+	  break;
+  }
 }
 
 RecT Recon(void* data,

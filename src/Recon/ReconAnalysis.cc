@@ -13,12 +13,17 @@
 
 #include <ROOT/Utils.hh>
 
-ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname,
+ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname ,
 							 const double &R, const double &HH,
-							 const char *treename){
+							 int me, int a, int ms,
+							 bool im,
+							 bool iv,
+							 const char *treename)
+	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), isverbose(iv){
+  //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
-  mPDF2D = GetROOTMObj<TH2D>(pdfname, std::string(histname).append("_PMT").c_str(), "TH2D");
+  mPDF2D = GetROOTMObj<TH2D>(pdfname, perpmthistname, "TH2D");
   std::transform(
 	  mPDF2D.begin(), mPDF2D.end(),
 	  std::inserter(mPDF1D, mPDF1D.begin()),
@@ -26,14 +31,20 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname,
 		return std::make_pair(p.first, p.second->ProjectionX());
 	  }
   );
+  //
   Cyl = new Cylinder(R, HH);
+  //
   Tree = new TTree(treename, treename);
   RT.SetTree(Tree);
+  //
+  max_seed = max_seed < 0 ? std::numeric_limits<int>::max() : max_seed;
 }
 ReconAnalysis::~ReconAnalysis(){
   delete Tree;
   delete Cyl;
   delete hPDF;
+  for(auto& p : mPDF2D)
+	delete p.second;
 }
 
 void ReconAnalysis::Do(void *Data) {
@@ -48,36 +59,40 @@ void ReconAnalysis::Do(void *Data) {
   double TSeed = Cyl->GetTWall(Centroid);
 
   // Get SnD seeds
-  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl, 0);
+  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl, max_seed);
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
   // RT = Recon(RData->vHits, mPDF1D, Cyl, vSeeds);
   FitStruct FS = {RData->vHits, hPDF};
-  RT = Recon(&FS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosT, {SetBounds, SetParsNM});
-  RT.Print();
+  RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
+  if(isverbose)
+	RT.Print();
   FitMapStruct FMS = {RData->vHits, mPDF1D};
-  RT = Recon(&FMS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosTPerPMT, {SetBounds, SetParsNM});
-  RT.Print();
+  RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetBounds, SetPars});
+  if(isverbose)
+	RT.Print();
 
-  // // Map
-  // std::vector<TCanvas*> vMap = GetMap(RData->vHits, hPDF, Cyl);
-  // TFile f("MAP.root", "UPDATE");
-  // for (auto &c : vMap) {
-	// c->SetName(Form("%s_%s",
-	// 				RData->tag.c_str(), c->GetName()));
-	// c->Write();
-  // }
-  // f.Close();
-  // for (auto &&obj: *gDirectory->GetList()) {
-	// if (!std::string(obj->GetName()).find("hGrid_")) {
-	//   delete obj;
-	// }
-  // }
-  // for(auto &c: vMap) {
-	// delete c;
-  // }
-  // vMap.clear();
+  // Map
+  if(ismap) {
+	std::vector<TCanvas *> vMap = GetMap(RData->vHits, hPDF, Cyl);
+	TFile f("MAP.root", "UPDATE");
+	for (auto &c: vMap) {
+	  c->SetName(Form("%s_%s",
+					  RData->tag.c_str(), c->GetName()));
+	  c->Write();
+	}
+	f.Close();
+	for (auto &&obj: *gDirectory->GetList()) {
+	  if (!std::string(obj->GetName()).find("hGrid_")) {
+		delete obj;
+	  }
+	}
+	for (auto &c: vMap) {
+	  delete c;
+	}
+	vMap.clear();
+  }
 
   // Fill
   Tree->Fill();
