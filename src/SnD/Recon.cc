@@ -45,9 +45,7 @@ double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *dat
   return TGuess > d->GetTEdge() ? -1.f : std::min(TWall, TGuess);
 }
 
-std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSeeds){
-  //
-  nlopt::result result;
+void SetBounds(nlopt::opt &opt, Bnd *c){
   // Minimizer bounds
   std::vector<double> lb = {
 	  -c->GetEdge().x(), -c->GetEdge().y(), -c->GetEdge().z(), 0.f
@@ -58,6 +56,11 @@ std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSe
   // Set boundaries
   opt.set_lower_bounds(lb);
   opt.set_upper_bounds(ub);
+}
+
+void SetParsCOBYLA(nlopt::opt &opt, Bnd *c){
+  // Minimizer bounds
+  SetBounds(opt, c);
   // Set T constraints
   opt.add_inequality_constraint(fPosTC, c, 1.e-12);
   // Set stopping criteria
@@ -65,6 +68,26 @@ std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSe
   opt.set_ftol_rel(1.e-18);
   // Set limits
   opt.set_maxtime(1./*sec*/);
+}
+
+void SetParsNM(nlopt::opt &opt, Bnd *c){
+  // Minimizer bounds
+  SetBounds(opt, c);
+  // Set stopping criteria
+  opt.set_xtol_rel(1.e-18);
+  opt.set_ftol_rel(1.e-18);
+  // Set limits
+  opt.set_maxtime(1./*sec*/);
+}
+
+std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSeeds){
+  //
+  nlopt::result result;
+  // Minimizer bounds
+  SetBounds(opt, c);
+  // Set T constraints
+  // SetParsCOBYLA(opt, c);
+  SetParsNM(opt, c);
   // Create return object
   std::vector< RecT > vResults;
   // Loop over seeds and recon
@@ -96,7 +119,7 @@ RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
   //
   FitStruct FS = {vHits, hPDF};
   // Create minimizer obj
-  nlopt::opt opt(nlopt::LN_COBYLA, 4);
+  nlopt::opt opt(nlopt::LN_NELDERMEAD, 4);
   opt.set_min_objective(fPosT, &FS);
   //
   return GetRecon(c, opt, vSeeds).front();
@@ -106,7 +129,7 @@ RecT Recon(const std::vector<Hit> &vHits, const std::map<int, TH1D *> &mPDFs, Bn
   //
   FitMapStruct FMS = {vHits, mPDFs};
   // Create minimizer obj
-  nlopt::opt opt(nlopt::LN_COBYLA, 4);
+  nlopt::opt opt(nlopt::LN_NELDERMEAD, 4);
   opt.set_min_objective(fPosTPerPMT, &FMS);
   //
   return GetRecon(c, opt, vSeeds).front();
