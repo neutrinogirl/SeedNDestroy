@@ -49,12 +49,13 @@ void ReconAnalysis::Do(void *Data) {
   std::vector<TCanvas*> vMap = GetMap(RData->vHits, hPDF, Cyl);
   TFile f("MAP.root", "UPDATE");
   for (auto &c : vMap) {
+	c->SetName(Form("%s_%s",
+					RData->tag.c_str(), c->GetName()));
 	c->Write();
   }
   f.Close();
   for (auto &&obj: *gDirectory->GetList()) {
 	if (!std::string(obj->GetName()).find("hGrid_")) {
-	  // std::cout << obj->GetName() << std::endl;
 	  delete obj;
 	}
   }

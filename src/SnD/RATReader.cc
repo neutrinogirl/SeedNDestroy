@@ -47,5 +47,7 @@ void *RATReader::GetData() {
 
   }
 
+  d->tag = w_rat.GetTag();
+
   return d;
 }
