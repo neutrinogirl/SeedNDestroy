@@ -60,24 +60,24 @@ void ReconAnalysis::Do(void *Data) {
   RT = Recon(&FMS, Cyl, vSeeds, nlopt::LN_NELDERMEAD, fPosTPerPMT, SetOPT);
   RT.Print();
 
-  // Map
-  std::vector<TCanvas*> vMap = GetMap(RData->vHits, hPDF, Cyl);
-  TFile f("MAP.root", "UPDATE");
-  for (auto &c : vMap) {
-	c->SetName(Form("%s_%s",
-					RData->tag.c_str(), c->GetName()));
-	c->Write();
-  }
-  f.Close();
-  for (auto &&obj: *gDirectory->GetList()) {
-	if (!std::string(obj->GetName()).find("hGrid_")) {
-	  delete obj;
-	}
-  }
-  for(auto &c: vMap) {
-	delete c;
-  }
-  vMap.clear();
+  // // Map
+  // std::vector<TCanvas*> vMap = GetMap(RData->vHits, hPDF, Cyl);
+  // TFile f("MAP.root", "UPDATE");
+  // for (auto &c : vMap) {
+	// c->SetName(Form("%s_%s",
+	// 				RData->tag.c_str(), c->GetName()));
+	// c->Write();
+  // }
+  // f.Close();
+  // for (auto &&obj: *gDirectory->GetList()) {
+	// if (!std::string(obj->GetName()).find("hGrid_")) {
+	//   delete obj;
+	// }
+  // }
+  // for(auto &c: vMap) {
+	// delete c;
+  // }
+  // vMap.clear();
 
   // Fill
   Tree->Fill();
