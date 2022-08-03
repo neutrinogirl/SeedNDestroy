@@ -15,6 +15,22 @@ double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data
 				PosGuess, TGuess);
 }
 
+double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void *data){
+  //
+  auto d = static_cast<FitMapStruct*>(data);
+  // Create object to calculate TRes histogram
+  TVector3 PosGuess(x[0], x[1], x[2]);
+  double TGuess = x[3];
+  // Calculate NLL
+  double NLL = 0.f;
+  for (const auto& hit: d->vHits){
+	double TRes = hit.GetTRes(PosGuess, -TGuess);
+	double P_TRes = d->mPDF[hit.ID]->Interpolate(TRes);
+	NLL += P_TRes <= 0.f ? d->vHits.size() : -TMath::Log(P_TRes/d->mPDF[hit.ID]->Integral());
+  }
+  return NLL;
+}
+
 double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data) {
   //
   auto d = static_cast<Cylinder *>(data);

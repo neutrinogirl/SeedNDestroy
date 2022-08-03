@@ -17,6 +17,14 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname,
 							 const double &R, const double &HH,
 							 const char *treename){
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
+  mPDF2D = GetROOTMObj<TH2D>(pdfname, histname, "TH2D");
+  std::transform(
+	  mPDF2D.begin(), mPDF2D.end(),
+	  std::inserter(mPDF1D, mPDF1D.begin()),
+	  [](const std::pair<int, TH2D*>& p){
+		return std::make_pair(p.first, p.second->ProjectionX());
+	  }
+  );
   Cyl = new Cylinder(R, HH);
   Tree = new TTree(treename, treename);
   RT.SetTree(Tree);

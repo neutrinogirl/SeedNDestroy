@@ -20,13 +20,12 @@ typedef struct FitStruct{
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data);
 double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
-typedef struct FitResults {
-  double NLL;
-  PosT RecT;
-  void SetTTree(TTree *t){
-	t->Branch("NLL", &NLL, "NLL/D");
-  }
-} FitResults;
+typedef struct FitMapStruct{
+  std::vector<Hit> vHits;
+  std::map<int, TH1D*> mPDF;
+} FitMapStruct;
+
+double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
 RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
 
