@@ -1,6 +1,8 @@
 [submodule "external/wRATter"]
 	path = external/wRATter
 	url = git@github.com:P3tru/wRATter.git
+	branch = v2
 [submodule "external/Argz"]
 	path = external/Argz
 	url = git@github.com:P3tru/Argz.git
+    branch = v2

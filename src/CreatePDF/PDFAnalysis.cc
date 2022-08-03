@@ -6,7 +6,7 @@
 
 #include "SnD/ZAxis.hh"
 
-Analysis::Analysis(const unsigned int& TResBins, const float& TResMin, const float& TResMax) {
+Analysis::Analysis(const unsigned int& TResBins, const float& TResMin, const float& TResMax){
   const zAxis axTRes(TResBins, TResMin, TResMax);
   const zAxis axCosT(12, -1., 1.);
   const zAxis axNHits(1000, 0., 1000.);
@@ -16,7 +16,7 @@ Analysis::Analysis(const unsigned int& TResBins, const float& TResMin, const flo
   hN400 = new TH1D("hN400", "N_{400} per event ; N_{400} ; ",
 				   axNHits.nBins, axNHits.min, axNHits.max);
   hN400->SetDirectory(nullptr);
-  std::vector<unsigned int> vPower = {0, 1, 2};
+  std::vector<unsigned int> vPower = {0};
   vvHPDFs.reserve(vPower.size());
   for(const auto& wP : vPower){
 	vvHPDFs.push_back(
@@ -42,7 +42,7 @@ void Analysis::Do(void *Data) {
   hN400->Fill(GetNPrompts(RData->vHits, 400));
   hNHits->Fill(GetNPrompts(RData->vHits, std::numeric_limits<double>::max()));
 
-  std::vector<unsigned int> vPower = {0, 1, 2};
+  std::vector<unsigned int> vPower = {0};
   enum { kTHIT, kTOF };
 
   for(auto iPower = 0; iPower<vPower.size(); iPower++){
@@ -59,6 +59,20 @@ void Analysis::Do(void *Data) {
 								  hit.GetCosTheta(RData->Pos, RData->Dir),
 								  QW);
 
+	  if(!mPDFs[hit.ID]){
+		const zAxis axTRes(vvHPDFs[iPower][kTOF]->GetXaxis());
+		const zAxis axCosT(vvHPDFs[iPower][kTOF]->GetYaxis());
+		mPDFs[hit.ID]=
+			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d_PMT%d", iPower, hit.ID), "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
+					 axTRes.nBins, axTRes.min, axTRes.max,
+					 axCosT.nBins, axCosT.min, axCosT.max)
+			;
+	  } else {
+		mPDFs[hit.ID]->Fill(hit.GetTRes(RData->Pos, RData->T-RData->TrigTime),
+							hit.GetCosTheta(RData->Pos, RData->Dir),
+							QW);
+	  }
+
 	}
 
   }
@@ -74,6 +88,9 @@ void Analysis::Export(const char *filename) {
 	for(auto& hPDF : vHPDF){
 	  hPDF->Write();
 	}
+  }
+  for(auto& m : mPDFs){
+	m.second->Write();
   }
   f.Close();
 }

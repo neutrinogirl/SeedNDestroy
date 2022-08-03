@@ -5,6 +5,8 @@
 #ifndef SND_SRC_SND_PDFANALYSIS_HH_
 #define SND_SRC_SND_PDFANALYSIS_HH_
 
+#include <map>
+
 #include <TH2D.h>
 #include <TH1D.h>
 
@@ -15,6 +17,7 @@ class Analysis : public TAnalysis {
   std::vector< std::vector<TH2D*> > vvHPDFs;
   TH1D* hNHits;
   TH1D* hN400;
+  std::map<int, TH2D*> mPDFs;
  public:
   Analysis(const unsigned int& TResBins, const float& TResMin, const float& TResMax);
   void Do(void* Data) override;

@@ -41,7 +41,7 @@ void *RATReader::GetData() {
 	auto T = PMT->GetTime();
 	auto Pos = w_rat.GetRun()->GetPMTInfo()->GetPosition(ID);
 	auto QHit = PMT->GetCharge();
-	Hit hit(Pos, QHit, T);
+	Hit hit(Pos, QHit, T, ID);
 	d->vHits.emplace_back(hit);
 	// }
 

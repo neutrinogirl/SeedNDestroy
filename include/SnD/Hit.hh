@@ -20,6 +20,7 @@
 typedef struct Hit {
   TVector3 PMTPos;
   double Q, T;
+  int ID;
 
   // ######################################################## //
   // #### #### #### CONSTRUCTORS / DESTRUCTORS #### #### #### //
@@ -29,12 +30,13 @@ typedef struct Hit {
 	PMTPos = TVector3(0.,0.,0.);
 	Q=0;
 	T=0;
+	ID=-1;
   }
   explicit Hit(const TVector3 &pmt_pos) : Hit() { PMTPos = pmt_pos; }
   explicit Hit(const double &t) : Hit() { T = t; }
   Hit(const double &q, const double &t) : Hit() { Q = q; T = t; }
-  Hit(const TVector3& pos, const double& q, const double& t)
-	  : PMTPos(pos), Q(q), T(t){ };
+  Hit(const TVector3& pos, const double& q, const double& t, const int& id)
+	  : PMTPos(pos), Q(q), T(t), ID(id){ };
 
   // ######################################################## //
   // #### #### #### ####   OPERATORS  ## #### #### #### ####  //
