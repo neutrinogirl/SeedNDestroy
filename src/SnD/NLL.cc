@@ -55,7 +55,7 @@ double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
 
   // Fill histogram to calculate NLL TRes
   for(auto& hit:vHits){
-	hExp.Fill(hit.GetTRes(Pos, T), hit.GetCosTheta(Pos, Dir), fW(hit, wPower));
+	hExp.Fill(hit.GetTRes(Pos, -T), hit.GetCosTheta(Pos, Dir), fW(hit, wPower));
   }
 
   return -CalculateLL(hPDF, &hExp, false);

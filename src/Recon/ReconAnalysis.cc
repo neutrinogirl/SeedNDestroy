@@ -39,7 +39,7 @@ void ReconAnalysis::Do(void *Data) {
   double TSeed = Cyl->GetTWall(Centroid);
 
   // Get SnD seeds
-  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl, 0, 10);
+  std::vector<PosT> vSeeds = GetVPosTSeeds(RData->vHits, hPDF, Cyl, 0);
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
