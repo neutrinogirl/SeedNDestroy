@@ -17,7 +17,8 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname,
 							 const double &R, const double &HH,
 							 const char *treename){
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
-  mPDF2D = GetROOTMObj<TH2D>(pdfname, histname, "TH2D");
+  std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
+  mPDF2D = GetROOTMObj<TH2D>(pdfname, std::string(histname).append("_PMT").c_str(), "TH2D");
   std::transform(
 	  mPDF2D.begin(), mPDF2D.end(),
 	  std::inserter(mPDF1D, mPDF1D.begin()),
