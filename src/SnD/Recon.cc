@@ -105,10 +105,6 @@ RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> 
 RecT Recon(const std::vector<Hit> &vHits, const std::map<int, TH1D *> &mPDFs, Bnd *c, std::vector<PosT> &vSeeds){
   //
   FitMapStruct FMS = {vHits, mPDFs};
-  for(const auto& p: FMS.mPDF){
-	std::cout << p.first << std::endl;
-	std::cout << p.second->GetName() << std::endl;
-  }
   // Create minimizer obj
   nlopt::opt opt(nlopt::LN_COBYLA, 4);
   opt.set_min_objective(fPosTPerPMT, &FMS);
