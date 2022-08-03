@@ -24,7 +24,14 @@ $> make
 ```
 
 ## Usage
-### Create PDF
+Verbosity level is controlled with flag -v
 
+### Create PDF
+```bash
+$> ./TApp -v -i IN.root -o PDF.root
+```
 
 ### Recon
+```bash
+$> ./ReconApp -v -r <R> -hh <HH> -p PDF.root -i IN.root -o OUT.root
+```
