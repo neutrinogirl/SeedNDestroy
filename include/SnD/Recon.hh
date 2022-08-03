@@ -17,19 +17,18 @@ typedef struct FitStruct{
   TH1D *hPDF;
 } FitStruct;
 
-double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data);
-double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data);
-
-RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
-
 typedef struct FitMapStruct{
   std::vector<Hit> vHits;
   std::map<int, TH1D*> mPDF;
 } FitMapStruct;
 
+double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data);
 double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void *data);
+double fPosTC(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
-RecT Recon(const std::vector<Hit> &vHits, std::map<int, TH1D *> mPDFs, Bnd *c, std::vector<PosT> &vSeeds);
+std::vector<RecT> GetRecon(Bnd *c, nlopt::opt &opt, const std::vector<PosT> &vSeeds);
 
+RecT Recon(const std::vector<Hit> &vHits, TH1D *hPDF, Bnd *c, std::vector<PosT> &vSeeds);
+RecT Recon(const std::vector<Hit> &vHits, const std::map<int, TH1D *> &mPDFs, Bnd *c, std::vector<PosT> &vSeeds);
 
 #endif //_RECON_HH_
