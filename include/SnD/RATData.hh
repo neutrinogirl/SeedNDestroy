@@ -12,6 +12,8 @@
 class RATData {
  public:
   std::string tag;
+  int ievt=0;
+  int itrig=0;
   double TrigTime = 0.f;
   TVector3 Pos = TVector3(0.f, 0.f, 0.f);
   TVector3 Dir = TVector3(0.f, 0.f, 0.f);

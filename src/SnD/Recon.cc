@@ -3,7 +3,6 @@
 //
 
 #include <SnD/Recon.hh>
-#include <utility>
 
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data){
   //
@@ -14,6 +13,17 @@ double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data
   // Calculate NLL
   return GetNLL(d->vHits, d->hPDF,
 				PosGuess, TGuess);
+}
+
+double fPosTU(const std::vector<double> &x, std::vector<double> &grad, void *data){
+  //
+  auto d = static_cast<FitStruct*>(data);
+  // Create object to calculate TRes histogram
+  TVector3 PosGuess(x[0], x[1], x[2]);
+  double TGuess = x[3];
+  // Calculate NLL
+  return GetUNLL(d->vHits, d->hPDF,
+				 PosGuess, TGuess);
 }
 
 double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void *data){
@@ -56,16 +66,6 @@ void SetBounds(nlopt::opt &opt, Bnd *c){
   // Set boundaries
   opt.set_lower_bounds(lb);
   opt.set_upper_bounds(ub);
-}
-
-void SetParsWInequality(nlopt::opt &opt, Bnd *c){
-  // Set T constraints
-  opt.add_inequality_constraint(fPosTC, c, 1.e-12);
-  // Set stopping criteria
-  opt.set_xtol_rel(1.e-18);
-  opt.set_ftol_rel(1.e-18);
-  // Set limits
-  opt.set_maxtime(1./*sec*/);
 }
 
 void SetPars(nlopt::opt &opt, Bnd *c){
@@ -137,7 +137,7 @@ RecT Recon(void* data,
 		   std::vector<PosT> &vSeeds,
 		   nlopt::algorithm alg,
 		   double(*fRec)(const std::vector<double> &x, std::vector<double> &grad, void *data),
-		   std::vector<void (*)(nlopt::opt &opt, Bnd *c)> vSetPars){
+		   const std::vector<void (*)(nlopt::opt &opt, Bnd *c)>& vSetPars){
   //
   // Create minimizer obj
   nlopt::opt opt(alg, 4);

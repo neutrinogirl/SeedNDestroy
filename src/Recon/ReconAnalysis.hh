@@ -20,15 +20,23 @@ class ReconAnalysis : public TAnalysis {
   TH1D* hPDF;
   std::map<int, TH2D*> mPDF2D;
   std::map<int, TH1D*> mPDF1D;
+
   Cylinder* Cyl;
+
   TTree* Tree;
+
   RecT RT;
+
   int nMaxEvts;
   int algo;
   int max_seed;
   bool ismap;
-  bool isverbose;
   std::string mapname;
+  bool isverbose;
+
+  bool isbinned;
+  bool isunbinned;
+  bool isperpmt;
  public:
   ReconAnalysis() = default;
   ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname,
@@ -37,6 +45,7 @@ class ReconAnalysis : public TAnalysis {
 				bool im,
 				const char* mn,
 				bool iv,
+				bool ib, bool iu, bool ip,
 				const char *treename = "T");
   void Do(void *Data) override;
   void Export(const char* filename) const;

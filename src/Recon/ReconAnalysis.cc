@@ -2,6 +2,8 @@
 // Created by Stephane Zsoldos on 7/6/22.
 //
 
+#include <csignal>
+
 #include <TH2D.h>
 
 #include "ReconAnalysis.hh"
@@ -18,8 +20,9 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
 							 int me, int a, int ms,
 							 bool im, const char *mn,
 							 bool iv,
+							 bool ib, bool iu, bool ip,
 							 const char *treename)
-	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv){
+	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip){
   //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
@@ -38,6 +41,9 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
   RT.SetTree(Tree);
   //
   max_seed = max_seed < 0 ? std::numeric_limits<int>::max() : max_seed;
+  //
+  if(!isbinned && !isunbinned && !isperpmt)
+	isbinned = true;
 }
 ReconAnalysis::~ReconAnalysis(){
   delete Tree;
@@ -52,6 +58,10 @@ void ReconAnalysis::Do(void *Data) {
   // Get Data
   auto *RData = static_cast<RATData*>(Data);
 
+  //
+  if(RData->ievt == nMaxEvts)
+	raise(SIGINT);
+
   // Get centroid seed
   TVector3 Centroid = GetCentroid(RData->vHits);
 
@@ -63,12 +73,24 @@ void ReconAnalysis::Do(void *Data) {
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
-  FitStruct FS = {RData->vHits, hPDF};
-  RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
-  if(isverbose)
-	RT.Print();
-  FitMapStruct FMS = {RData->vHits, mPDF1D};
-  RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetBounds, SetPars});
+  if(isunbinned){
+	FitStruct FS = {RData->vHits, hPDF};
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {SetBounds, SetPars});
+	// Fill
+	Tree->Fill();
+  } else if(isperpmt) {
+	FitMapStruct FMS = {RData->vHits, mPDF1D};
+	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetBounds, SetPars});
+	// Fill
+	Tree->Fill();
+  } else {
+	FitStruct FS = {RData->vHits, hPDF};
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
+	// Fill
+	Tree->Fill();
+  }
+
+  // Verbose
   if(isverbose)
 	RT.Print();
 
@@ -76,8 +98,6 @@ void ReconAnalysis::Do(void *Data) {
   if(ismap)
 	SaveMap(RData->vHits, hPDF, Cyl, RData->tag.c_str(), mapname.c_str());
 
-  // Fill
-  Tree->Fill();
 }
 
 #include <TFile.h>

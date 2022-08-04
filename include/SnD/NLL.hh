@@ -15,14 +15,24 @@
 #include <SnD/ZAxis.hh>
 #include <SnD/Hit.hh>
 
-static std::string random_string(const unsigned int& nChars=32);
-
-static double EvalLL(double nObs, double nPred);
-static double EvalExtendedLL(double nObs, double nPred);
-static double EvalNLL(double nObs, double nPred);
+static double EvalLL(double nObs, double nPred){
+  return nObs*TMath::Log(nPred);
+}
+static double EvalExtendedLL(double nObs, double nPred){
+  return nObs*TMath::Log(nPred) - nPred;
+}
+static double EvalNLL(double nObs, double nPred){
+  double L;
+  if(nObs>0 && nPred>0)
+	L=nObs*TMath::Log(nObs/nPred) + nPred-nObs;
+  else
+	L=nPred;
+  return -L;
+}
 
 template <typename T>
-double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
+double CalculateLL(T const *hPDF, T const *hExp,
+				   bool isNormalized){
 
   auto nBinsX = hPDF->GetNbinsX();
   auto nBinsY = hPDF->GetNbinsY();
@@ -50,17 +60,21 @@ double CalculateLL(T const *hPDF, T const *hExp, bool isNormalized = true){
 	}
   }
 
-  return Chi2 /*/ static_cast<double>(nBinsX + nBinsY)*/;
-
+  return Chi2;
 }
 
-double UnbinnedLL(TH1D *hPDF, const std::vector<double> &vTRes);
-double GetNLL(const std::vector<Hit>& vHits, TH2D* hPDF,
-			  const TVector3& Pos, const double& T, const TVector3& Dir,
-			  double(*fW)(const Hit&, const int&) = fWeight, const int& wPower = 0);
 double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 			  const TVector3& Pos, const double& T,
-			  double(*fW)(const Hit&, const int&) = fWeight, const int& wPower = 0,
-			  const bool &isUnbinned = false);
+			  bool isNormalized=false);
+
+double GetNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
+			  const std::vector<double> &x,
+			  bool isNormalized=false);
+
+double GetUNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
+			   const TVector3& Pos, const double& T);
+
+double GetUNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
+			   const std::vector<double> &x);
 
 #endif //SEEDNDESTROY_INCLUDE_NLL_HH_

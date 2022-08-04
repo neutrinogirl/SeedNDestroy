@@ -24,7 +24,9 @@ typedef struct ReconAppArgs : public Args {
 		new iArg("-ms",  "--max-seed",     -1),
 		new bArg("-m",   "--map"),
 		new bArg("-vv",  "--vverbose"),
-		new sArg("-mn",  "--map-name",     "MAP.root")
+		new sArg("-mn",  "--map-name",     "MAP.root"),
+		new bArg("-b",   "--binned"),
+		new bArg("-pp",  "--pperpmt"),
 	};
   }
   explicit ReconAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -42,7 +44,9 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-h   (--help)        \tShow this help message\n"
 			  << "\t-v   (--verbose)     \tSet verbosity level true\n"
 			  << "\t-vv  (--vverbose)    \tSet MEGA verbosity\n"
+			  << "\t-b   (--binned)      \tSet binned TRes fit\n"
 			  << "\t-u   (--unbinned)    \tSet unbinned TRes fit\n"
+			  << "\t-pp  (--pperpmt)     \tSet PDF p PMT TRes fit (unbinned)\n"
 			  << "\t-pn  (--pdf-name)    \tSet PDF hist name\n"
 			  << "\t-ppn (--pdf-pmt-name)\tSet PDFpPMT hist name\n"
 			  << "\t-n   (--n-evts)      \tSet n evts to process (default all)\n"
@@ -103,6 +107,12 @@ typedef struct ReconAppArgs : public Args {
   }
   const char *GetMapName() const {
 	return reinterpret_cast<sArg*>(v[14])->val.c_str();
+  }
+  bool GetBinned() const {
+	return reinterpret_cast<bArg*>(v[15])->val;
+  }
+  bool GetPerPMT() const {
+	return reinterpret_cast<bArg*>(v[16])->val;
   }
 } ReconAppArgs;
 

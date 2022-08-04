@@ -150,9 +150,7 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 								TH1D* hPDF,
 								Bnd* b,
-								const unsigned int& wPower,
-								const unsigned int& MaxSeeds,
-								const bool &isUnbinned){
+								const unsigned int& MaxSeeds){
 
   // Get vector of seeds
   std::vector<PosT> vSeeds;
@@ -202,7 +200,7 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 
   // Sort seeds by flat NLL value
   std::sort(vSeeds.begin(), vSeeds.end(), [&](const PosT& v1, const PosT& v2){
-	return GetNLL(vHits, hPDF, v1.GetTVector3(), -v1.T, fWeight, wPower, isUnbinned) < GetNLL(vHits, hPDF, v2.GetTVector3(), -v2.T, fWeight, wPower, isUnbinned);
+	return GetNLL(vHits, hPDF, v1.GetStdVec()) < GetNLL(vHits, hPDF, v2.GetStdVec());
   });
 
   if(vSeeds.size() > MaxSeeds)

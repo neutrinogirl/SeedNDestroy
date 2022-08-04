@@ -22,8 +22,6 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b);
 std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 								TH1D* hPDF,
 								Bnd* b,
-								const unsigned int& wPower = 0,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max(),
-								const bool &isUnbinned = false);
+								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max());
 
 #endif //_MULTILATERATION_HH_

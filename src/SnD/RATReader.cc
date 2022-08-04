@@ -48,6 +48,8 @@ void *RATReader::GetData() {
   }
 
   d->tag = w_rat.GetTag();
+  d->ievt = w_rat.GetIEvt();
+  d->itrig = w_rat.GetITrig();
 
   return d;
 }
