@@ -3,9 +3,10 @@
 //
 
 #include "TApp.hh"
-#include "TAppAnalysis.hh"
+#include "PDFAnalysis.hh"
+#include "SnD/RATReader.hh"
 
-volatile sig_atomic_t TRReader::gSignalStatus = 0;
+volatile sig_atomic_t TReader::gSignalStatus = 0;
 
 int main(int argc, char **argv) {
 
@@ -16,10 +17,12 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Create analysis class
-  TAppAnalysis Ana;
+  Analysis Ana(static_cast<unsigned int>(Args.GetTResBins()[0]), Args.GetTResBins()[1], Args.GetTResBins()[2]);
 
   // ######################################## //
   // Run analysis
+  RATReader R(Args.GetInput(), Args.GetVerbose());
+  R.Read(&Ana);
 
   // ######################################## //
   // Export results

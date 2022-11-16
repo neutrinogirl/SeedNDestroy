@@ -63,8 +63,13 @@ target_link_libraries(Multilateration ROOT::Physics ROOT::Hist)
 #----------------------------------------------------------------------------
 # EXECUTABLES
 #
-add_executable(TApp src/CreatePDF/TApp.cc src/CreatePDF/PDFAnalysis.cc)
-target_link_libraries(TApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
+add_library(NReader src/CreatePDF/TAppAnalysis.cc)
+target_link_libraries(NReader ${ROOT_LIBRARIES} ${Boost_LIBRARIES} Hit)
+add_executable(TApp src/CreatePDF/TApp.cc)
+target_link_libraries(TApp Argz NReader)
+
+add_executable(PDFApp src/CreatePDF/PDFApp.cc src/CreatePDF/PDFAnalysis.cc)
+target_link_libraries(PDFApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
 
 add_executable(ReconApp src/Recon/ReconApp.cc src/Recon/ReconAnalysis.cc src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc)
 target_link_libraries(ReconApp Argz RATReader Hit SVD ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree ROOT::Gpad nlopt)
