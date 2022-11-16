@@ -96,11 +96,14 @@ class NTupleReader : public TRReader {
   TFile *f;
   TTreeReader *t;
   NTuple *data;
+  TTreeReader *m;
+  MetaNTuple *meta;
   int iTrig;
   ProgressBar progress_bar_;
   bool verbose_;
  public:
-  NTupleReader(const char *filename, const char *treename);
+  explicit NTupleReader(const char *filename,
+						const char *treename="output", const char *metaname="meta");
   ~NTupleReader();
   bool GetNextEvent() override;
   bool GetNextTrigger() override;

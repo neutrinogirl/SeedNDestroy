@@ -20,6 +20,8 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Run analysis
+  NTupleReader R(Args.GetInput());
+  R.Read(&Ana);
 
   // ######################################## //
   // Export results

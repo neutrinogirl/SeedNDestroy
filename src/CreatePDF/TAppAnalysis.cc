@@ -4,6 +4,7 @@
 
 #include "TAppAnalysis.hh"
 
+// #### #### #### #### #### #### #### #### #### #### #### #### //
 MetaNTuple::MetaNTuple(TTreeReader *Reader) {
   SetReader(Reader);
   Reader->Next();
@@ -23,9 +24,10 @@ void MetaNTuple::SetReader(TTreeReader *Reader) {
 
 TVector3 MetaNTuple::GetPMTPosition(int PMTId) {
   auto ID = (*pmtId->Get())[PMTId];
-  return {(*pmtX->Get())[ID], (*pmtX->Get())[ID], (*pmtX->Get())[ID]};
+  return {(*pmtX->Get())[ID], (*pmtY->Get())[ID], (*pmtZ->Get())[ID]};
 }
 
+// #### #### #### #### #### #### #### #### #### #### #### #### //
 NTuple::NTuple(TTreeReader *Reader) {
   SetReader(Reader);
 }
@@ -54,10 +56,14 @@ std::vector<Hit> NTuple::GetVHits() {
   return vHits;
 }
 
-NTupleReader::NTupleReader(const char *filename, const char *treename) {
+// #### #### #### #### #### #### #### #### #### #### #### #### //
+NTupleReader::NTupleReader(const char *filename,
+						   const char *treename, const char *metaname) {
   f = new TFile(filename);
   t = new TTreeReader(treename, f);
   data = new NTuple(t);
+  m = new TTreeReader(metaname, f);
+  meta = new MetaNTuple(m);
   iTrig = 1;
 }
 
@@ -65,6 +71,8 @@ NTupleReader::~NTupleReader() {
   delete f;
   delete t;
   delete data;
+  delete m;
+  delete meta;
 }
 
 bool NTupleReader::GetNextEvent() {
@@ -84,9 +92,10 @@ TData *NTupleReader::GetData() {
   return data;
 }
 
+// #### #### #### #### #### #### #### #### #### #### #### #### //
 void TAppAnalysis::Do(TData *Data) {
 
-  for(auto hit : Data->GetVHits()) {
+  for(const auto& hit : Data->GetVHits()) {
 	hit.PMTPos.Print();
   }
 
