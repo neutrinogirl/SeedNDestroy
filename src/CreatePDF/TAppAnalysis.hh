@@ -64,7 +64,7 @@ class TRReader {
 #include <TTreeReader.h>
 class MetaNTuple {
  private:
-  std::map<int, TVector3> mPMTPos;
+  std::map<int, TVector3> *mPMTPos;
  public:
   explicit MetaNTuple(TTreeReader *Reader);
   ~MetaNTuple();

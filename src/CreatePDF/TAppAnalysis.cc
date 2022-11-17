@@ -14,6 +14,7 @@ MetaNTuple::MetaNTuple(TTreeReader *Reader) {
   TTreeReaderValue<std::vector<double>> pmtY(*Reader, "pmtY");
   TTreeReaderValue<std::vector<double>> pmtZ(*Reader, "pmtZ");
   Reader->Next();
+  mPMTPos = new std::map<int, TVector3>();
 
   spdlog::info("MetaNTuple::MetaNTuple(): Creating PMTs map");
   for(auto tup : boost::combine(*pmtId, *pmtX, *pmtY, *pmtZ)) {
@@ -22,16 +23,16 @@ MetaNTuple::MetaNTuple(TTreeReader *Reader) {
 	boost::tie(id, x, y, z) = tup;
 	spdlog::info("MetaNTuple::MetaNTuple(): Creating PMT with id: {} at position {} {} {}",
 				 id, x, y, z);
-	// mPMTPos[id] = {x, y, z};
+	mPMTPos->insert(std::make_pair(id, TVector3(x, y, z)));
   }
 }
 
 TVector3 MetaNTuple::GetPMTPosition(const int& PMTId) {
-  return mPMTPos[PMTId];
+  return mPMTPos->at(PMTId);
 }
 
 MetaNTuple::~MetaNTuple() {
-  mPMTPos.clear();
+  delete mPMTPos;
 }
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
@@ -52,6 +53,7 @@ void NTuple::SetReader(TTreeReader *Reader) {
 #include <boost/range/combine.hpp>
 std::vector<Hit> NTuple::GetVHits() {
   std::vector<Hit> vHits;
+  spdlog::info("NTuple::GetVHits(): Creating Hits");
   for (auto tup :
 	  boost::combine(**hitPMTID, **hitPMTTime, **hitPMTCharge)) {
 	int ID;
