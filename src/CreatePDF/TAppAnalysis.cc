@@ -39,7 +39,6 @@ NTuple::~NTuple() {
 }
 
 void NTuple::SetReader(TTreeReader *Reader) {
-  delete hitPMTID, delete hitPMTTime, delete hitPMTCharge;
   hitPMTID = new TTreeReaderValue<std::vector<int>>(*Reader, "hitPMTID");
   hitPMTTime = new TTreeReaderValue<std::vector<double>>(*Reader, "hitPMTTime");
   hitPMTCharge = new TTreeReaderValue<std::vector<double>>(*Reader, "hitPMTCharge");
