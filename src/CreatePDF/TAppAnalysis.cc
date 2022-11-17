@@ -66,7 +66,7 @@ NTupleReader::NTupleReader(const char *filename,
   data = new NTuple(t);
   m = new TTreeReader(metaname, f);
   meta = new MetaNTuple(m);
-  iTrig = 1;
+  iTrig = -1;
   progress_bar_.Set(t->GetEntries(), 70);
   verbose_ = verbose;
 }
