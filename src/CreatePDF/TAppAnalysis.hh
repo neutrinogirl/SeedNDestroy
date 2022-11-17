@@ -64,23 +64,23 @@ class TRReader {
 #include <TTreeReader.h>
 class MetaNTuple {
  private:
-  std::map<int, TVector3> *mPMTPos;
+  std::map<int, TVector3> mPMTPos;
  public:
-  explicit MetaNTuple(TTreeReader *Reader);
+  MetaNTuple(TTreeReader *Reader);
   ~MetaNTuple();
   TVector3 GetPMTPosition(const int& PMTID);
 };
 
 class NTuple : public TData {
  private:
-  MetaNTuple *Meta;
+  MetaNTuple *meta;
   TTreeReaderValue<std::vector<int>> *hitPMTID;
   TTreeReaderValue<std::vector<double>> *hitPMTTime;
   TTreeReaderValue<std::vector<double>> *hitPMTCharge;
  public:
   NTuple() = default;
   ~NTuple();
-  explicit NTuple(TTreeReader *Reader);
+  NTuple(TTreeReader *Reader, TTreeReader *mReader);
   void SetReader(TTreeReader *Reader);
   std::vector<Hit> GetVHits() override;
 };
@@ -90,9 +90,8 @@ class NTupleReader : public TRReader {
  private:
   TFile *f;
   TTreeReader *t;
-  NTuple *data;
   TTreeReader *m;
-  MetaNTuple *meta;
+  NTuple *data;
   int iTrig;
   ProgressBar progress_bar_;
   bool verbose_;

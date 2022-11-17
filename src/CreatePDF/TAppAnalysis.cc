@@ -14,7 +14,6 @@ MetaNTuple::MetaNTuple(TTreeReader *Reader) {
   TTreeReaderValue<std::vector<double>> pmtY(*Reader, "pmtY");
   TTreeReaderValue<std::vector<double>> pmtZ(*Reader, "pmtZ");
   Reader->Next();
-  mPMTPos = new std::map<int, TVector3>();
 
   spdlog::info("MetaNTuple::MetaNTuple(): Creating PMTs map");
   for(auto tup : boost::combine(*pmtId, *pmtX, *pmtY, *pmtZ)) {
@@ -23,21 +22,22 @@ MetaNTuple::MetaNTuple(TTreeReader *Reader) {
 	boost::tie(id, x, y, z) = tup;
 	spdlog::info("MetaNTuple::MetaNTuple(): Creating PMT with id: {} at position {} {} {}",
 				 id, x, y, z);
-	mPMTPos->insert(std::make_pair(id, TVector3(x, y, z)));
+	mPMTPos[id] = TVector3(x, y, z);
   }
 }
 
 TVector3 MetaNTuple::GetPMTPosition(const int& PMTId) {
-  return mPMTPos->at(PMTId);
+  return mPMTPos[PMTId];
 }
 
 MetaNTuple::~MetaNTuple() {
-  delete mPMTPos;
+  mPMTPos.clear();
 }
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
-NTuple::NTuple(TTreeReader *Reader) {
+NTuple::NTuple(TTreeReader *Reader, TTreeReader *mReader) {
   SetReader(Reader);
+  meta = new MetaNTuple(mReader);
 }
 
 NTuple::~NTuple() {
@@ -59,7 +59,7 @@ std::vector<Hit> NTuple::GetVHits() {
 	int ID;
 	double T, Q;
 	boost::tie(ID, T, Q) = tup;
-	vHits.emplace_back(Meta->GetPMTPosition(ID), T, Q, ID);
+	vHits.emplace_back(meta->GetPMTPosition(ID), T, Q, ID);
   }
   return vHits;
 }
@@ -70,9 +70,8 @@ NTupleReader::NTupleReader(const char *filename,
 						   const bool &verbose) {
   f = new TFile(filename);
   t = new TTreeReader(treename, f);
-  data = new NTuple(t);
   m = new TTreeReader(metaname, f);
-  meta = new MetaNTuple(m);
+  data = new NTuple(t, m);
   iTrig = -1;
   progress_bar_.Set(t->GetEntries(), 70);
   verbose_ = verbose;
@@ -81,9 +80,8 @@ NTupleReader::NTupleReader(const char *filename,
 NTupleReader::~NTupleReader() {
   delete f;
   delete t;
-  delete data;
   delete m;
-  delete meta;
+  delete data;
 }
 
 bool NTupleReader::GetNextEvent() {
