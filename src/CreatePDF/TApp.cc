@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   // ######################################## //
   // Run analysis
   NTupleReader R(Args.GetInput(), "output", "meta", Args.GetVerbose());
-  R.Read(&Ana);
+  // R.Read(&Ana);
 
   // ######################################## //
   // Export results

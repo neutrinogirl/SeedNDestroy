@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 add_subdirectory(external/wRATter)
 add_subdirectory(external/Argz)
+add_subdirectory(external/spdlog)
 
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
@@ -64,7 +65,7 @@ target_link_libraries(Multilateration ROOT::Physics ROOT::Hist)
 # EXECUTABLES
 #
 add_library(NReader src/CreatePDF/TAppAnalysis.cc)
-target_link_libraries(NReader ${ROOT_LIBRARIES} ${Boost_LIBRARIES} Hit)
+target_link_libraries(NReader ${ROOT_LIBRARIES} ${Boost_LIBRARIES} Hit spdlog::spdlog)
 add_executable(TApp src/CreatePDF/TApp.cc)
 target_link_libraries(TApp Argz NReader)
 

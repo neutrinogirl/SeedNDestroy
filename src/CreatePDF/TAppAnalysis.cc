@@ -3,21 +3,26 @@
 //
 
 #include "TAppAnalysis.hh"
+#include "spdlog/spdlog.h"
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
 #include <boost/range/combine.hpp>
 MetaNTuple::MetaNTuple(TTreeReader *Reader) {
+  spdlog::info("START MetaNTuple::MetaNTuple()");
   TTreeReaderValue<std::vector<int>> pmtId(*Reader, "pmtId");
   TTreeReaderValue<std::vector<double>> pmtX(*Reader, "pmtX");
   TTreeReaderValue<std::vector<double>> pmtY(*Reader, "pmtY");
   TTreeReaderValue<std::vector<double>> pmtZ(*Reader, "pmtZ");
   Reader->Next();
 
+  spdlog::info("MetaNTuple::MetaNTuple(): Creating PMTs map");
   for(auto tup : boost::combine(*pmtId, *pmtX, *pmtY, *pmtZ)) {
 	int id;
 	double x, y, z;
 	boost::tie(id, x, y, z) = tup;
-	mPMTPos[id] = {x, y, z};
+	spdlog::info("MetaNTuple::MetaNTuple(): Creating PMT with id: {} at position {} {} {}",
+				 id, x, y, z);
+	// mPMTPos[id] = {x, y, z};
   }
 }
 
