@@ -64,16 +64,11 @@ class TRReader {
 #include <TTreeReader.h>
 class MetaNTuple {
  private:
-  TTreeReaderValue<std::vector<int>> *pmtId;
-  TTreeReaderValue<std::vector<double>> *pmtX;
-  TTreeReaderValue<std::vector<double>> *pmtY;
-  TTreeReaderValue<std::vector<double>> *pmtZ;
+  std::map<int, TVector3> mPMTPos;
  public:
-  MetaNTuple() = default;
-  ~MetaNTuple();
-  void SetReader(TTreeReader *Reader);
   explicit MetaNTuple(TTreeReader *Reader);
-  TVector3 GetPMTPosition(int PMTId);
+  ~MetaNTuple();
+  TVector3 GetPMTPosition(const int& PMTID);
 };
 
 class NTuple : public TData {
@@ -103,7 +98,8 @@ class NTupleReader : public TRReader {
   bool verbose_;
  public:
   explicit NTupleReader(const char *filename,
-						const char *treename="output", const char *metaname="meta");
+						const char *treename="output", const char *metaname="meta",
+						const bool &verbose=false);
   ~NTupleReader();
   bool GetNextEvent() override;
   bool GetNextTrigger() override;

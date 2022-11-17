@@ -5,26 +5,28 @@
 #include "TAppAnalysis.hh"
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
+#include <boost/range/combine.hpp>
 MetaNTuple::MetaNTuple(TTreeReader *Reader) {
-  SetReader(Reader);
+  TTreeReaderValue<std::vector<int>> pmtId(*Reader, "pmtId");
+  TTreeReaderValue<std::vector<double>> pmtX(*Reader, "pmtX");
+  TTreeReaderValue<std::vector<double>> pmtY(*Reader, "pmtY");
+  TTreeReaderValue<std::vector<double>> pmtZ(*Reader, "pmtZ");
   Reader->Next();
+
+  for(auto tup : boost::combine(*pmtId, *pmtX, *pmtY, *pmtZ)) {
+	int id;
+	double x, y, z;
+	boost::tie(id, x, y, z) = tup;
+	mPMTPos[id] = {x, y, z};
+  }
+}
+
+TVector3 MetaNTuple::GetPMTPosition(const int& PMTId) {
+  return mPMTPos[PMTId];
 }
 
 MetaNTuple::~MetaNTuple() {
-  delete pmtId, delete pmtX, delete pmtY, delete pmtZ;
-}
-
-void MetaNTuple::SetReader(TTreeReader *Reader) {
-  // MetaNTuple::~MetaNTuple();
-  pmtId = new TTreeReaderValue<std::vector<int>>(*Reader, "pmtId");
-  pmtX = new TTreeReaderValue<std::vector<double>>(*Reader, "pmtX");
-  pmtY = new TTreeReaderValue<std::vector<double>>(*Reader, "pmtY");
-  pmtZ = new TTreeReaderValue<std::vector<double>>(*Reader, "pmtZ");
-}
-
-TVector3 MetaNTuple::GetPMTPosition(int PMTId) {
-  auto ID = (*pmtId->Get())[PMTId];
-  return {(*pmtX->Get())[ID], (*pmtY->Get())[ID], (*pmtZ->Get())[ID]};
+  mPMTPos.clear();
 }
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
@@ -37,7 +39,7 @@ NTuple::~NTuple() {
 }
 
 void NTuple::SetReader(TTreeReader *Reader) {
-  // NTuple::~NTuple();
+  delete hitPMTID, delete hitPMTTime, delete hitPMTCharge;
   hitPMTID = new TTreeReaderValue<std::vector<int>>(*Reader, "hitPMTID");
   hitPMTTime = new TTreeReaderValue<std::vector<double>>(*Reader, "hitPMTTime");
   hitPMTCharge = new TTreeReaderValue<std::vector<double>>(*Reader, "hitPMTCharge");
@@ -58,13 +60,16 @@ std::vector<Hit> NTuple::GetVHits() {
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
 NTupleReader::NTupleReader(const char *filename,
-						   const char *treename, const char *metaname) {
+						   const char *treename, const char *metaname,
+						   const bool &verbose) {
   f = new TFile(filename);
   t = new TTreeReader(treename, f);
   data = new NTuple(t);
   m = new TTreeReader(metaname, f);
   meta = new MetaNTuple(m);
   iTrig = 1;
+  progress_bar_.Set(t->GetEntries(), 70);
+  verbose_ = verbose;
 }
 
 NTupleReader::~NTupleReader() {
@@ -94,7 +99,6 @@ TData *NTupleReader::GetData() {
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
 void TAppAnalysis::Do(TData *Data) {
-
   for(const auto& hit : Data->GetVHits()) {
 	hit.PMTPos.Print();
   }
