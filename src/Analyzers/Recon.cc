@@ -1,0 +1,109 @@
+//
+// Created by Stephane Zsoldos on 7/6/22.
+//
+
+#include <csignal>
+
+#include <TH2D.h>
+
+#include "Recon.hh"
+#include "../Readers/TData.hh"
+
+#include <SnD/Multilateration.hh>
+#include <SnD/Recon.hh>
+#include <SnD/Map.hh>
+
+#include <ROOT/Utils.hh>
+
+ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname ,
+							 const double &R, const double &HH,
+							 int me, int a, int ms,
+							 bool im, const char *mn,
+							 bool iv,
+							 bool ib, bool iu, bool ip,
+							 const char *treename)
+	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip){
+  //
+  hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
+  std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
+  mPDF2D = GetROOTMObj<TH2D>(pdfname, perpmthistname, "TH2D");
+  std::transform(
+	  mPDF2D.begin(), mPDF2D.end(),
+	  std::inserter(mPDF1D, mPDF1D.begin()),
+	  [](const std::pair<int, TH2D*>& p){
+		return std::make_pair(p.first, p.second->ProjectionX());
+	  }
+  );
+  //
+  Cyl = new Cylinder(R, HH);
+  //
+  Tree = new TTree(treename, treename);
+  RT.SetTree(Tree);
+  //
+  max_seed = max_seed < 0 ? std::numeric_limits<int>::max() : max_seed;
+  //
+  if(!isbinned && !isunbinned && !isperpmt)
+	isbinned = true;
+}
+ReconAnalysis::~ReconAnalysis(){
+  delete Tree;
+  delete Cyl;
+  delete hPDF;
+  for(auto& p : mPDF2D)
+	delete p.second;
+}
+
+void ReconAnalysis::Do(void *Data) {
+
+  // Get Data
+  auto *RData = static_cast<TData*>(Data);
+  auto vHits = RData->GetVHits();
+
+  //
+  // if(RData->ievt == nMaxEvts)
+	// raise(SIGINT);
+
+  // Get centroid seed
+  TVector3 Centroid = GetCentroid(vHits);
+
+  // Get time seed
+  double TSeed = Cyl->GetTWall(Centroid);
+
+  // Get SnD seeds
+  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF, Cyl, max_seed);
+  vSeeds.emplace_back(Centroid, TSeed);
+
+  // Recon
+  if(isunbinned){
+	FitStruct FS = {vHits, hPDF};
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {SetBounds, SetPars});
+	// Fill
+	Tree->Fill();
+  } else if(isperpmt) {
+	FitMapStruct FMS = {vHits, mPDF1D};
+	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetBounds, SetPars});
+	// Fill
+	Tree->Fill();
+  } else {
+	FitStruct FS = {vHits, hPDF};
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
+	// Fill
+	Tree->Fill();
+  }
+
+  // Verbose
+  if(isverbose)
+	RT.Print();
+
+  // Map
+  if(ismap)
+	SaveMap(vHits, hPDF, Cyl, RData->tag.c_str(), mapname.c_str());
+
+}
+
+#include <TFile.h>
+void ReconAnalysis::Export(const char *filename) const {
+  TFile f(filename, "RECREATE");
+  Tree->Write();
+  f.Close();
+}
