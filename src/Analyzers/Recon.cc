@@ -21,8 +21,9 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
 							 bool im, const char *mn,
 							 bool iv,
 							 bool ib, bool iu, bool ip,
+							 bool itt,
 							 const char *treename)
-	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip){
+	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip), istrigtime(itt) {
   //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
@@ -70,6 +71,8 @@ void ReconAnalysis::Do(void *Data) {
 
   // Get time seed
   double TSeed = Cyl->GetTWall(Centroid);
+  if(istrigtime)
+	TSeed = 0;
 
   // Get SnD seeds
   std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF, Cyl, max_seed);

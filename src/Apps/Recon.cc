@@ -24,7 +24,8 @@ int main(int argc, char **argv) {
 					Args.GetRadius(), Args.GetHHeight(),
 					Args.GetNEvts(), Args.GetAlgo(), Args.GetMaxSeed(),
 					Args.GetMap(), Args.GetMapName(), Args.GetVVerbose(),
-					Args.GetBinned(), Args.GetUnbinned(), Args.GetPerPMT());
+					Args.GetBinned(), Args.GetUnbinned(), Args.GetPerPMT(),
+					Args.GetTrigTime());
   // ######################################## //
   // Run analysis
   FlatReader R(Args.GetInput(), "output", "meta", Args.GetVerbose());
