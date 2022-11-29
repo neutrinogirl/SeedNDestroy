@@ -7,18 +7,31 @@
 
 #include "wRATter/Wrapper.hh"
 
+#include "Templates/TData.hh"
+
 class RATData : public TData {
  private:
+  TVector3 Pos;
+  TVector3 Dir;
+  double Energy;
+  double Time;
   std::vector<Hit> vHits;
+  int EventID;
+  int TriggerID;
  public:
   RATData() = default;
-  explicit RATData(const std::vector<Hit> &v_hits)
-	  : vHits(v_hits) {}
-  std::vector<Hit> GetVHits() override { return vHits; };
+  void Update(wRAT *w_rat);
+  TVector3 GetPosition() override {return Pos;};
+  TVector3 GetDirection() override {return Dir;};
+  double GetEnergy() override {return Energy;};
+  double GetTime() override {return Time;};
+  std::vector<Hit> GetVHits() override {return vHits;};
+  int GetEventID() override {return EventID;};
+  int GetTriggerID() override {return TriggerID;};
 };
 
 
-#include "Templates/TReader.hh"
+#include <Templates/TReader.hh>
 
 class RATReader : public TReader{
  private:
@@ -29,7 +42,7 @@ class RATReader : public TReader{
  protected:
   bool GetNextEvent() override;
   bool GetNextTrigger() override;
-  RATData* GetData() override;
+  void* GetData() override;
   ProgressBar *GetProgressBar() override { return &progress_bar_; }
   bool GetVerbosity() override { return verbose_; }
  public:

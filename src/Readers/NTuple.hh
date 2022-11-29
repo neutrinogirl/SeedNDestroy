@@ -15,7 +15,7 @@
 //
 #include <boost/any.hpp>
 //
-#include "TData.hh"
+#include "Templates/TData.hh"
 
 //
 enum ETreeReaders{
@@ -37,6 +37,8 @@ class Flat : public TData {
   double GetEnergy() override;
   double GetTime() override;
   std::vector<Hit> GetVHits() override;
+  int GetEventID() override;
+  int GetTriggerID() override;
 };
 
 //

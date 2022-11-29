@@ -6,7 +6,7 @@
 
 #include "SnD/ZAxis.hh"
 
-#include "../Readers/TData.hh"
+#include "Templates/TData.hh"
 
 MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax){
   const zAxis axTRes(TResBins, TResMin, TResMax);

@@ -5,7 +5,7 @@
 #ifndef SND_SRC_READERS_TDATA_HH_
 #define SND_SRC_READERS_TDATA_HH_
 
-#include <SnD/Hit.hh>
+#include "SnD/Hit.hh"
 
 class TData {
  protected:
@@ -15,6 +15,8 @@ class TData {
   virtual double GetEnergy() = 0;
   virtual double GetTime() = 0;
   virtual std::vector<Hit> GetVHits() = 0;
+  virtual int GetEventID() = 0;
+  virtual int GetTriggerID() = 0;
 };
 
 #endif //SND_SRC_READERS_TDATA_HH_

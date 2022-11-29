@@ -3,7 +3,7 @@
 //
 
 //
-#include "../Readers/TData.hh"
+#include "Templates/TData.hh"
 
 //
 #include "TAnalyzer.hh"

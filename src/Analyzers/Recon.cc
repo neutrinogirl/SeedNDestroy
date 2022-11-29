@@ -7,7 +7,7 @@
 #include <TH2D.h>
 
 #include "Recon.hh"
-#include "../Readers/TData.hh"
+#include "Templates/TData.hh"
 
 #include <SnD/Multilateration.hh>
 #include <SnD/Recon.hh>
@@ -56,12 +56,14 @@ ReconAnalysis::~ReconAnalysis(){
 void ReconAnalysis::Do(void *Data) {
 
   // Get Data
-  auto *RData = static_cast<TData*>(Data);
-  auto vHits = RData->GetVHits();
-
+  auto wData = static_cast<TData*>(Data);
+  auto vHits = wData->GetVHits();
+  auto iEvt = wData->GetEventID();
+  auto iTrig = wData->GetTriggerID();
+  const char *tag = Form("Evt%d_Trigger%d", iEvt, iTrig);
   //
-  // if(RData->ievt == nMaxEvts)
-	// raise(SIGINT);
+  if(iEvt == nMaxEvts)
+	raise(SIGINT);
 
   // Get centroid seed
   TVector3 Centroid = GetCentroid(vHits);
@@ -97,7 +99,7 @@ void ReconAnalysis::Do(void *Data) {
 
   // Map
   if(ismap)
-	SaveMap(vHits, hPDF, Cyl, RData->tag.c_str(), mapname.c_str());
+	SaveMap(vHits, hPDF, Cyl, tag, mapname.c_str());
 
 }
 

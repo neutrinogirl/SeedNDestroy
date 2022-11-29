@@ -61,6 +61,14 @@ double Flat::GetTime() {
   return 0;
 }
 
+int Flat::GetEventID() {
+  return *boost::any_cast<TTreeReaderValue<int>*>(many[7])->Get();
+}
+
+int Flat::GetTriggerID() {
+  return *boost::any_cast<TTreeReaderValue<int>*>(many[8])->Get();
+}
+
 std::vector<Hit> Flat::GetVHits() {
   std::vector<Hit> vHits;
   auto pmtId = boost::any_cast<TTreeReaderValue<std::vector<int>>*>(many[9]);
