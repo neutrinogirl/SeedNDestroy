@@ -44,9 +44,6 @@ LINK_DIRECTORIES($ENV{RATROOT}/lib)
 LINK_DIRECTORIES($ENV{GEANT4SYS}/lib)
 LINK_DIRECTORIES(${NLOPT_LIB})
 
-###
-# ${ROOT_LIBRARIES} ${Boost_LIBRARIES} ${NLOPT_LIB}
-
 #----------------------------------------------------------------------------
 # LIBRARIES
 #
@@ -59,33 +56,17 @@ target_link_libraries(NTuple Hit ROOT::RIO ROOT::Tree)
 add_library(Rat src/Readers/Rat.cc)
 target_link_libraries(Rat Hit wRATter)
 
-add_library(MakePDF src/Analyzers/MakePDF.cc)
-target_link_libraries(MakePDF ROOT::Hist)
-
-add_library(RATReader src/SnD/RATReader.cc)
-target_link_libraries(RATReader wRATter)
-
-add_library(SVD src/SnD/SVD.cc)
-
-add_library(Multilateration src/SnD/Multilateration.cc)
-target_link_libraries(Multilateration ROOT::Physics ROOT::Hist)
-
 #----------------------------------------------------------------------------
 # EXECUTABLES
 #
-#add_library(NReader src/CreatePDF/TAnalyzer.cc)
-#target_link_libraries(NReader ${ROOT_LIBRARIES} ${Boost_LIBRARIES} Hit spdlog::spdlog)
-#add_executable(TApp src/CreatePDF/TApp.cc)
-#target_link_libraries(TApp Argz NReader)
 
 add_executable(TApp src/Apps/TApp.cc src/Analyzers/TAnalyzer.cc)
 target_link_libraries(TApp Argz NTuple ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(PDFApp src/CreatePDF/PDFApp.cc src/CreatePDF/PDFAnalysis.cc)
-target_link_libraries(PDFApp Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)
+add_executable(CreatePDF src/Apps/CreatePDF.cc src/Analyzers/MakePDF.cc)
+target_link_libraries(CreatePDF Argz NTuple ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(ReconApp src/Recon/ReconApp.cc src/Recon/ReconAnalysis.cc src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc)
-target_link_libraries(ReconApp Argz RATReader Hit SVD ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree ROOT::Gpad nlopt)
+add_executable(Recon src/Apps/Recon.cc src/Analyzers/Recon.cc
+        src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc)
+target_link_libraries(Recon Argz NTuple ${ROOT_LIBRARIES} ${Boost_LIBRARIES} nlopt)
 
-add_executable(ERec src/ERec/TApp.cc src/ERec/ERecAnalysis.cc)
-target_link_libraries(ERec Argz RATReader Hit ROOT::Physics ROOT::Hist ROOT::RIO ROOT::Tree)

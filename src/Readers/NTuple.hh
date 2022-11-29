@@ -5,35 +5,43 @@
 #ifndef SND_SRC_READERS_NTUPLE_HH_
 #define SND_SRC_READERS_NTUPLE_HH_
 
+//
 #include <Templates/TReader.hh>
-
+//
 #include <map>
-
+//
 #include <TFile.h>
 #include <TTreeReader.h>
-#include <TVector3.h>
-
+//
 #include <boost/any.hpp>
+//
+#include "TData.hh"
 
-class Flat {
- private:
-  std::vector<boost::any> many;
- public:
-  explicit Flat(TTreeReader *Reader);
-  TVector3 GetPosition();
-  TVector3 GetDirection();
-  double GetEnergy();
-  int GetEventID();
-  int GetSubEventID();
+//
+enum ETreeReaders{
+  kTree,
+  kMeta
 };
 
-class FlatReader : public TReader {
+//
+class Flat : public TData {
  private:
   //
-  enum ETreeReaders{
-	kTree,
-	kMeta
-  };
+  std::map<int, TVector3> mPMTPos;
+  //
+  std::vector<boost::any> many;
+ public:
+  explicit Flat(std::vector< TTreeReader* > &vTreeReaders);
+  TVector3 GetPosition() override;
+  TVector3 GetDirection() override;
+  double GetEnergy() override;
+  double GetTime() override;
+  std::vector<Hit> GetVHits() override;
+};
+
+//
+class FlatReader : public TReader {
+ private:
   //
   Flat *fFlat;
   //
