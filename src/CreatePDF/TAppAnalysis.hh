@@ -6,7 +6,6 @@
 #define SND_SRC_SND_TAPPANALYSIS_HH_
 
 // #### #### #### #### #### #### #### #### #### #### #### #### //
-// This goes into "SnD/TData.hh"
 #include <SnD/Hit.hh>
 
 class TData{

@@ -54,7 +54,13 @@ add_library(Hit src/SnD/Hit.cc)
 target_link_libraries(Hit ROOT::Physics)
 
 add_library(NTuple src/Readers/NTuple.cc)
-target_link_libraries(NTuple Hit)
+target_link_libraries(NTuple Hit ROOT::RIO ROOT::Tree)
+
+add_library(Rat src/Readers/Rat.cc)
+target_link_libraries(Rat Hit wRATter)
+
+add_library(MakePDF src/Analyzers/MakePDF.cc)
+target_link_libraries(MakePDF ROOT::Hist)
 
 add_library(RATReader src/SnD/RATReader.cc)
 target_link_libraries(RATReader wRATter)
@@ -67,12 +73,12 @@ target_link_libraries(Multilateration ROOT::Physics ROOT::Hist)
 #----------------------------------------------------------------------------
 # EXECUTABLES
 #
-#add_library(NReader src/CreatePDF/TAppAnalysis.cc)
+#add_library(NReader src/CreatePDF/TAnalyzer.cc)
 #target_link_libraries(NReader ${ROOT_LIBRARIES} ${Boost_LIBRARIES} Hit spdlog::spdlog)
 #add_executable(TApp src/CreatePDF/TApp.cc)
 #target_link_libraries(TApp Argz NReader)
 
-add_executable(TApp src/Apps/TApp.cc src/Apps/TAppAnalysis.cc)
+add_executable(TApp src/Apps/TApp.cc src/Analyzers/TAnalyzer.cc)
 target_link_libraries(TApp Argz NTuple ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(PDFApp src/CreatePDF/PDFApp.cc src/CreatePDF/PDFAnalysis.cc)

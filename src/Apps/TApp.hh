@@ -15,7 +15,7 @@ typedef struct TAppArgs : public Args {
 		new sArg("-o", "--output"),
 	};
   }
-  TAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
+  explicit TAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
   void ShowUsage(const std::string &name) override {
 	std::cout << "Usage: " << name
 			  << " <option(s)>"

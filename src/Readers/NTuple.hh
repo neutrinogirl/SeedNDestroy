@@ -11,47 +11,47 @@
 
 #include <TFile.h>
 #include <TTreeReader.h>
+#include <TVector3.h>
 
-class MetaNTuple {
+#include <boost/any.hpp>
+
+class Flat {
  private:
-  std::map<int, TVector3> mPMTPos;
+  std::vector<boost::any> many;
  public:
-  explicit MetaNTuple(TTreeReader *Reader);
-  ~MetaNTuple();
-  TVector3 GetPMTPosition(const int& PMTID);
+  explicit Flat(TTreeReader *Reader);
+  TVector3 GetPosition();
+  TVector3 GetDirection();
+  double GetEnergy();
+  int GetEventID();
+  int GetSubEventID();
 };
 
-class NTuple : public TData {
+class FlatReader : public TReader {
  private:
-  MetaNTuple *meta;
-  TTreeReaderValue<std::vector<int>> *hitPMTID;
-  TTreeReaderValue<std::vector<double>> *hitPMTTime;
-  TTreeReaderValue<std::vector<double>> *hitPMTCharge;
- public:
-  NTuple() = default;
-  ~NTuple();
-  NTuple(TTreeReader *Reader, TTreeReader *mReader);
-  void SetReader(TTreeReader *Reader);
-  std::vector<Hit> GetVHits() override;
-};
-
-class NTupleReader : public TReader {
- private:
+  //
+  enum ETreeReaders{
+	kTree,
+	kMeta
+  };
+  //
+  Flat *fFlat;
+  //
   TFile *f;
-  TTreeReader *t;
-  TTreeReader *m;
-  NTuple *data;
+  std::vector< TTreeReader* > vTreeReaders;
+  //
   int iTrig;
+  //
   ProgressBar progress_bar_;
   bool verbose_;
  public:
-  explicit NTupleReader(const char *filename,
+  explicit FlatReader(const char *filename,
 						const char *treename="output", const char *metaname="meta",
 						const bool &verbose=false);
-  ~NTupleReader();
+  ~FlatReader();
   bool GetNextEvent() override;
   bool GetNextTrigger() override;
-  TData *GetData() override;
+  void *GetData() override;
   ProgressBar *GetProgressBar() override { return &progress_bar_; }
   bool GetVerbosity() override { return verbose_; }
 };

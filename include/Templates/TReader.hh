@@ -5,7 +5,6 @@
 #ifndef SND_INCLUDE_TEMPLATES_TREADER_HH_
 #define SND_INCLUDE_TEMPLATES_TREADER_HH_
 
-#include "TData.hh"
 #include "TAnalysis.hh"
 
 #include "ProgressBar/ProgressBar.hpp"
@@ -17,7 +16,7 @@ class TReader {
  protected:
   virtual bool GetNextEvent() = 0;
   virtual bool GetNextTrigger() = 0;
-  virtual TData *GetData() = 0;
+  virtual void *GetData() = 0;
   virtual ProgressBar *GetProgressBar() = 0;
   virtual bool GetVerbosity() = 0;
  public:
