@@ -2,8 +2,8 @@
 // Created by Stephane Zsoldos on 9/5/21.
 //
 
-#ifndef _GRIDWALKER_HH_
-#define _GRIDWALKER_HH_
+#ifndef SND_INCLUDE_SND_GRIDWALKER_HH_
+#define SND_INCLUDE_SND_GRIDWALKER_HH_
 
 #include <iostream>
 #include <vector>
@@ -109,4 +109,4 @@ class Grid {
   }
 };
 
-#endif //_GRIDWALKER_HH_
+#endif // SND_INCLUDE_SND_GRIDWALKER_HH_

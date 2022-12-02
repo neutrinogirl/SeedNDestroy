@@ -2,8 +2,8 @@
 // Created by Stephane Zsoldos on 7/6/22.
 //
 
-#ifndef SND_SRC_SND_GEOM_HH_
-#define SND_SRC_SND_GEOM_HH_
+#ifndef SND_INCLUDE_SND_GEOM_HH_
+#define SND_INCLUDE_SND_GEOM_HH_
 
 #include <TVector3.h>
 #include "SnD/Utils.hh"
@@ -40,4 +40,4 @@ class Cylinder : public Bnd {
   }
 };
 
-#endif //SND_SRC_SND_GEOM_HH_
+#endif //SND_INCLUDE_SND_GEOM_HH_

@@ -2,14 +2,14 @@
 // Created by zsoldos on 8/12/20.
 //
 
-#ifndef _MULTILATERATION_HH_
-#define _MULTILATERATION_HH_
+#ifndef SND_INCLUDE_SND_MULTILATERATION_HH_
+#define SND_INCLUDE_SND_MULTILATERATION_HH_
 
 #include <numeric>
 
-#include <SnD/Matrix.hh>
-#include <SnD/Hit.hh>
-#include <SnD/Geom.hh>
+#include "SnD/Matrix.hh"
+#include "SnD/Hit.hh"
+#include "SnD/Geom.hh"
 
 Matrix GetDMatrix(std::vector<Hit>& vHits);
 
@@ -24,4 +24,4 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 								Bnd* b,
 								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max());
 
-#endif //_MULTILATERATION_HH_
+#endif // SND_INCLUDE_SND_MULTILATERATION_HH_

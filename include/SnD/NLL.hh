@@ -2,8 +2,8 @@
 // Created by zsoldos on 1/15/21.
 //
 
-#ifndef SEEDNDESTROY_INCLUDE_NLL_HH_
-#define SEEDNDESTROY_INCLUDE_NLL_HH_
+#ifndef SND_INCLUDE_SND_NLL_HH_
+#define SND_INCLUDE_SND_NLL_HH_
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -12,8 +12,8 @@
 
 #include <random>
 
-#include <SnD/ZAxis.hh>
-#include <SnD/Hit.hh>
+#include "SnD/ZAxis.hh"
+#include "SnD/Hit.hh"
 
 static double EvalLL(double nObs, double nPred){
   return nObs*TMath::Log(nPred);
@@ -77,4 +77,4 @@ double GetUNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 double GetUNLL(const std::vector<Hit>& vHits, TH1D* hPDF,
 			   const std::vector<double> &x);
 
-#endif //SEEDNDESTROY_INCLUDE_NLL_HH_
+#endif //SND_INCLUDE_SND_NLL_HH_

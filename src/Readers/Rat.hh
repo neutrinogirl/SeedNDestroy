@@ -47,7 +47,7 @@ class RATReader : public TReader{
   bool GetVerbosity() override { return verbose_; }
  public:
   explicit RATReader(const char *filename, const bool &verbose = false);
-  ~RATReader() { delete d; };
+  ~RATReader() { delete data; };
 
 };
 

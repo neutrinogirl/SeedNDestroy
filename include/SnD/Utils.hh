@@ -2,8 +2,8 @@
 // Created by Stephane Zsoldos on 6/27/22.
 //
 
-#ifndef WRATTER_INCLUDE_WRATTER_UTILS_HH_
-#define WRATTER_INCLUDE_WRATTER_UTILS_HH_
+#ifndef SND_INCLUDE_SND_UTILS_HH_
+#define SND_INCLUDE_SND_UTILS_HH_
 
 class Csts {
  public:
@@ -28,4 +28,4 @@ class Csts {
   Csts() = default;
 };
 
-#endif //WRATTER_INCLUDE_WRATTER_UTILS_HH_
+#endif //SND_INCLUDE_SND_UTILS_HH_

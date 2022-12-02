@@ -2,8 +2,8 @@
 // Created by Stephane Zsoldos on 6/27/22.
 //
 
-#ifndef WRATTER_INCLUDE_WRATTER_HIT_HH_
-#define WRATTER_INCLUDE_WRATTER_HIT_HH_
+#ifndef SND_INCLUDE_SND_HIT_HH_
+#define SND_INCLUDE_SND_HIT_HH_
 
 // ####################################### //
 // #### #### ####   C/C++   #### #### #### //
@@ -15,7 +15,7 @@
 // ####################################### //
 #include <TVector3.h>
 
-#include <SnD/Utils.hh>
+#include "SnD/Utils.hh"
 
 typedef struct Hit {
   TVector3 PMTPos;
@@ -66,4 +66,4 @@ double fWeight(const Hit& h, const int& P);
 
 TVector3 GetCentroid(const std::vector<Hit>& vHits);
 
-#endif //WRATTER_INCLUDE_WRATTER_HIT_HH_
+#endif //SND_INCLUDE_SND_HIT_HH_

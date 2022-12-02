@@ -2,8 +2,8 @@
 // Created by Stephane Zsoldos on 11/28/22.
 //
 
-#ifndef SND_SRC_READERS_TDATA_HH_
-#define SND_SRC_READERS_TDATA_HH_
+#ifndef SND_INCLUDE_TEMPLATES_TDATA_HH_
+#define SND_INCLUDE_TEMPLATES_TDATA_HH_
 
 #include "SnD/Hit.hh"
 
@@ -19,4 +19,4 @@ class TData {
   virtual int GetTriggerID() = 0;
 };
 
-#endif //SND_SRC_READERS_TDATA_HH_
+#endif //SND_INCLUDE_TEMPLATES_TDATA_HH_

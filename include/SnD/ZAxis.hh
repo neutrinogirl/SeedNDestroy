@@ -2,8 +2,8 @@
 // Created by Stephane Zsoldos on 7/5/22.
 //
 
-#ifndef SND_SRC_SND_ZAXIS_HH_
-#define SND_SRC_SND_ZAXIS_HH_
+#ifndef SND_INCLUDE_SND_ZAXIS_HH_
+#define SND_INCLUDE_SND_ZAXIS_HH_
 
 #include <TAxis.h>
 
@@ -39,4 +39,4 @@ typedef struct zAxis {
 
 } zAxis ;
 
-#endif //SND_SRC_SND_ZAXIS_HH_
+#endif //SND_INCLUDE_SND_ZAXIS_HH_

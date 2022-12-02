@@ -2,13 +2,13 @@
 // Created by zsoldos on 7/30/20.
 //
 
-#ifndef _SVD_HH_
-#define _SVD_HH_
+#ifndef SND_INCLUDE_SND_SVD_HH_
+#define SND_INCLUDE_SND_SVD_HH_
 
 #include <limits>
 #include <cmath>
 
-#include <SnD/Matrix.hh>
+#include "SnD/Matrix.hh"
 
 // macro-like inline functions
 
@@ -79,4 +79,4 @@ struct SVD {
 typedef struct SVD SVD;
 
 
-#endif //_SVD_HH_
+#endif // SND_INCLUDE_SND_SVD_HH_

@@ -2,13 +2,13 @@
 // Created by zsoldos on 10/12/20.
 //
 
-#ifndef _RECON_HH_
-#define _RECON_HH_
+#ifndef SND_INCLUDE_SND_RECON_HH_
+#define SND_INCLUDE_SND_RECON_HH_
 
-#include <SnD/PosT.hh>
-#include <SnD/Geom.hh>
-#include <SnD/Hit.hh>
-#include <SnD/NLL.hh>
+#include "SnD/PosT.hh"
+#include "SnD/Geom.hh"
+#include "SnD/Hit.hh"
+#include "SnD/NLL.hh"
 
 #include <nlopt.hpp>
 #include <utility>
@@ -51,4 +51,4 @@ RecT Recon(void* data,
 		   double(*fRec)(const std::vector<double> &x, std::vector<double> &grad, void *data),
 		   const std::vector<void (*)(nlopt::opt &opt, Bnd *c)>& vSetPars);
 
-#endif //_RECON_HH_
+#endif // SND_INCLUDE_SND_RECON_HH_

@@ -2,8 +2,8 @@
 // Created by Stephane Zsoldos on 7/6/22.
 //
 
-#ifndef SND_SRC_SND_MATRIX_HH_
-#define SND_SRC_SND_MATRIX_HH_
+#ifndef SND_INCLUDE_SND_MATRIX_HH_
+#define SND_INCLUDE_SND_MATRIX_HH_
 
 #include <vector>
 #include <iostream>
@@ -60,4 +60,4 @@ struct DiagMatrix {
 typedef struct DiagMatrix DiagMatrix;
 
 
-#endif //SND_SRC_SND_MATRIX_HH_
+#endif //SND_INCLUDE_SND_MATRIX_HH_
