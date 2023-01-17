@@ -78,7 +78,7 @@ std::vector<Hit> Flat::GetVHits() {
 	int ID;
 	double T, Q;
 	boost::tie(ID, T, Q) = tup;
-	vHits.emplace_back(mPMTPos[ID], T, Q, ID);
+	vHits.emplace_back(mPMTPos[ID], Q, T, ID);
   }
   return vHits;
 }
