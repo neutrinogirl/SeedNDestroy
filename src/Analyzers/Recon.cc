@@ -22,6 +22,7 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
 							 bool iv,
 							 bool ib, bool iu, bool ip,
 							 bool itt,
+               const char *filename,
 							 const char *treename)
 	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip), istrigtime(itt) {
   //
@@ -38,16 +39,18 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
   //
   Cyl = new Cylinder(R, HH);
   //
+  OFile = new TFile(filename, "RECREATE");
   Tree = new TTree(treename, treename);
   RT.SetTree(Tree);
   //
   max_seed = max_seed < 0 ? std::numeric_limits<int>::max() : max_seed;
+  nMaxEvts = nMaxEvts < 0 ? std::numeric_limits<int>::max() : nMaxEvts;
   //
   if(!isbinned && !isunbinned && !isperpmt)
 	isbinned = true;
 }
 ReconAnalysis::~ReconAnalysis(){
-  delete Tree;
+  delete OFile;
   delete Cyl;
   delete hPDF;
   for(auto& p : mPDF2D)
@@ -106,9 +109,8 @@ void ReconAnalysis::Do(void *Data) {
 
 }
 
-#include <TFile.h>
-void ReconAnalysis::Export(const char *filename) const {
-  TFile f(filename, "RECREATE");
+void ReconAnalysis::Export() const {
+  OFile->cd();
   Tree->Write();
-  f.Close();
+  OFile->Close();
 }

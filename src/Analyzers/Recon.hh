@@ -14,6 +14,8 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TTree.h>
+#include <TFile.h>
+
 
 class ReconAnalysis : public TAnalysis {
  public:
@@ -23,6 +25,7 @@ class ReconAnalysis : public TAnalysis {
 
   Cylinder* Cyl;
 
+  TFile* OFile;
   TTree* Tree;
 
   RecT RT;
@@ -48,9 +51,10 @@ class ReconAnalysis : public TAnalysis {
 				bool iv,
 				bool ib, bool iu, bool ip,
 				bool itt,
+        const char *filename,
 				const char *treename = "T");
   void Do(void *Data) override;
-  void Export(const char* filename) const;
+  void Export() const;
   ~ReconAnalysis();
 };
 
