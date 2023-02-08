@@ -66,7 +66,7 @@ void ReconAnalysis::Do(void *Data) {
   auto iTrig = wData->GetTriggerID();
   const char *tag = Form("Evt%d_Trigger%d", iEvt, iTrig);
   //
-  if(iEvt == nMaxEvts)
+  if(iEvt > nMaxEvts)
 	raise(SIGINT);
 
   // Get centroid seed
@@ -81,26 +81,23 @@ void ReconAnalysis::Do(void *Data) {
   std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF, Cyl, max_seed, istrigtime);
   vSeeds.emplace_back(Centroid, TSeed);
 
+  // Set bounds limit depending on trigtime
+  auto fPosBounds = istrigtime ? SetPosBounds: SetBounds;
+
   // Recon
   if(isunbinned){
 	FitStruct FS = {vHits, hPDF};
-	RT = istrigtime ?
-		Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {SetPosBounds, SetPars}) :
-		Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {SetBounds, SetPars}) ;
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {fPosBounds, SetPars});
 	// Fill
 	Tree->Fill();
   } else if(isperpmt) {
 	FitMapStruct FMS = {vHits, mPDF1D};
-	RT = istrigtime ?
-		 Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetPosBounds, SetPars}) :
-		 Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetBounds, SetPars});
+	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {fPosBounds, SetPars});
 	// Fill
 	Tree->Fill();
   } else {
 	FitStruct FS = {vHits, hPDF};
-	RT = istrigtime ?
-		 Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetPosBounds, SetPars}) :
-		 Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {fPosBounds, SetPars});
 	// Fill
 	Tree->Fill();
   }
