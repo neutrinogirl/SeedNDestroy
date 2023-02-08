@@ -68,6 +68,19 @@ void SetBounds(nlopt::opt &opt, Bnd *c){
   opt.set_upper_bounds(ub);
 }
 
+void SetPosBounds(nlopt::opt &opt, Bnd *c){
+  // Minimizer bounds
+  std::vector<double> lb = {
+	  -c->GetEdge().x(), -c->GetEdge().y(), -c->GetEdge().z(), -1.f
+  };
+  std::vector<double> ub = {
+	  c->GetEdge().x(), c->GetEdge().y(), c->GetEdge().z(), 1.f
+  };
+  // Set boundaries
+  opt.set_lower_bounds(lb);
+  opt.set_upper_bounds(ub);
+}
+
 void SetPars(nlopt::opt &opt, Bnd *c){
   // Set stopping criteria
   opt.set_xtol_rel(1.e-18);

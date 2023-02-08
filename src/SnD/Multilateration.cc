@@ -157,7 +157,7 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
   std::vector<PosT> vSeeds;
   auto DTSeed = GetDTSeed(vHits, b);
   if(b->IsInside(DTSeed))
-	isTrigTime ? vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed)) : vSeeds.emplace_back(DTSeed, 0);
+	isTrigTime ? vSeeds.emplace_back(DTSeed, 0) : vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed));
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
@@ -173,7 +173,7 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 	  auto PosSeed = GetDTSeed(ivSeed, b);
 
 	  if(b->IsInside(PosSeed)){
-		isTrigTime ? vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed)) : vSeeds.emplace_back(DTSeed, 0);
+		isTrigTime ? vSeeds.emplace_back(DTSeed, 0) : vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed));
 	  }
 
 	}

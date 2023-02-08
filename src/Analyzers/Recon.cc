@@ -84,17 +84,23 @@ void ReconAnalysis::Do(void *Data) {
   // Recon
   if(isunbinned){
 	FitStruct FS = {vHits, hPDF};
-	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {SetBounds, SetPars});
+	RT = istrigtime ?
+		Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {SetPosBounds, SetPars}) :
+		Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {SetBounds, SetPars}) ;
 	// Fill
 	Tree->Fill();
   } else if(isperpmt) {
 	FitMapStruct FMS = {vHits, mPDF1D};
-	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetBounds, SetPars});
+	RT = istrigtime ?
+		 Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetPosBounds, SetPars}) :
+		 Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {SetBounds, SetPars});
 	// Fill
 	Tree->Fill();
   } else {
 	FitStruct FS = {vHits, hPDF};
-	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
+	RT = istrigtime ?
+		 Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetPosBounds, SetPars}) :
+		 Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {SetBounds, SetPars});
 	// Fill
 	Tree->Fill();
   }
