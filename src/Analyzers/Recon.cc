@@ -42,6 +42,7 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
   RT.SetTree(Tree);
   //
   max_seed = max_seed < 0 ? std::numeric_limits<int>::max() : max_seed;
+  nMaxEvts = nMaxEvts < 0 ? std::numeric_limits<int>::max() : nMaxEvts;
   //
   if(!isbinned && !isunbinned && !isperpmt)
 	isbinned = true;
@@ -75,7 +76,7 @@ void ReconAnalysis::Do(void *Data) {
 	TSeed = 0;
 
   // Get SnD seeds
-  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF, Cyl, max_seed);
+  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF, Cyl, max_seed, istrigtime);
   vSeeds.emplace_back(Centroid, TSeed);
 
   // Recon
