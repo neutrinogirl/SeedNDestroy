@@ -12,3 +12,4 @@
 [submodule "external/nlopt"]
 	path = external/nlopt
 	url = https://github.com/stevengj/nlopt.git
+	branch = tags/v2.7.1

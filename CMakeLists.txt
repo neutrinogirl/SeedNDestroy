@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 add_subdirectory(external/wRATter)
 add_subdirectory(external/Argz)
 add_subdirectory(external/spdlog)
+add_subdirectory(external/nlopt)
 
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 #---Locate the ROOT package and defines a number of variables (e.g. ROOT_INCLUDE_DIRS)
@@ -33,16 +34,8 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/external/ROOT/include
         ${ROOT_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
-        ${NLOPT_INCLUDE_DIRS}
-        $ENV{RATROOT}/include
 )
 
-#----------------------------------------------------------------------------
-# Locate RATROOT Libs
-#
-LINK_DIRECTORIES($ENV{RATROOT}/lib)
-LINK_DIRECTORIES($ENV{GEANT4SYS}/lib)
-LINK_DIRECTORIES(${NLOPT_LIB})
 
 #----------------------------------------------------------------------------
 # LIBRARIES
@@ -56,10 +49,10 @@ target_link_libraries(NTuple Hit ROOT::RIO ROOT::Tree)
 add_library(Rat src/Readers/Rat.cc)
 target_link_libraries(Rat Hit wRATter)
 
+
 #----------------------------------------------------------------------------
 # EXECUTABLES
 #
-
 add_executable(TApp src/Apps/TApp.cc src/Analyzers/TAnalyzer.cc)
 target_link_libraries(TApp Argz NTuple ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
 
@@ -67,6 +60,6 @@ add_executable(CreatePDF src/Apps/CreatePDF.cc src/Analyzers/MakePDF.cc)
 target_link_libraries(CreatePDF Argz NTuple ${ROOT_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(Recon src/Apps/Recon.cc src/Analyzers/Recon.cc
-        src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc)
+        src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc src/SnD/SVD.cc)
 target_link_libraries(Recon Argz NTuple ${ROOT_LIBRARIES} ${Boost_LIBRARIES} nlopt)
 
