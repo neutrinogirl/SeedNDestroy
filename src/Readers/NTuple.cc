@@ -96,9 +96,6 @@ FlatReader::FlatReader(const char *filename,
   //
   fFlat = new Flat(vTreeReaders);
   //
-  //
-  iTrig = -1;
-  //
   progress_bar_.Set(vTreeReaders[kTree]->GetEntries(), 70);
   verbose_ = verbose;
 }
@@ -112,15 +109,6 @@ FlatReader::~FlatReader() {
 
 bool FlatReader::GetNextEvent() {
   return vTreeReaders[kTree]->Next();
-}
-
-bool FlatReader::GetNextTrigger() {
-  if (++iTrig < 1) {
-	return true;
-  } else {
-	iTrig = -1;
-	return false;
-  }
 }
 
 void *FlatReader::GetData() {

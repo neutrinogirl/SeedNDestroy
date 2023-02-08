@@ -15,7 +15,6 @@
 class TReader {
  protected:
   virtual bool GetNextEvent() = 0;
-  virtual bool GetNextTrigger() = 0;
   virtual void *GetData() = 0;
   virtual ProgressBar *GetProgressBar() = 0;
   virtual bool GetVerbosity() = 0;
@@ -30,9 +29,7 @@ class TReader {
 	  if(TReader::gSignalStatus == SIGINT)
 		break;
 	  ++(*GetProgressBar());
-	  while(this->GetNextTrigger()){
 		Ana->Do(this->GetData());
-	  }
 	  if(GetVerbosity())
 		GetProgressBar()->display();
 	}

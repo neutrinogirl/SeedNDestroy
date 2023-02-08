@@ -41,7 +41,6 @@ class RATReader : public TReader{
   bool verbose_;
  protected:
   bool GetNextEvent() override;
-  bool GetNextTrigger() override;
   void* GetData() override;
   ProgressBar *GetProgressBar() override { return &progress_bar_; }
   bool GetVerbosity() override { return verbose_; }

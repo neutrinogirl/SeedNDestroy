@@ -50,17 +50,14 @@ class FlatReader : public TReader {
   TFile *f;
   std::vector< TTreeReader* > vTreeReaders;
   //
-  int iTrig;
-  //
   ProgressBar progress_bar_;
   bool verbose_;
  public:
   explicit FlatReader(const char *filename,
-						const char *treename="output", const char *metaname="meta",
-						const bool &verbose=false);
+					  const char *treename="output", const char *metaname="meta",
+					  const bool &verbose=false);
   ~FlatReader();
   bool GetNextEvent() override;
-  bool GetNextTrigger() override;
   void *GetData() override;
   ProgressBar *GetProgressBar() override { return &progress_bar_; }
   bool GetVerbosity() override { return verbose_; }

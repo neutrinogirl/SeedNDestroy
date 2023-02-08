@@ -44,9 +44,6 @@ RATReader::RATReader(const char *filename, const bool &verbose) {
 bool RATReader::GetNextEvent() {
   w_rat.GetNextEvent();
 }
-bool RATReader::GetNextTrigger() {
-  w_rat.GetNextTrigger();
-}
 
 void *RATReader::GetData() {
 
