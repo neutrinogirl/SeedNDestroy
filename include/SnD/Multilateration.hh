@@ -22,6 +22,7 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b);
 std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 								TH1D* hPDF,
 								Bnd* b,
-								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max());
+								const unsigned int& MaxSeeds = std::numeric_limits<unsigned int>::max(),
+								bool isTrigTime=false);
 
 #endif // SND_INCLUDE_SND_MULTILATERATION_HH_

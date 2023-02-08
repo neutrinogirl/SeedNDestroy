@@ -150,13 +150,14 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 								TH1D* hPDF,
 								Bnd* b,
-								const unsigned int& MaxSeeds){
+								const unsigned int& MaxSeeds,
+								bool isTrigTime){
 
   // Get vector of seeds
   std::vector<PosT> vSeeds;
   auto DTSeed = GetDTSeed(vHits, b);
   if(b->IsInside(DTSeed))
-	vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed));
+	isTrigTime ? vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed)) : vSeeds.emplace_back(DTSeed, 0);
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
@@ -171,8 +172,9 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 
 	  auto PosSeed = GetDTSeed(ivSeed, b);
 
-	  if(b->IsInside(PosSeed))
-		vSeeds.emplace_back(PosSeed, b->GetTWall(PosSeed));
+	  if(b->IsInside(PosSeed)){
+		isTrigTime ? vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed)) : vSeeds.emplace_back(DTSeed, 0);
+	  }
 
 	}
 
