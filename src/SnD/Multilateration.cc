@@ -66,7 +66,7 @@ std::vector< std::vector<Hit> > GetSetsOfVHits(Matrix& M, int& i, std::vector<Hi
 
 }
 
-TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
+boost::optional<TVector3> GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 
   std::size_t nDim = 3;
   if(vHits.size() < nDim)
@@ -138,10 +138,8 @@ TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 
   }
 
-  if(TVector3(X[0], X[1], X[2]).Mag() > b->GetEdge().Mag())
-	return b->GetEdge();
-
-  return TVector3(X[0], X[1], X[2]);
+  if(b->IsInside({X[0], X[1], X[2]}))
+	return boost::optional<TVector3>({X[0], X[1], X[2]});
 
 }
 
@@ -156,8 +154,8 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
   // Get vector of seeds
   std::vector<PosT> vSeeds;
   auto DTSeed = GetDTSeed(vHits, b);
-  if(b->IsInside(DTSeed))
-	isTrigTime ? vSeeds.emplace_back(DTSeed, 0) : vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed));
+  if(DTSeed.is_initialized())
+	isTrigTime ? vSeeds.emplace_back(DTSeed.get(), 0) : vSeeds.emplace_back(DTSeed.get(), b->GetTWall(DTSeed.get()));
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
@@ -172,8 +170,8 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 
 	  auto PosSeed = GetDTSeed(ivSeed, b);
 
-	  if(b->IsInside(PosSeed)){
-		isTrigTime ? vSeeds.emplace_back(DTSeed, 0) : vSeeds.emplace_back(DTSeed, b->GetTWall(DTSeed));
+	  if(PosSeed.is_initialized()){
+		isTrigTime ? vSeeds.emplace_back(PosSeed.get(), 0) : vSeeds.emplace_back(PosSeed.get(), b->GetTWall(PosSeed.get()));
 	  }
 
 	}

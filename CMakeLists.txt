@@ -55,5 +55,5 @@ target_link_libraries(CreatePDF Argz NTuple ${ROOT_LIBRARIES})
 
 add_executable(Recon src/Apps/Recon.cc src/Analyzers/Recon.cc
         src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc src/SnD/SVD.cc)
-target_link_libraries(Recon Argz NTuple ${ROOT_LIBRARIES} Boost::foreach nlopt)
+target_link_libraries(Recon Argz NTuple ${ROOT_LIBRARIES} Boost::foreach Boost::optional nlopt)
 

@@ -11,11 +11,13 @@
 #include "SnD/Hit.hh"
 #include "SnD/Geom.hh"
 
+#include <boost/optional.hpp>
+
 Matrix GetDMatrix(std::vector<Hit>& vHits);
 
 std::vector< std::vector<Hit> > GetSetsOfVHits(Matrix& M, int& i, std::vector<Hit>& vHits);
 
-TVector3 GetDTSeed(std::vector<Hit>& vHits, Bnd* b);
+boost::optional<TVector3> GetDTSeed(std::vector<Hit>& vHits, Bnd* b);
 
 #include <TH1D.h>
 #include "PosT.hh"
