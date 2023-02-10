@@ -8,6 +8,17 @@
 
 #include "Templates/TData.hh"
 
+void ShiftHistogram(TH2D* hist) {
+  // Find the bin with the maximum value in the x-axis
+  int maxBin = hist->GetMaximumBin();
+  double maxValue = hist->GetBinContent(maxBin);
+  double maxX = hist->GetXaxis()->GetBinCenter(hist->GetXaxis()->FindBin(maxValue));
+
+  // Shift the histogram so that the maximum bin x-value is 0
+  hist->GetXaxis()->SetRangeUser(hist->GetXaxis()->GetXmin() - maxX, hist->GetXaxis()->GetXmax() - maxX);
+}
+
+
 MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax){
   const zAxis axTRes(TResBins, TResMin, TResMax);
   const zAxis axCosT(12, -1., 1.);
@@ -83,6 +94,11 @@ void MakePDF::Do(void *Data) {
 	}
 
   }
+
+  for(auto iPower = 0; iPower<vPower.size(); iPower++){
+	ShiftHistogram(vvHPDFs[iPower][kTHIT]);
+  }
+
 
 }
 #include <TFile.h>
