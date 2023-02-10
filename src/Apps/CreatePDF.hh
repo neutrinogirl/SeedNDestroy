@@ -13,7 +13,8 @@ typedef struct TAppArgs : public Args {
 		new bArg("-v", "--verbose"),
 		new sArg("-i", "--input"),
 		new sArg("-o", "--output"),
-		new vfArg("-t", "--tres", {250., -5., 20.})
+		new vfArg("-t", "--tres", {250., -5., 20.}),
+		new bArg("-s", "--shift")
 	};
   }
   TAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -28,6 +29,7 @@ typedef struct TAppArgs : public Args {
 			  << "\t-h (--help)\tShow this help message\n"
 			  << "\t-v (--verbose)\tSet verbosity level true\n"
 			  << "\t-t (--tres) nBins min max\tSet bins for TRes hist (default 250, -5., 20.)\n"
+			  << "\t-s (--shift)\tShift TRes hist to 0 (default false)\n"
 
 			  << std::endl;
   }
@@ -42,7 +44,10 @@ typedef struct TAppArgs : public Args {
   }
   std::vector<float> GetTResBins() const {
 	return reinterpret_cast<vfArg*>(v[3])->val;
-  };
+  }
+  bool GetShift() const {
+	return reinterpret_cast<bArg*>(v[4])->val;
+  }
 } TAppArgs;
 
 

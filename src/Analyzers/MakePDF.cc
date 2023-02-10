@@ -10,7 +10,7 @@
 
 void ShiftHistogram(TH2D* hist) {
   // find x position of maximum
-  double x_max = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
+  double x_max = hist->GetXaxis()->GetBinLowEdge(hist->ProjectionX()->GetMaximumBin());
 
   // get hist info
   int nbinsx = hist->GetXaxis()->GetNbins();
@@ -22,7 +22,8 @@ void ShiftHistogram(TH2D* hist) {
 }
 
 
-MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax){
+MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax, const bool &isshift)
+	: isShift(isshift){
   const zAxis axTRes(TResBins, TResMin, TResMax);
   const zAxis axCosT(12, -1., 1.);
   const zAxis axNHits(1000, 0., 1000.);
@@ -98,24 +99,24 @@ void MakePDF::Do(void *Data) {
 
   }
 
-  for(auto iPower = 0; iPower<vPower.size(); iPower++){
-	ShiftHistogram(vvHPDFs[iPower][kTHIT]);
-  }
-
-
 }
 #include <TFile.h>
 void MakePDF::Export(const char *filename) {
+
   TFile f(filename, "RECREATE");
   f.cd();
   hNHits->Write();
   hN400->Write();
   for(auto& vHPDF : vvHPDFs){
 	for(auto& hPDF : vHPDF){
+	  if(isShift)
+		ShiftHistogram(hPDF);
 	  hPDF->Write();
 	}
   }
   for(auto& m : mPDFs){
+	if(isShift)
+	  ShiftHistogram(m.second);
 	m.second->Write();
   }
   f.Close();

@@ -18,8 +18,10 @@ class MakePDF : public TAnalysis{
   TH1D* hNHits;
   TH1D* hN400;
   std::map<int, TH2D*> mPDFs;
+  bool isShift;
  public:
-  MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax);
+  MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax,
+		  const bool &isshift=false);
   void Do(void* Data) override;
   void Export(const char *filename);
 
