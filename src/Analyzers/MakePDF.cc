@@ -9,13 +9,16 @@
 #include "Templates/TData.hh"
 
 void ShiftHistogram(TH2D* hist) {
-  // Find the bin with the maximum value in the x-axis
-  int maxBin = hist->GetMaximumBin();
-  double maxValue = hist->GetBinContent(maxBin);
-  double maxX = hist->GetXaxis()->GetBinCenter(hist->GetXaxis()->FindBin(maxValue));
+  // find x position of maximum
+  double x_max = hist->GetXaxis()->GetBinCenter(hist->GetMaximumBin());
 
-  // Shift the histogram so that the maximum bin x-value is 0
-  hist->GetXaxis()->SetRangeUser(hist->GetXaxis()->GetXmin() - maxX, hist->GetXaxis()->GetXmax() - maxX);
+  // get hist info
+  int nbinsx = hist->GetXaxis()->GetNbins();
+  int minx = hist->GetXaxis()->GetXmin();
+  int maxx = hist->GetXaxis()->GetXmax();
+
+  // shift the histogram
+  hist->GetXaxis()->Set(nbinsx, minx-x_max, maxx-x_max);
 }
 
 
