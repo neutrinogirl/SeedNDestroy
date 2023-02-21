@@ -28,6 +28,7 @@ typedef struct ReconAppArgs : public Args {
 		new bArg("-b",   "--binned"),
 		new bArg("-pp",  "--pperpmt"),
 		new bArg("-tt",  "--trigtime"),
+		new bArg("-at",  "--applytrigger"),
 	};
   }
   explicit ReconAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -55,6 +56,7 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-m   (--map)         \tPlot and save NLL map in MAP.root\n"
 			  << "\t-mn  (--map-name)    \tSet output name map (default MAP.root)\n"
 			  << "\t-tt  (--trigtime)    \tSet flag to disable trigtime\n"
+			  << "\t-at  (--applytrigger)\tSet flag to applytrigger\n"
 			  << "\t-a   (--algo)        \tSelect algorithm (default 0):\n"
 			  << "\t                     \t [0]: nlopt::LN_NELDERMEAD\n"
 			  << "\t                     \t [1]: nlopt::LN_BOBYQA\n"
@@ -118,6 +120,9 @@ typedef struct ReconAppArgs : public Args {
   }
   bool GetTrigTime() const {
 	return reinterpret_cast<bArg*>(v[17])->val;
+  }
+  bool GetApplyTrigger() const {
+	return reinterpret_cast<bArg*>(v[18])->val;
   }
 } ReconAppArgs;
 

@@ -22,9 +22,10 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
 							 bool iv,
 							 bool ib, bool iu, bool ip,
 							 bool itt,
-               const char *filename,
+							 bool iat,
+							 const char *filename,
 							 const char *treename)
-	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip), istrigtime(itt) {
+	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip), istrigtime(itt), isapplytrigger(iat) {
   //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
@@ -62,6 +63,12 @@ void ReconAnalysis::Do(void *Data) {
   // Get Data
   auto wData = static_cast<TData*>(Data);
   auto vHits = wData->GetVHits();
+  if(isapplytrigger){
+	std::sort(vHits.begin(), vHits.end(), [](const Hit& a, const Hit& b){return a.T < b.T;});
+	auto T0 = vHits.begin()->T;
+	std::transform(vHits.begin(), vHits.end(), vHits.begin(),
+				   [T0](Hit& hit){hit.T -= T0; return hit;});
+  }
   auto iEvt = wData->GetEventID();
   auto iTrig = wData->GetTriggerID();
   const char *tag = Form("Evt%d_Trigger%d", iEvt, iTrig);
