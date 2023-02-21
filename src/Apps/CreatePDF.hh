@@ -16,6 +16,7 @@ typedef struct TAppArgs : public Args {
 		new vfArg("-t", "--tres", {250., -5., 20.}),
 		new bArg("-s", "--shift"),
 		new vfArg("-ps", "--pos-shift", {0, 0, 0}),
+		new bArg("-a", "--apply-trigger")
 	};
   }
   TAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -32,6 +33,7 @@ typedef struct TAppArgs : public Args {
 			  << "\t-t (--tres) nBins min max\tSet bins for TRes hist (default 250, -5., 20.)\n"
 			  << "\t-s (--shift)\tShift TRes hist to 0 (default false)\n"
 			  << "\t-ps (--pos-shift) x y z\tShift MC TRUE positions (default 0, 0, 0)\n"
+			  << "\t-a (--apply-trigger)\tApply trigger (default false)\n"
 
 			  << std::endl;
   }
@@ -52,6 +54,9 @@ typedef struct TAppArgs : public Args {
   }
   std::vector<float> GetPosShift() const {
 	return reinterpret_cast<vfArg*>(v[5])->val;
+  }
+  bool GetApplyTrigger() const {
+	return reinterpret_cast<bArg*>(v[6])->val;
   }
 } TAppArgs;
 

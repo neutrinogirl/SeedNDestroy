@@ -24,8 +24,9 @@ void ShiftHistogram(TH2D* hist) {
 
 MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax,
 				 const bool &isshift,
+				 const bool &applytrigger,
 				 const std::vector<float>& vPosShift)
-	: isShift(isshift), isPosShifted(false) {
+	: isShift(isshift), isPosShifted(false), isApplyTrigger(applytrigger) {
   const zAxis axTRes(TResBins, TResMin, TResMax);
   const zAxis axCosT(12, -1., 1.);
   const zAxis axNHits(1000, 0., 1000.);
@@ -61,10 +62,22 @@ void MakePDF::Do(void *Data) {
   auto* wData = static_cast<TData*>(Data);
 
   auto vHits = wData->GetVHits();
-  auto Pos = isPosShifted ? wData->GetPosition() - PosShift : wData->GetPosition();
+  if(isApplyTrigger){
+	std::sort(vHits.begin(), vHits.end(), [](const Hit& a, const Hit& b){return a.T < b.T;});
+	auto T0 = vHits.begin()->T;
+	std::transform(vHits.begin(), vHits.end(), vHits.begin(),
+				   [T0](Hit& hit){hit.T -= T0; return hit;});
+  }
+
+  TVector3 Pos = wData->GetPosition();
+  if(isPosShifted){
+	Pos.SetXYZ(wData->GetPosition().X(),
+			   -1*(wData->GetPosition().Z()-PosShift.Z()),
+			   wData->GetPosition().Y()-PosShift.Y());
+  }
   auto Dir = wData->GetDirection();
   auto T = wData->GetTime();
-  auto TrigTime = T;
+  auto TrigTime = 0;
 
   std::sort(vHits.begin(), vHits.end());
 
@@ -92,7 +105,8 @@ void MakePDF::Do(void *Data) {
 		const zAxis axTRes(vvHPDFs[iPower][kTOF]->GetXaxis());
 		const zAxis axCosT(vvHPDFs[iPower][kTOF]->GetYaxis());
 		mPDFs[hit.ID]=
-			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d_PMT%d", iPower, hit.ID), "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
+			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d_PMT%d", iPower, hit.ID),
+					 "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
 					 axTRes.nBins, axTRes.min, axTRes.max,
 					 axCosT.nBins, axCosT.min, axCosT.max)
 			;
