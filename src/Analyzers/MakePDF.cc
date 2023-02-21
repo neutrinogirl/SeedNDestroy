@@ -22,8 +22,10 @@ void ShiftHistogram(TH2D* hist) {
 }
 
 
-MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax, const bool &isshift)
-	: isShift(isshift){
+MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax,
+				 const bool &isshift,
+				 const std::vector<float>& vPosShift)
+	: isShift(isshift), isPosShifted(false) {
   const zAxis axTRes(TResBins, TResMin, TResMax);
   const zAxis axCosT(12, -1., 1.);
   const zAxis axNHits(1000, 0., 1000.);
@@ -47,6 +49,11 @@ MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float
 		}
 	);
   }
+  // Check if vPosShift member are different from 0
+  if(vPosShift[0] != 0 || vPosShift[1] != 0 || vPosShift[2] != 0){
+	PosShift.SetXYZ(vPosShift[0], vPosShift[1], vPosShift[2]);
+	isPosShifted = true;
+  }
 }
 
 void MakePDF::Do(void *Data) {
@@ -54,7 +61,7 @@ void MakePDF::Do(void *Data) {
   auto* wData = static_cast<TData*>(Data);
 
   auto vHits = wData->GetVHits();
-  auto Pos = wData->GetPosition();
+  auto Pos = isPosShifted ? wData->GetPosition() - PosShift : wData->GetPosition();
   auto Dir = wData->GetDirection();
   auto T = wData->GetTime();
   auto TrigTime = T;
