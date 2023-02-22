@@ -89,7 +89,7 @@ MapAnalysis::~MapAnalysis(){
   for(auto& p : mPDF2D)
 	delete p.second;
   delete SG;
-  delete h3D;
+  // delete h3D;
 }
 
 void MapAnalysis::Do(void *Data) {
