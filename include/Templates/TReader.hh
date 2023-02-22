@@ -20,21 +20,8 @@ class TReader {
   virtual bool GetVerbosity() = 0;
  public:
   static volatile sig_atomic_t gSignalStatus;
-  static void MyHandler(int sig){
-	TReader::gSignalStatus = sig;
-  };
-  virtual void Read(TAnalysis *Ana){
-	signal(SIGINT, MyHandler);
-	while(this->GetNextEvent()){
-	  if(TReader::gSignalStatus == SIGINT)
-		break;
-	  ++(*GetProgressBar());
-		Ana->Do(this->GetData());
-	  if(GetVerbosity())
-		GetProgressBar()->display();
-	}
-	GetProgressBar()->done();
-  }
+  static void MyHandler(int sig);
+  virtual void Read(TAnalysis *Ana);
 };
 
 #endif //SND_INCLUDE_TEMPLATES_TREADER_HH_

@@ -37,8 +37,10 @@ include_directories(
 add_library(Hit src/SnD/Hit.cc)
 target_link_libraries(Hit ROOT::Physics)
 
+add_library(TReader src/Templates/TReader.cc)
+
 add_library(NTuple src/Readers/NTuple.cc)
-target_link_libraries(NTuple Hit ROOT::RIO ROOT::Tree Boost::range Boost::any)
+target_link_libraries(NTuple TReader Hit ROOT::RIO ROOT::Tree ROOT::TreePlayer Boost::range Boost::any)
 
 add_library(Rat src/Readers/Rat.cc)
 target_link_libraries(Rat Hit wRATter)
@@ -48,12 +50,18 @@ target_link_libraries(Rat Hit wRATter)
 # EXECUTABLES
 #
 add_executable(TApp src/Apps/TApp.cc src/Analyzers/TAnalyzer.cc)
-target_link_libraries(TApp Argz NTuple ${ROOT_LIBRARIES})
+target_link_libraries(TApp Argz NTuple)
 
 add_executable(CreatePDF src/Apps/CreatePDF.cc src/Analyzers/MakePDF.cc)
-target_link_libraries(CreatePDF Argz NTuple ${ROOT_LIBRARIES})
+target_link_libraries(CreatePDF Argz NTuple)
 
 add_executable(Recon src/Apps/Recon.cc src/Analyzers/Recon.cc
-        src/SnD/PosT.cc src/SnD/Multilateration.cc src/SnD/NLL.cc src/SnD/Recon.cc src/SnD/Map.cc src/SnD/SVD.cc)
-target_link_libraries(Recon Argz NTuple ${ROOT_LIBRARIES} Boost::foreach Boost::optional nlopt)
+        src/SnD/PosT.cc
+        src/SnD/Multilateration.cc
+        src/SnD/NLL.cc
+        src/SnD/Recon.cc
+        src/SnD/Map.cc
+        src/SnD/SpaceGrid.cc
+        src/SnD/SVD.cc)
+target_link_libraries(Recon Argz NTuple Boost::foreach Boost::optional nlopt)
 
