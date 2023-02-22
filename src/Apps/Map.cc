@@ -3,9 +3,9 @@
 //
 
 //
-#include "Recon.hh"
+#include "Map.hh"
 //
-#include "../Analyzers/Recon.hh"
+#include "../Analyzers/Map.hh"
 //
 #include "../Readers/NTuple.hh"
 
@@ -20,12 +20,12 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Create analysis class
-  ReconAnalysis Ana(Args.GetPDF(), Args.GetPDFName(), Args.GetPDFPMTName(),
-					Args.GetRadius(), Args.GetHHeight(),
-					Args.GetNEvts(), Args.GetAlgo(), Args.GetMaxSeed(),
-					Args.GetVVerbose(),
-					Args.GetBinned(), Args.GetUnbinned(), Args.GetPP(),
-					Args.GetTrigTime(), Args.GetApplyTrigger(), Args.GetOutput());
+  MapAnalysis Ana(Args.GetPDF(), Args.GetPDFName(), Args.GetPDFPMTName(),
+				  Args.GetRadius(), Args.GetHHeight(),
+				  Args.GetNEvts(),
+				  Args.GetApplyTrigger(),
+				  Args.GetSpaceBins(), Args.GetTimeBins(),
+				  Args.GetOutput());
   // ######################################## //
   // Run analysis
   FlatReader R(Args.GetInput(), "output", "meta", Args.GetVerbose());

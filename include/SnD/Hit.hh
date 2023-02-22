@@ -42,6 +42,13 @@ typedef struct Hit {
   // #### #### #### ####   OPERATORS  ## #### #### #### ####  //
   // ######################################################## //
 
+  friend Hit operator+(const Hit& h1, const double& TT) {
+	return Hit(h1.PMTPos, h1.Q, h1.T+TT, h1.ID);
+  }
+  friend Hit operator-(const Hit& h1, const double& TT) {
+	return Hit(h1.PMTPos, h1.Q, h1.T-TT, h1.ID);
+  }
+
   double GetD(const TVector3& OrigPos) const {
 	return (PMTPos - OrigPos).Mag();
   };
@@ -60,10 +67,22 @@ typedef struct Hit {
 } Hit;
 
 bool operator<(const Hit& h1, const Hit& h2);
+bool operator==(const Hit& h1, const Hit& h2);
 
 double GetNPrompts(const std::vector<Hit>& vHits, const double& T);
 double fWeight(const Hit& h, const int& P);
 
 TVector3 GetCentroid(const std::vector<Hit>& vHits);
+
+// ########################################## //
+// #### #### ####   TRIGGER    #### #### #### //
+// ########################################## //
+
+// ASSUMING vHits is sorted in order of being recorded
+
+double GetFirstHitTime(const std::vector<Hit>& vHits, const double& threshold);
+double GetFirstHitTime(const std::vector<Hit>& vHits);
+double GetWindowHitTime(const std::vector<Hit>& vHits, const double& threshold=0., const int& windowsize=2);
+double GetMaxHitTime(const std::vector<Hit>& vHits);
 
 #endif //SND_INCLUDE_SND_HIT_HH_

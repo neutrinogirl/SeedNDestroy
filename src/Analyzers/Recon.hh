@@ -10,12 +10,13 @@
 #include <Templates/TAnalysis.hh>
 #include "SnD/Geom.hh"
 #include "SnD/PosT.hh"
+#include "SnD/SpaceGrid.hh"
 
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TTree.h>
 #include <TFile.h>
-
+#include <TH3D.h>
 
 class ReconAnalysis : public TAnalysis {
  public:
@@ -33,8 +34,6 @@ class ReconAnalysis : public TAnalysis {
   int nMaxEvts;
   int algo;
   int max_seed;
-  bool ismap;
-  std::string mapname;
   bool isverbose;
 
   bool isbinned;
@@ -47,8 +46,6 @@ class ReconAnalysis : public TAnalysis {
   ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname,
 				const double &R, const double &HH,
 				int me, int a, int ms,
-				bool im,
-				const char* mn,
 				bool iv,
 				bool ib, bool iu, bool ip,
 				bool itt,

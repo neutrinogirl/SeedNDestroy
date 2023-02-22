@@ -11,21 +11,23 @@
 
 #include <SnD/Multilateration.hh>
 #include <SnD/Recon.hh>
-#include <SnD/Map.hh>
 
 #include <ROOT/Utils.hh>
 
 ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname ,
 							 const double &R, const double &HH,
 							 int me, int a, int ms,
-							 bool im, const char *mn,
 							 bool iv,
 							 bool ib, bool iu, bool ip,
 							 bool itt,
 							 bool iat,
 							 const char *filename,
 							 const char *treename)
-	: nMaxEvts(me), algo(a), max_seed(ms), ismap(im), mapname(mn), isverbose(iv), isbinned(ib), isunbinned(iu), isperpmt(ip), istrigtime(itt), isapplytrigger(iat) {
+	: nMaxEvts(me), algo(a), max_seed(ms),
+	  isverbose(iv),
+	  isbinned(ib), isunbinned(iu), isperpmt(ip),
+	  istrigtime(itt),
+	  isapplytrigger(iat) {
   //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
@@ -64,10 +66,16 @@ void ReconAnalysis::Do(void *Data) {
   auto wData = static_cast<TData*>(Data);
   auto vHits = wData->GetVHits();
   if(isapplytrigger){
-	std::sort(vHits.begin(), vHits.end(), [](const Hit& a, const Hit& b){return a.T < b.T;});
-	auto T0 = vHits.begin()->T;
-	std::transform(vHits.begin(), vHits.end(), vHits.begin(),
-				   [T0](Hit& hit){hit.T -= T0; return hit;});
+	double T = GetFirstHitTime(vHits, 1.f);
+	std::cout << "Apply trigger time offset: " << T << " ns" << std::endl;
+	std::transform(
+		vHits.begin(),
+		vHits.end(),
+		vHits.begin(),
+		[T](const Hit& h){
+		  return h-T;
+		}
+	);
   }
   auto iEvt = wData->GetEventID();
   auto iTrig = wData->GetTriggerID();
@@ -113,9 +121,6 @@ void ReconAnalysis::Do(void *Data) {
   if(isverbose)
 	RT.Print();
 
-  // Map
-  if(ismap)
-	SaveMap(vHits, hPDF, Cyl, tag, mapname.c_str());
 
 }
 

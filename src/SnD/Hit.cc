@@ -8,6 +8,9 @@
 bool operator<(const Hit& h1, const Hit& h2){
   return h1.T < h2.T;
 }
+bool operator==(const Hit& h1, const Hit& h2){
+  return h1.T == h2.T;
+}
 
 double GetNPrompts(const std::vector<Hit>& vHits, const double& T){
   double NPrompts = 0.;
@@ -31,4 +34,52 @@ TVector3 GetCentroid(const std::vector<Hit>& vHits){
 	centroid += hit.PMTPos * (1./NHits);
   }
   return centroid;
+}
+
+double GetFirstHitTime(const std::vector<Hit>& vHits, const double& threshold){
+  double T = 0.;
+  for(const auto& hit: vHits){
+	if(hit.Q>threshold){
+	  T = hit.T;
+	  break;
+	}
+  }
+  return T;
+}
+
+double GetFirstHitTime(const std::vector<Hit>& vHits){
+  double T = std::numeric_limits<double>::max();
+  for(const auto& hit: vHits){
+	if(hit.T<T){
+	  T = hit.T;
+	}
+  }
+  return T;
+}
+
+double GetWindowHitTime(const std::vector<Hit>& vHits, const double& threshold, const int& windowsize){
+  double T = 0.;
+  for(int i=0; i<vHits.size()-windowsize; i++){
+	double Q = 0.;
+	for(int j=0; j<windowsize; j++) {
+	  Q += vHits[i + j].Q;
+	}
+	if(Q>threshold){
+	  T = vHits[i].T;
+	  break;
+	}
+  }
+  return T;
+}
+
+double GetMaxHitTime(const std::vector<Hit>& vHits){
+  double T = 0.;
+  double Q = 0.;
+  for(const auto& hit: vHits){
+	if(hit.Q>Q){
+	  T = hit.T;
+	  Q = hit.Q;
+	}
+  }
+  return T;
 }

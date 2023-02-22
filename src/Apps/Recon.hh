@@ -22,9 +22,7 @@ typedef struct ReconAppArgs : public Args {
 		new iArg("-n",   "--n-evts",       -1),
 		new iArg("-a",   "--algo",          0),
 		new iArg("-ms",  "--max-seed",     -1),
-		new bArg("-m",   "--map"),
 		new bArg("-vv",  "--vverbose"),
-		new sArg("-mn",  "--map-name",     "MAP.root"),
 		new bArg("-b",   "--binned"),
 		new bArg("-pp",  "--pperpmt"),
 		new bArg("-tt",  "--trigtime"),
@@ -53,8 +51,6 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-ppn (--pdf-pmt-name)\tSet PDFpPMT hist name\n"
 			  << "\t-n   (--n-evts)      \tSet n evts to process (default all)\n"
 			  << "\t-ms  (--max-seed)    \tSelect max seeds to try (default all)\n"
-			  << "\t-m   (--map)         \tPlot and save NLL map in MAP.root\n"
-			  << "\t-mn  (--map-name)    \tSet output name map (default MAP.root)\n"
 			  << "\t-tt  (--trigtime)    \tSet flag to disable trigtime\n"
 			  << "\t-at  (--applytrigger)\tSet flag to applytrigger\n"
 			  << "\t-a   (--algo)        \tSelect algorithm (default 0):\n"
@@ -103,26 +99,20 @@ typedef struct ReconAppArgs : public Args {
   int GetMaxSeed() const {
 	return reinterpret_cast<iArg*>(v[11])->val;
   }
-  bool GetMap() const {
+  bool GetVVerbose() const {
 	return reinterpret_cast<bArg*>(v[12])->val;
   }
-  bool GetVVerbose() const {
+  bool GetBinned() const {
 	return reinterpret_cast<bArg*>(v[13])->val;
   }
-  const char *GetMapName() const {
-	return reinterpret_cast<sArg*>(v[14])->val.c_str();
-  }
-  bool GetBinned() const {
-	return reinterpret_cast<bArg*>(v[15])->val;
-  }
-  bool GetPerPMT() const {
-	return reinterpret_cast<bArg*>(v[16])->val;
+  bool GetPP() const {
+	return reinterpret_cast<bArg*>(v[14])->val;
   }
   bool GetTrigTime() const {
-	return reinterpret_cast<bArg*>(v[17])->val;
+	return reinterpret_cast<bArg*>(v[15])->val;
   }
   bool GetApplyTrigger() const {
-	return reinterpret_cast<bArg*>(v[18])->val;
+	return reinterpret_cast<bArg*>(v[16])->val;
   }
 } ReconAppArgs;
 

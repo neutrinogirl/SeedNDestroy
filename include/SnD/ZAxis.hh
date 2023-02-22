@@ -5,6 +5,8 @@
 #ifndef SND_INCLUDE_SND_ZAXIS_HH_
 #define SND_INCLUDE_SND_ZAXIS_HH_
 
+#include <numeric>
+
 #include <TAxis.h>
 
 typedef struct zAxis {

@@ -69,8 +69,8 @@ std::vector< std::vector<Hit> > GetSetsOfVHits(Matrix& M, int& i, std::vector<Hi
 boost::optional<TVector3> GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 
   std::size_t nDim = 3;
-  if(vHits.size() < nDim)
-	return b->GetEdge();
+  // if(vHits.size() < nDim)
+	// return b->GetEdge();
 
   std::sort(vHits.begin(), vHits.end());
   auto itHit0 = std::lower_bound(vHits.begin(), vHits.end(), vHits[0]);
@@ -89,17 +89,20 @@ boost::optional<TVector3> GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
   };
 
   auto GetACoeff = [&GetTau, &Hit1](Hit& h, std::size_t iDim){
-	return (2*h.PMTPos[iDim] / (Csts::GetSoL()*GetTau(h))) - (2 * Hit1.PMTPos[iDim] / (Csts::GetSoL()*GetTau(Hit1)));
+	return (2*h.PMTPos[iDim] / (Csts::GetSoL()*GetTau(h)))
+	- (2 * Hit1.PMTPos[iDim] / (Csts::GetSoL()*GetTau(Hit1)));
   };
 
   auto GetBCoeff = [&GetTau, &Hit1](Hit& h){
-	return Csts::GetSoL()*(GetTau(h) - GetTau(Hit1)) - h.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(h)) + Hit1.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(Hit1));
+	return Csts::GetSoL()*(GetTau(h) - GetTau(Hit1))
+	- h.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(h))
+	+ Hit1.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(Hit1));
   };
 
   std::size_t nEq = vHits.size() - iHit1 - 1;
 
-  if(nEq < nDim)
-	return b->GetEdge();
+  // if(nEq < nDim)
+	// return b->GetEdge();
 
   Matrix A(nEq, nDim);
   DiagMatrix B(nEq);
@@ -134,12 +137,10 @@ boost::optional<TVector3> GetDTSeed(std::vector<Hit>& vHits, Bnd* b){
 
   } catch ( const char* e) {
 
-	return b->GetEdge();
-
   }
 
   if(b->IsInside({X[0], X[1], X[2]}))
-	return boost::optional<TVector3>({X[0], X[1], X[2]});
+	return TVector3({X[0], X[1], X[2]});
 
 }
 
@@ -155,7 +156,8 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
   std::vector<PosT> vSeeds;
   auto DTSeed = GetDTSeed(vHits, b);
   if(DTSeed.is_initialized())
-	isTrigTime ? vSeeds.emplace_back(DTSeed.get(), 0) : vSeeds.emplace_back(DTSeed.get(), b->GetTWall(DTSeed.get()));
+	isTrigTime ? vSeeds.emplace_back(DTSeed.get(), 0) :
+	vSeeds.emplace_back(DTSeed.get(), b->GetTWall(DTSeed.get()));
 
   auto M = GetDMatrix(vHits);
   auto nHits = vHits.size();
@@ -171,7 +173,8 @@ std::vector<PosT> GetVPosTSeeds(std::vector<Hit>& vHits,
 	  auto PosSeed = GetDTSeed(ivSeed, b);
 
 	  if(PosSeed.is_initialized()){
-		isTrigTime ? vSeeds.emplace_back(PosSeed.get(), 0) : vSeeds.emplace_back(PosSeed.get(), b->GetTWall(PosSeed.get()));
+		isTrigTime ? vSeeds.emplace_back(PosSeed.get(), 0) :
+		vSeeds.emplace_back(PosSeed.get(), b->GetTWall(PosSeed.get()));
 	  }
 
 	}
