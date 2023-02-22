@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   // ######################################## //
   // Create analysis class
   MakePDF Ana(static_cast<unsigned int>(Args.GetTResBins()[0]), Args.GetTResBins()[1], Args.GetTResBins()[2],
-			  Args.GetShift(), Args.GetApplyTrigger(), Args.GetPosShift());
+			  Args.GetShift(), Args.GetNormalize(), Args.GetPosShift());
 
   // ######################################## //
   // Run analysis

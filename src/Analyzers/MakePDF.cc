@@ -24,9 +24,9 @@ void ShiftHistogram(TH2D* hist) {
 
 MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax,
 				 const bool &isshift,
-				 const bool &applytrigger,
+				 const bool &applynorm,
 				 const std::vector<float>& vPosShift)
-	: isShift(isshift), isPosShifted(false), isApplyTrigger(applytrigger) {
+	: isShift(isshift), isPosShifted(false), isApplyNorm(applynorm) {
   const zAxis axTRes(TResBins, TResMin, TResMax);
   const zAxis axCosT(12, -1., 1.);
   const zAxis axNHits(1000, 0., 1000.);
@@ -62,12 +62,6 @@ void MakePDF::Do(void *Data) {
   auto* wData = static_cast<TData*>(Data);
 
   auto vHits = wData->GetVHits();
-  if(isApplyTrigger){
-	std::sort(vHits.begin(), vHits.end(), [](const Hit& a, const Hit& b){return a.T < b.T;});
-	auto T0 = vHits.begin()->T;
-	std::transform(vHits.begin(), vHits.end(), vHits.begin(),
-				   [T0](Hit& hit){hit.T -= T0; return hit;});
-  }
 
   TVector3 Pos = wData->GetPosition();
   if(isPosShifted){
@@ -130,12 +124,16 @@ void MakePDF::Export(const char *filename) {
   hN400->Write();
   for(auto& vHPDF : vvHPDFs){
 	for(auto& hPDF : vHPDF){
+	  if(isApplyNorm)
+		hPDF->Scale(1./hPDF->Integral());
 	  if(isShift)
 		ShiftHistogram(hPDF);
 	  hPDF->Write();
 	}
   }
   for(auto& m : mPDFs){
+	if(isApplyNorm)
+	  m.second->Scale(1./m.second->Integral());
 	if(isShift)
 	  ShiftHistogram(m.second);
 	m.second->Write();
