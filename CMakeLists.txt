@@ -61,7 +61,6 @@ add_executable(Recon src/Apps/Recon.cc src/Analyzers/Recon.cc
         src/SnD/NLL.cc
         src/SnD/Recon.cc
         src/SnD/Map.cc
-        src/SnD/SpaceGrid.cc
         src/SnD/SVD.cc)
 target_link_libraries(Recon Argz NTuple Boost::foreach Boost::optional nlopt)
 
