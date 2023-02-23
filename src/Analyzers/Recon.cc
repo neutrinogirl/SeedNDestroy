@@ -4,29 +4,24 @@
 
 #include <csignal>
 
-#include <TH2D.h>
-
 #include "Recon.hh"
+
 #include "Templates/TData.hh"
-
-#include <SnD/Multilateration.hh>
-#include <SnD/Recon.hh>
-
-#include <ROOT/Utils.hh>
+#include "Algo/WOpt.hh"
+#include "Algo/VHits.hh"
+#include "ROOT/Utils.hh"
 
 ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname ,
 							 const double &R, const double &HH,
 							 int me, int a, int ms,
 							 bool iv,
 							 bool ib, bool iu, bool ip,
-							 bool itt,
 							 bool iat,
 							 const char *filename,
 							 const char *treename)
 	: nMaxEvts(me), algo(a), max_seed(ms),
 	  isverbose(iv),
 	  isbinned(ib), isunbinned(iu), isperpmt(ip),
-	  istrigtime(itt),
 	  isapplytrigger(iat) {
   //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
@@ -64,10 +59,10 @@ void ReconAnalysis::Do(void *Data) {
 
   // Get Data
   auto wData = static_cast<TData*>(Data);
-  auto vHits = wData->GetVHits();
+  std::vector<Hit> vHits = wData->GetVHits();
+  //
   if(isapplytrigger){
 	double T = GetFirstHitTime(vHits, 1.f);
-	std::cout << "Apply trigger time offset: " << T << " ns" << std::endl;
 	std::transform(
 		vHits.begin(),
 		vHits.end(),
@@ -77,50 +72,70 @@ void ReconAnalysis::Do(void *Data) {
 		}
 	);
   }
-  auto iEvt = wData->GetEventID();
-  auto iTrig = wData->GetTriggerID();
-  const char *tag = Form("Evt%d_Trigger%d", iEvt, iTrig);
+  //
+  int iEvt = wData->GetEventID();
   //
   if(iEvt > nMaxEvts)
 	raise(SIGINT);
 
-  // Get centroid seed
-  TVector3 Centroid = GetCentroid(vHits);
+  // Init vSeeds with Centroid
+  std::vector<PosT> vSeeds = {
+	  GetCentroidBasedSeed(vHits, Cyl)
+  };
 
-  // Get time seed
-  double TSeed = Cyl->GetTWall(Centroid);
-  if(istrigtime)
-	TSeed = 0;
+  // Get LS seed
+  auto LS = GetLSBasedSeed(vHits, Cyl, vSeeds);
+  if(LS)
+	vSeeds.emplace_back(*LS);
 
-  // Get SnD seeds
-  std::vector<PosT> vSeeds = GetVPosTSeeds(vHits, hPDF, Cyl, max_seed, istrigtime);
-  vSeeds.emplace_back(Centroid, TSeed);
+  std::vector<void (*)(nlopt::opt &opt, Bnd *c)> vfPars = {
+	  SetBounds,
+	  SetPars,
+  };
 
-  // Set bounds limit depending on trigtime
-  auto fPosBounds = istrigtime ? SetPosBounds: SetBounds;
+
+  if(algo == 2)
+	vfPars.emplace_back(SetInequalityConstraint);
 
   // Recon
   if(isunbinned){
 	FitStruct FS = {vHits, hPDF};
-	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, {fPosBounds, SetPars});
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, vfPars);
 	// Fill
+	// Convert back to mm
+	Vector3<double> v3(RT.X, RT.Y, RT.Z, SpaceUnit::dm);
+	Vector3<double> v3mm = v3.ConvertTo(SpaceUnit::mm);
+	RT.X = v3mm.GetX();
+	RT.Y = v3mm.GetY();
+	RT.Z = v3mm.GetZ();
 	Tree->Fill();
   } else if(isperpmt) {
 	FitMapStruct FMS = {vHits, mPDF1D};
-	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, {fPosBounds, SetPars});
+	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, vfPars);
 	// Fill
+	// Convert back to mm
+	Vector3<double> v3(RT.X, RT.Y, RT.Z, SpaceUnit::dm);
+	Vector3<double> v3mm = v3.ConvertTo(SpaceUnit::mm);
+	RT.X = v3mm.GetX();
+	RT.Y = v3mm.GetY();
+	RT.Z = v3mm.GetZ();
 	Tree->Fill();
   } else {
 	FitStruct FS = {vHits, hPDF};
-	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, {fPosBounds, SetPars});
+	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, vfPars);
 	// Fill
+	// Convert back to mm
+	Vector3<double> v3(RT.X, RT.Y, RT.Z, SpaceUnit::dm);
+	Vector3<double> v3mm = v3.ConvertTo(SpaceUnit::mm);
+	RT.X = v3mm.GetX();
+	RT.Y = v3mm.GetY();
+	RT.Z = v3mm.GetZ();
 	Tree->Fill();
   }
 
   // Verbose
   if(isverbose)
 	RT.Print();
-
 
 }
 

@@ -8,7 +8,7 @@
 #include <limits>
 #include <cmath>
 
-#include "SnD/Matrix.hh"
+#include "LinAlg/Matrix.hh"
 
 // macro-like inline functions
 

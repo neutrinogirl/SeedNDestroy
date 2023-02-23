@@ -27,6 +27,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/external/Argz/include
         ${PROJECT_SOURCE_DIR}/external/ProgressBar/include
         ${PROJECT_SOURCE_DIR}/external/ROOT/include
+        ${PROJECT_SOURCE_DIR}/external/spdlog/include
         ${ROOT_INCLUDE_DIRS}
 )
 
@@ -34,8 +35,11 @@ include_directories(
 #----------------------------------------------------------------------------
 # LIBRARIES
 #
+
+add_library(SVD src/LinAlg/SVD.cc)
+
 add_library(Hit src/SnD/Hit.cc)
-target_link_libraries(Hit ROOT::Physics)
+target_link_libraries(Hit SVD ROOT::Physics ROOT::Hist)
 
 add_library(TReader src/Templates/TReader.cc)
 
@@ -56,14 +60,12 @@ add_executable(CreatePDF src/Apps/CreatePDF.cc src/Analyzers/MakePDF.cc)
 target_link_libraries(CreatePDF Argz NTuple)
 
 add_executable(Recon src/Apps/Recon.cc src/Analyzers/Recon.cc
-        src/SnD/PosT.cc
-        src/SnD/Multilateration.cc
-        src/SnD/NLL.cc
-        src/SnD/Recon.cc
-        src/SnD/SpaceGrid.cc
-        src/SnD/SVD.cc)
+        src/Algo/VHits.cc
+        src/Algo/WOpt.cc)
 target_link_libraries(Recon Argz NTuple Boost::foreach Boost::optional nlopt)
 
 add_executable(Map src/Apps/Map.cc src/Analyzers/Map.cc
+        src/Algo/VHits.cc
+        src/Algo/WOpt.cc
         src/SnD/SpaceGrid.cc)
-target_link_libraries(Map Argz NTuple)
+target_link_libraries(Map Argz NTuple nlopt)

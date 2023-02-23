@@ -20,12 +20,11 @@ typedef struct ReconAppArgs : public Args {
 		new sArg("-pn",  "--pdf-name",     "hCTVSTResPDF_TTOF_QW0"),
 		new sArg("-ppn", "--pdf-pmt-name", "hCTVSTResPDF_TTOF_QW0_PMT"),
 		new iArg("-n",   "--n-evts",       -1),
-		new iArg("-a",   "--algo",          0),
+		new iArg("-a",   "--algo",          2),
 		new iArg("-ms",  "--max-seed",     -1),
 		new bArg("-vv",  "--vverbose"),
 		new bArg("-b",   "--binned"),
 		new bArg("-pp",  "--pperpmt"),
-		new bArg("-tt",  "--trigtime"),
 		new bArg("-at",  "--applytrigger"),
 	};
   }
@@ -51,9 +50,8 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-ppn (--pdf-pmt-name)\tSet PDFpPMT hist name\n"
 			  << "\t-n   (--n-evts)      \tSet n evts to process (default all)\n"
 			  << "\t-ms  (--max-seed)    \tSelect max seeds to try (default all)\n"
-			  << "\t-tt  (--trigtime)    \tSet flag to disable trigtime\n"
 			  << "\t-at  (--applytrigger)\tSet flag to applytrigger\n"
-			  << "\t-a   (--algo)        \tSelect algorithm (default 0):\n"
+			  << "\t-a   (--algo)        \tSelect algorithm (default 2):\n"
 			  << "\t                     \t [0]: nlopt::LN_NELDERMEAD\n"
 			  << "\t                     \t [1]: nlopt::LN_BOBYQA\n"
 			  << "\t                     \t [2]: nlopt::LN_COBYLA\n"
@@ -108,11 +106,8 @@ typedef struct ReconAppArgs : public Args {
   bool GetPP() const {
 	return reinterpret_cast<bArg*>(v[14])->val;
   }
-  bool GetTrigTime() const {
-	return reinterpret_cast<bArg*>(v[15])->val;
-  }
   bool GetApplyTrigger() const {
-	return reinterpret_cast<bArg*>(v[16])->val;
+	return reinterpret_cast<bArg*>(v[15])->val;
   }
 } ReconAppArgs;
 

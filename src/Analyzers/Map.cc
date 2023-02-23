@@ -5,12 +5,16 @@
 #include <csignal>
 
 #include <TH2D.h>
+#include <TProfile2D.h>
 #include <TCanvas.h>
 #include <TStyle.h>
 #include <TSystem.h>
+#include <TMarker.h>
 
 #include "Map.hh"
 #include "Templates/TData.hh"
+
+#include "Algo/VHits.hh"
 
 #include <ROOT/Utils.hh>
 
@@ -109,12 +113,35 @@ void MapAnalysis::Do(void *Data) {
 	);
   }
   auto iEvt = wData->GetEventID();
-  auto iTrig = wData->GetTriggerID();
-  const char *tag = Form("Evt%d_Trigger%d", iEvt, iTrig);
+  const char *tag = Form("Evt%d", iEvt);
   //
   if(iEvt > nMaxEvts)
 	raise(SIGINT);
 
+  // Init vSeeds with Centroid
+  std::vector<PosT> vSeeds = {
+	  GetCentroidBasedSeed(vHits, Cyl)
+  };
+
+  // Get LS seed
+  auto LS = GetLSBasedSeed(vHits, Cyl, vSeeds);
+  if(LS)
+	vSeeds.emplace_back(*LS);
+
+  Vector3<double> v3BF(vSeeds.back().X, vSeeds.back().Y, vSeeds.back().T, SpaceUnit::dm);
+  // convert to mm
+  v3BF = v3BF.ConvertTo(SpaceUnit::mm);
+
+  std::vector<TMarker*> vBFMarkers = {
+	  new TMarker(v3BF.GetX(), v3BF.GetZ(), kFullCross),
+	  new TMarker(v3BF.GetY(), v3BF.GetZ(), kFullCross),
+	  new TMarker(v3BF.GetX(), v3BF.GetY(), kFullCross)
+  };
+
+  for(auto& m : vBFMarkers){
+	m->SetMarkerColor(kGreen+1);
+	m->SetMarkerSize(2);
+  }
 
   TCanvas *canvas = new TCanvas("canvas", "canvas", 1200, 400);
   canvas->Divide(3,1);
@@ -122,30 +149,62 @@ void MapAnalysis::Do(void *Data) {
   gSystem->Unlink(Form("map_%s.gif", tag));
 
   for(const auto& T: vTCenter){
-	SG->ParallelWalk(hPDF, vHits, T);
+	SG->ParallelWalk(*hPDF, vHits, T);
 
 	for(int i=0; i<SG->GetNPts(); i++){
 	  h3D->Fill(SG->vPts[i].x(), SG->vPts[i].y(), SG->vPts[i].z(), SG->vNLL[i]);
 	}
 
-	auto hxz = h3D->Project3D("xz");
+	// Get the bin with the minimum content
+	Int_t bin_min = h3D->GetMinimumBin();
+
+	// Convert the bin number to x, y, z coordinates
+	Int_t binx, biny, binz;
+	h3D->GetBinXYZ(bin_min, binx, biny, binz);
+	Double_t x_min = h3D->GetXaxis()->GetBinCenter(binx);
+	Double_t y_min = h3D->GetYaxis()->GetBinCenter(biny);
+	Double_t z_min = h3D->GetZaxis()->GetBinCenter(binz);
+	Double_t min_content = h3D->GetBinContent(bin_min);
+
+	// Print the coordinates and bin content
+	// std::cout << "Minimum bin content at (" << x_min << ", " << y_min << ", " << z_min << ") = " << min_content << " ";
+	// std::cout << "LS: " << GetSum2Residuals(TVector3(x_min, y_min, z_min), T, vHits) << std::endl;
+
+	std::vector<TMarker*> vMarkers = {
+		new TMarker(x_min, z_min, kFullDiamond),
+		new TMarker(y_min, z_min, kFullDiamond),
+		new TMarker(x_min, y_min, kFullDiamond)
+	};
+
+	for(auto& m: vMarkers){
+	  m->SetMarkerColor(kBlue);
+	  m->SetMarkerSize(2);
+	}
+
+	auto hxz = h3D->Project3DProfile("xz");
 	canvas->cd(1);
 	hxz->Draw("colz");
 	gStyle->SetOptStat(0);
 	gPad->Update();
 	gStyle->SetPalette(kInvertedDarkBodyRadiator);
-	auto hyz = h3D->Project3D("yz");
+	vMarkers[0]->Draw("same");
+	vBFMarkers[0]->Draw("same");
+	auto hyz = h3D->Project3DProfile("yz");
 	canvas->cd(2);
 	hyz->Draw("colz");
 	gStyle->SetOptStat(0);
 	gPad->Update();
 	gStyle->SetPalette(kInvertedDarkBodyRadiator);
-	auto hxy = h3D->Project3D("xy");
+	vMarkers[1]->Draw("same");
+	vBFMarkers[1]->Draw("same");
+	auto hxy = h3D->Project3DProfile("xy");
 	canvas->cd(3);
 	hxy->Draw("colz");
 	gStyle->SetOptStat(0);
 	gPad->Update();
 	gStyle->SetPalette(kInvertedDarkBodyRadiator);
+	vMarkers[2]->Draw("same");
+	vBFMarkers[2]->Draw("same");
 	canvas->Update();
 	canvas->Print(Form("map_%s.gif+25", tag), "gif");
 
@@ -160,9 +219,17 @@ void MapAnalysis::Do(void *Data) {
 	delete hyz;
 	delete hxy;
 
+	for(auto& m: vMarkers) {
+	  delete m;
+	}
+
   }
 
   delete canvas;
+
+  for(auto &m: vBFMarkers){
+	delete m;
+  }
 
 }
 

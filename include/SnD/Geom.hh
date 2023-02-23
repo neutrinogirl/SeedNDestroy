@@ -6,6 +6,7 @@
 #define SND_INCLUDE_SND_GEOM_HH_
 
 #include <TVector3.h>
+
 #include "SnD/Utils.hh"
 
 class Bnd {

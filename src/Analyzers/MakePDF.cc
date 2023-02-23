@@ -4,8 +4,6 @@
 
 #include "MakePDF.hh"
 
-#include "SnD/ZAxis.hh"
-
 #include "Templates/TData.hh"
 
 void ShiftHistogram(TH2D* hist) {
@@ -27,26 +25,30 @@ MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float
 				 const bool &applynorm,
 				 const std::vector<float>& vPosShift)
 	: isShift(isshift), isPosShifted(false), isApplyNorm(applynorm) {
-  const zAxis axTRes(TResBins, TResMin, TResMax);
-  const zAxis axCosT(12, -1., 1.);
-  const zAxis axNHits(1000, 0., 1000.);
+  //
+  const int NBinsNHits = 1000;
+  const float MinNHits = 0.f;
+  const float MaxNHits = 1000.f;
+  const int NBinsCosT = 12;
+  const float MinCosT = 0.f;
+  const float MaxCosT = 1.f;
+  //
   hNHits = new TH1D("hNHits", "NHits per event ; NHits ; ",
-					axNHits.nBins, axNHits.min, axNHits.max);
+					NBinsNHits, MinNHits, MaxNHits);
   hNHits->SetDirectory(nullptr);
+  //
   hN400 = new TH1D("hN400", "N_{400} per event ; N_{400} ; ",
-				   axNHits.nBins, axNHits.min, axNHits.max);
+				   NBinsNHits, MinNHits, MaxNHits);
   hN400->SetDirectory(nullptr);
+  //
   std::vector<unsigned int> vPower = {0};
   vvHPDFs.reserve(vPower.size());
   for(const auto& wP : vPower){
 	vvHPDFs.push_back(
 		{
-			new TH2D(Form("hCTVSTResPDF_THit_QW%d", wP), "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
-					 axTRes.nBins, axTRes.min, axTRes.max,
-					 axCosT.nBins, axCosT.min, axCosT.max),
 			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d", wP), "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
-					 axTRes.nBins, axTRes.min, axTRes.max,
-					 axCosT.nBins, axCosT.min, axCosT.max)
+					 TResBins, TResMin, TResMax,
+					 NBinsCosT, MinCosT, MaxCosT)
 		}
 	);
   }
@@ -64,22 +66,24 @@ void MakePDF::Do(void *Data) {
   auto vHits = wData->GetVHits();
 
   TVector3 Pos = wData->GetPosition();
+  // Relative to ANNIE coordinate system
   if(isPosShifted){
 	Pos.SetXYZ(wData->GetPosition().X(),
 			   -1*(wData->GetPosition().Z()-PosShift.Z()),
 			   wData->GetPosition().Y()-PosShift.Y());
   }
-  auto Dir = wData->GetDirection();
-  auto T = wData->GetTime();
-  auto TrigTime = 0;
-
-  std::sort(vHits.begin(), vHits.end());
+  TVector3 Dir = wData->GetDirection();
+  double T     = 0.f;       // Timestamp of the event
+  double TTrig = 0.f;       // Timestamp of the trigger
+  double dT    = TTrig - T; // dT: Time between the vertex and the trigger
+  // In real data, all hits are recorded with respect to the trigger time
+  // Therefore, the time residuals must be corrected from the time between the event and the trigger.
 
   hN400->Fill(GetNPrompts(vHits, 400));
   hNHits->Fill(GetNPrompts(vHits, std::numeric_limits<double>::max()));
 
   std::vector<unsigned int> vPower = {0};
-  enum { kTHIT, kTOF };
+  enum { kTOF };
 
   for(auto iPower = 0; iPower<vPower.size(); iPower++){
 
@@ -88,24 +92,20 @@ void MakePDF::Do(void *Data) {
 
 	  const double QW = fWeight(hit, vPower[iPower]);
 
-	  vvHPDFs[iPower][kTHIT]->Fill(hit.GetTRes(Pos, T),
-								   hit.GetCosTheta(Pos, Dir),
-								   QW);
-	  vvHPDFs[iPower][kTOF]->Fill(hit.GetTRes(Pos, T-TrigTime),
+	  vvHPDFs[iPower][kTOF]->Fill(hit.GetTRes(Pos, dT),
 								  hit.GetCosTheta(Pos, Dir),
 								  QW);
 
 	  if(!mPDFs[hit.ID]){
-		const zAxis axTRes(vvHPDFs[iPower][kTOF]->GetXaxis());
-		const zAxis axCosT(vvHPDFs[iPower][kTOF]->GetYaxis());
 		mPDFs[hit.ID]=
 			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d_PMT%d", iPower, hit.ID),
 					 "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
-					 axTRes.nBins, axTRes.min, axTRes.max,
-					 axCosT.nBins, axCosT.min, axCosT.max)
-			;
+					 vvHPDFs[iPower][kTOF]->GetXaxis()->GetNbins(),
+					 vvHPDFs[iPower][kTOF]->GetXaxis()->GetXmin(), vvHPDFs[iPower][kTOF]->GetXaxis()->GetXmax(),
+					 vvHPDFs[iPower][kTOF]->GetYaxis()->GetNbins(),
+					 vvHPDFs[iPower][kTOF]->GetYaxis()->GetXmin(), vvHPDFs[iPower][kTOF]->GetYaxis()->GetXmax());
 	  } else {
-		mPDFs[hit.ID]->Fill(hit.GetTRes(Pos, T-TrigTime),
+		mPDFs[hit.ID]->Fill(hit.GetTRes(Pos, dT),
 							hit.GetCosTheta(Pos, Dir),
 							QW);
 	  }
@@ -115,6 +115,7 @@ void MakePDF::Do(void *Data) {
   }
 
 }
+
 #include <TFile.h>
 void MakePDF::Export(const char *filename) {
 

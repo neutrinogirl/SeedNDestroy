@@ -28,48 +28,6 @@ std::vector<T> linspace(T min, T max, std::size_t N){
 }
 
 //
-class ZHist {
- private:
-  std::vector<float> data;
-  int numBins;
-  double binSize;
-  double minValue;
- public:
-  ZHist() = default;
-  ZHist(int bins, double min, double max) {
-	Init(bins, min, max);
-  }
-  void Init(int bins, double min, double max) {
-	numBins = bins;
-	minValue = min;
-	binSize = (max - min) / bins;
-	data.resize(numBins, 0.f);
-  }
-  void Reset() {
-	std::fill(data.begin(), data.end(), 0.f);
-  }
-  void AddData(double value) {
-	if (value < minValue || value > (minValue + numBins * binSize))
-	  return; // ignore values outside of range
-	int bin = (int)((value - minValue) / binSize);
-	data[bin]++;
-  }
-  void Print() const {
-	for (int i = 0; i < numBins; i++) {
-	  std::cout << minValue + i * binSize << " - " << minValue + (i + 1) * binSize << ": " << data[i] << std::endl;
-	}
-  }
-  // Get data
-  std::vector<float> GetData() const { return data; }
-  // Get number of bins
-  int GetNumBins() const { return numBins; }
-  // Get bin size
-  double GetBinSize() const { return binSize; }
-  // Get min value
-  double GetMinValue() const { return minValue; }
-};
-
-//
 class SpaceGrid{
  private:
   std::size_t nPts;
@@ -82,9 +40,9 @@ class SpaceGrid{
   void Reset();
   void Clear();
   //
-  void Walk(TH1D* hPDF,
+  void Walk(const TH1D& hPDF,
 			const std::vector<Hit>& vHits, const float& T);
-  void ParallelWalk(TH1D* hPDF,
+  void ParallelWalk(const TH1D& hPDF,
 					const std::vector<Hit>& vHits, const float& T);
   //
   std::size_t GetNPts() const { return nPts; }

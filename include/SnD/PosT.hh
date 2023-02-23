@@ -10,6 +10,8 @@
 #include <TVector3.h>
 #include <TTree.h>
 
+#include "SnD/ZVector.hh"
+
 class PosT{
  protected:
  public:
@@ -21,6 +23,8 @@ class PosT{
 	  : X(x), Y(y), Z(z), T(t) {}
   PosT(const TVector3 &v, const double &t)
 	  : X(v.x()), Y(v.y()), Z(v.z()), T(t) {}
+  PosT(const Vector3<double> &v, const double& t)
+	  : X(v.GetX()), Y(v.GetY()), Z(v.GetZ()), T(t) {}
   //
   //
   void Clear(){
@@ -63,6 +67,10 @@ class RecT : public PosT {
   void SetTree(TTree *Tree) override{
 	PosT::SetTree(Tree);
 	Tree->Branch("NLL", &this->NLL, "NLL/D");
+  }
+  //
+  PosT GetPosT() const{
+	return PosT(X, Y, Z, T);
   }
 };
 

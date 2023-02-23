@@ -2,7 +2,7 @@
 // Created by Stephane Zsoldos on 7/11/22.
 //
 
-#include <SnD/SVD.hh>
+#include "LinAlg/SVD.hh"
 
 void SVD::solve(DiagMatrix &b, DiagMatrix &x, double thresh) {
   int i,j,jj;

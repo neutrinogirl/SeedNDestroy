@@ -6,17 +6,20 @@
 #define SND_SRC_SND_RECONANALYSIS_HH_
 
 #include <map>
-
-#include <Templates/TAnalysis.hh>
+//
+#include <boost/optional.hpp>
+//
+#include "Templates/TAnalysis.hh"
+//
 #include "SnD/Geom.hh"
 #include "SnD/PosT.hh"
-#include "SnD/SpaceGrid.hh"
-
+#include "SnD/Hit.hh"
+//
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TH3D.h>
 #include <TTree.h>
 #include <TFile.h>
-#include <TH3D.h>
 
 class ReconAnalysis : public TAnalysis {
  public:
@@ -39,7 +42,6 @@ class ReconAnalysis : public TAnalysis {
   bool isbinned;
   bool isunbinned;
   bool isperpmt;
-  bool istrigtime;
   bool isapplytrigger;
  public:
   ReconAnalysis() = default;
@@ -48,7 +50,6 @@ class ReconAnalysis : public TAnalysis {
 				int me, int a, int ms,
 				bool iv,
 				bool ib, bool iu, bool ip,
-				bool itt,
 				bool iat,
 				const char *filename,
 				const char *treename = "T");

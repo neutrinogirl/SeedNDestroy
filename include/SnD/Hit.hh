@@ -9,11 +9,13 @@
 // #### #### ####   C/C++   #### #### #### //
 // ####################################### //
 #include <iostream>
+#include <map>
 
 // ####################################### //
 // #### #### ####   ROOT    #### #### #### //
 // ####################################### //
 #include <TVector3.h>
+#include <TH1D.h>
 
 #include "SnD/Utils.hh"
 
@@ -26,16 +28,8 @@ typedef struct Hit {
   // #### #### #### CONSTRUCTORS / DESTRUCTORS #### #### #### //
   // ######################################################## //
 
-  Hit() {
-	PMTPos = TVector3(0.,0.,0.);
-	Q=0;
-	T=0;
-	ID=-1;
-  }
-  explicit Hit(const TVector3 &pmt_pos) : Hit() { PMTPos = pmt_pos; }
-  explicit Hit(const double &t) : Hit() { T = t; }
-  Hit(const double &q, const double &t) : Hit() { Q = q; T = t; }
-  Hit(const TVector3& pos, const double& q, const double& t, const int& id)
+  Hit(const TVector3& pos,
+	  const double& q, const double& t, const int& id)
 	  : PMTPos(pos), Q(q), T(t), ID(id){ };
 
   // ######################################################## //
@@ -50,13 +44,13 @@ typedef struct Hit {
   }
 
   double GetD(const TVector3& OrigPos) const {
-	return (PMTPos - OrigPos).Mag();
+	return (Hit::PMTPos - OrigPos).Mag();
   };
-  double GetTRes(const TVector3& OrigPos, const double& OrigT, const double& SoL=Csts::GetSoL()) const {
-	return T-OrigT - GetD(OrigPos)/SoL;
+  double GetTRes(const TVector3& OrigPos, const double& TTrig, const double& SoL=Csts::GetSoL()) const {
+	return Hit::T+TTrig - GetD(OrigPos)/SoL;
   };
   double GetCosTheta(const TVector3& OrigPos, const TVector3& OrigDir) const {
-	return OrigDir.Dot(PMTPos-OrigPos) / (PMTPos-OrigPos).Mag();
+	return OrigDir.Dot(Hit::PMTPos-OrigPos) / (Hit::PMTPos-OrigPos).Mag();
   };
   void Print() const {
 	std::cout << T << "ns "
@@ -72,17 +66,49 @@ bool operator==(const Hit& h1, const Hit& h2);
 double GetNPrompts(const std::vector<Hit>& vHits, const double& T);
 double fWeight(const Hit& h, const int& P);
 
+// ########################################### //
+// #### #### ####   PDF FREE    #### #### #### //
+// ########################################### //
+
+//
 TVector3 GetCentroid(const std::vector<Hit>& vHits);
+//
+std::vector<double> GetResiduals(const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
+double GetSum2Residuals(const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
+//
+TVector3 GetMLAT(const std::vector<Hit>& vHits);
+
+// ########################################### //
+// #### #### ####      PDF      #### #### #### //
+// ########################################### //
+
+//
+double GetNLL(const TH1D& hPDF,
+			  const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
+double GetUNLL(const TH1D& hPDF,
+			   const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
+double GetUNLL(const std::map<int, TH1D*>& mPDF,
+			   const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
 
 // ########################################## //
 // #### #### ####   TRIGGER    #### #### #### //
 // ########################################## //
 
+//
 // ASSUMING vHits is sorted in order of being recorded
-
 double GetFirstHitTime(const std::vector<Hit>& vHits, const double& threshold);
+//
 double GetFirstHitTime(const std::vector<Hit>& vHits);
+//
 double GetWindowHitTime(const std::vector<Hit>& vHits, const double& threshold=0., const int& windowsize=2);
+//
 double GetMaxHitTime(const std::vector<Hit>& vHits);
+
+// ############################################### //
+// #### #### ####   Funny things    #### #### #### //
+// ############################################### //
+
+//
+std::vector<Hit> RandomSubset(const std::vector<Hit>& vHits, const int& k);
 
 #endif //SND_INCLUDE_SND_HIT_HH_
