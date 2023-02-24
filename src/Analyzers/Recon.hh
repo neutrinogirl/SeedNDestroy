@@ -43,6 +43,8 @@ class ReconAnalysis : public TAnalysis {
   bool isunbinned;
   bool isperpmt;
   bool isapplytrigger;
+
+  bool isjustseed;
  public:
   ReconAnalysis() = default;
   ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname,
@@ -51,6 +53,7 @@ class ReconAnalysis : public TAnalysis {
 				bool iv,
 				bool ib, bool iu, bool ip,
 				bool iat,
+				bool ijs,
 				const char *filename,
 				const char *treename = "T");
   void Do(void *Data) override;

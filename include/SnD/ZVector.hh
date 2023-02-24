@@ -112,5 +112,13 @@ class Vector3 {
   SpaceUnit unit_;
 };
 
+// Convert TVector3 unit to other TVector3 unit
+template<typename T>
+static TVector3 ConvertTVector3Unit(const TVector3& vec, const SpaceUnit& lhs, const SpaceUnit& rhs) {
+  Vector3<T> v3(vec.x(), vec.y(), vec.z(), lhs);
+  v3 = v3.ConvertTo(rhs);
+  return {v3.GetX(), v3.GetY(), v3.GetZ()};
+}
+
 
 #endif //SND_INCLUDE_SND_ZVECTOR_HH_

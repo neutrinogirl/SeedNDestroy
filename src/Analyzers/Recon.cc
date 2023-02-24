@@ -17,12 +17,14 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
 							 bool iv,
 							 bool ib, bool iu, bool ip,
 							 bool iat,
+							 bool ijs,
 							 const char *filename,
 							 const char *treename)
 	: nMaxEvts(me), algo(a), max_seed(ms),
 	  isverbose(iv),
 	  isbinned(ib), isunbinned(iu), isperpmt(ip),
-	  isapplytrigger(iat) {
+	  isapplytrigger(iat),
+	  isjustseed(ijs){
   //
   hPDF = GetROOTObj<TH2D>(pdfname, histname)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
@@ -84,16 +86,26 @@ void ReconAnalysis::Do(void *Data) {
   };
 
   // Get LS seed
-  auto LS = GetLSBasedSeed(vHits, Cyl, vSeeds);
-  if(LS)
-	vSeeds.emplace_back(*LS);
+  vSeeds.emplace_back(GetLSBasedSeed(vHits, Cyl, vSeeds));
+
+  auto ConvertAndFill = [&](const TVector3& p){
+	TVector3 v3mm = ConvertTVector3Unit<double>(p, SpaceUnit::dm, SpaceUnit::mm);
+	RT.X = v3mm.x();
+	RT.Y = v3mm.y();
+	RT.Z = v3mm.z();
+	Tree->Fill();
+  };
+
+  if(isjustseed){
+	ConvertAndFill(vSeeds.back().GetTVector3());
+	return;
+  }
+
 
   std::vector<void (*)(nlopt::opt &opt, Bnd *c)> vfPars = {
 	  SetBounds,
 	  SetPars,
   };
-
-
   if(algo == 2)
 	vfPars.emplace_back(SetInequalityConstraint);
 
@@ -103,34 +115,19 @@ void ReconAnalysis::Do(void *Data) {
 	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, vfPars);
 	// Fill
 	// Convert back to mm
-	Vector3<double> v3(RT.X, RT.Y, RT.Z, SpaceUnit::dm);
-	Vector3<double> v3mm = v3.ConvertTo(SpaceUnit::mm);
-	RT.X = v3mm.GetX();
-	RT.Y = v3mm.GetY();
-	RT.Z = v3mm.GetZ();
-	Tree->Fill();
+	ConvertAndFill(RT.GetTVector3());
   } else if(isperpmt) {
 	FitMapStruct FMS = {vHits, mPDF1D};
 	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, vfPars);
 	// Fill
 	// Convert back to mm
-	Vector3<double> v3(RT.X, RT.Y, RT.Z, SpaceUnit::dm);
-	Vector3<double> v3mm = v3.ConvertTo(SpaceUnit::mm);
-	RT.X = v3mm.GetX();
-	RT.Y = v3mm.GetY();
-	RT.Z = v3mm.GetZ();
-	Tree->Fill();
+	ConvertAndFill(RT.GetTVector3());
   } else {
 	FitStruct FS = {vHits, hPDF};
 	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, vfPars);
 	// Fill
 	// Convert back to mm
-	Vector3<double> v3(RT.X, RT.Y, RT.Z, SpaceUnit::dm);
-	Vector3<double> v3mm = v3.ConvertTo(SpaceUnit::mm);
-	RT.X = v3mm.GetX();
-	RT.Y = v3mm.GetY();
-	RT.Z = v3mm.GetZ();
-	Tree->Fill();
+	ConvertAndFill(RT.GetTVector3());
   }
 
   // Verbose

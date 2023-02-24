@@ -26,6 +26,7 @@ typedef struct ReconAppArgs : public Args {
 		new bArg("-b",   "--binned"),
 		new bArg("-pp",  "--pperpmt"),
 		new bArg("-at",  "--applytrigger"),
+		new bArg("-js",  "--just-seed")
 	};
   }
   explicit ReconAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -51,6 +52,7 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-n   (--n-evts)      \tSet n evts to process (default all)\n"
 			  << "\t-ms  (--max-seed)    \tSelect max seeds to try (default all)\n"
 			  << "\t-at  (--applytrigger)\tSet flag to applytrigger\n"
+			  << "\t-js  (--just-seed)   \tSet flag to just seed\n"
 			  << "\t-a   (--algo)        \tSelect algorithm (default 2):\n"
 			  << "\t                     \t [0]: nlopt::LN_NELDERMEAD\n"
 			  << "\t                     \t [1]: nlopt::LN_BOBYQA\n"
@@ -108,6 +110,9 @@ typedef struct ReconAppArgs : public Args {
   }
   bool GetApplyTrigger() const {
 	return reinterpret_cast<bArg*>(v[15])->val;
+  }
+  bool GetJustSeed() const {
+	return reinterpret_cast<bArg*>(v[16])->val;
   }
 } ReconAppArgs;
 

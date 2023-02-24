@@ -101,6 +101,7 @@ void MapAnalysis::Do(void *Data) {
   // Get Data
   auto wData = static_cast<TData*>(Data);
   auto vHits = wData->GetVHits();
+  //
   if(isapplytrigger){
 	double T = GetFirstHitTime(vHits, 1.f);
 	std::transform(
@@ -112,6 +113,7 @@ void MapAnalysis::Do(void *Data) {
 		}
 	);
   }
+  //
   auto iEvt = wData->GetEventID();
   const char *tag = Form("Evt%d", iEvt);
   //
@@ -124,18 +126,14 @@ void MapAnalysis::Do(void *Data) {
   };
 
   // Get LS seed
-  auto LS = GetLSBasedSeed(vHits, Cyl, vSeeds);
-  if(LS)
-	vSeeds.emplace_back(*LS);
+  vSeeds.emplace_back(GetLSBasedSeed(vHits, Cyl, vSeeds));
 
-  Vector3<double> v3BF(vSeeds.back().X, vSeeds.back().Y, vSeeds.back().T, SpaceUnit::dm);
-  // convert to mm
-  v3BF = v3BF.ConvertTo(SpaceUnit::mm);
+  TVector3 v3BF = ConvertTVector3Unit<double>(vSeeds.back().GetTVector3(), SpaceUnit::dm, SpaceUnit::mm);
 
   std::vector<TMarker*> vBFMarkers = {
-	  new TMarker(v3BF.GetX(), v3BF.GetZ(), kFullCross),
-	  new TMarker(v3BF.GetY(), v3BF.GetZ(), kFullCross),
-	  new TMarker(v3BF.GetX(), v3BF.GetY(), kFullCross)
+	  new TMarker(v3BF.x(), v3BF.z(), kFullCross),
+	  new TMarker(v3BF.y(), v3BF.z(), kFullCross),
+	  new TMarker(v3BF.x(), v3BF.y(), kFullCross)
   };
 
   for(auto& m : vBFMarkers){
@@ -164,9 +162,9 @@ void MapAnalysis::Do(void *Data) {
 	Double_t x_min = h3D->GetXaxis()->GetBinCenter(binx);
 	Double_t y_min = h3D->GetYaxis()->GetBinCenter(biny);
 	Double_t z_min = h3D->GetZaxis()->GetBinCenter(binz);
-	Double_t min_content = h3D->GetBinContent(bin_min);
 
 	// Print the coordinates and bin content
+	// Double_t min_content = h3D->GetBinContent(bin_min);
 	// std::cout << "Minimum bin content at (" << x_min << ", " << y_min << ", " << z_min << ") = " << min_content << " ";
 	// std::cout << "LS: " << GetSum2Residuals(TVector3(x_min, y_min, z_min), T, vHits) << std::endl;
 
