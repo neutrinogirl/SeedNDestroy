@@ -19,7 +19,8 @@ Flat::Flat(std::vector< TTreeReader* > &vTreeReaders) {
 	  new TTreeReaderValue<int>(*vTreeReaders[kTree], "subev"),
 	  new TTreeReaderValue<std::vector<int>>(*vTreeReaders[kTree], "hitPMTID"),
 	  new TTreeReaderValue<std::vector<double>>(*vTreeReaders[kTree], "hitPMTTime"),
-	  new TTreeReaderValue<std::vector<double>>(*vTreeReaders[kTree], "hitPMTCharge")
+	  new TTreeReaderValue<std::vector<double>>(*vTreeReaders[kTree], "hitPMTCharge"),
+	  new TTreeReaderValue<double>(*vTreeReaders[kTree], "triggerTime")
   };
   TTreeReaderValue<std::vector<int>> pmtId(*vTreeReaders[kMeta], "pmtId");
   TTreeReaderValue<std::vector<double>> pmtX(*vTreeReaders[kMeta], "pmtX");
@@ -58,7 +59,7 @@ double Flat::GetEnergy() {
 }
 
 double Flat::GetTime() {
-  return 0;
+  return *boost::any_cast<TTreeReaderValue<double>*>(many[12])->Get();
 }
 
 int Flat::GetEventID() {
