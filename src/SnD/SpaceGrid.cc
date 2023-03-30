@@ -33,6 +33,16 @@ void Loop(const TH1D& hPDF,
   //
 }
 
+// void Loop(const std::map<int, TH1D*>& mPDF,
+// 		  const std::vector<Hit>& vHits, const std::vector<TVector3>& vPts, const float &T,
+// 		  std::vector<float>& vNLL,
+// 		  int startIndex, int endIndex){
+//
+//   for (int i = startIndex; i < endIndex; i++) {
+// 	vNLL[i] = GetUNLL(mPDF, vPts[i], T, vHits);
+//   }
+// }
+
 void SpaceGrid::Walk(const TH1D& hPDF,
 					 const std::vector<Hit> &vHits, const float& T) {
   //
