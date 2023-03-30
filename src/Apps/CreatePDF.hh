@@ -15,8 +15,7 @@ typedef struct TAppArgs : public Args {
 		new sArg("-o", "--output"),
 		new vfArg("-t", "--tres", {250., -5., 20.}),
 		new bArg("-s", "--shift"),
-		new vfArg("-ps", "--pos-shift", {0, 0, 0}),
-		new bArg("-n", "--normalize")
+		new vfArg("-ps", "--pos-shift", {0, 0, 0})
 	};
   }
   TAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
@@ -33,7 +32,6 @@ typedef struct TAppArgs : public Args {
 			  << "\t-t (--tres) nBins min max\tSet bins for TRes hist (default 250, -5., 20.)\n"
 			  << "\t-s (--shift)\tShift TRes hist to 0 (default false)\n"
 			  << "\t-ps (--pos-shift) x y z\tShift MC TRUE positions (default 0, 0, 0)\n"
-			  << "\t-n (--normalize)\tNormalize TRes hist (default false)\n"
 			  << std::endl;
   }
   bool GetVerbose() const {
@@ -53,9 +51,6 @@ typedef struct TAppArgs : public Args {
   }
   std::vector<float> GetPosShift() const {
 	return reinterpret_cast<vfArg*>(v[5])->val;
-  }
-  bool GetNormalize() const {
-	return reinterpret_cast<bArg*>(v[6])->val;
   }
 
 } TAppArgs;

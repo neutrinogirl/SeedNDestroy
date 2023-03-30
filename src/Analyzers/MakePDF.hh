@@ -22,11 +22,9 @@ class MakePDF : public TAnalysis{
   bool isShift;
   TVector3 PosShift;
   bool isPosShifted;
-  bool isApplyNorm;
  public:
   MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax,
 		  const bool &isshift=false,
-		  const bool &applynorm=false,
 		  const std::vector<float>& vPosShift={0,0,0});
   void Do(void* Data) override;
   void Export(const char *filename);

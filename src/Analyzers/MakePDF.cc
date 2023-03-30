@@ -22,15 +22,14 @@ void ShiftHistogram(TH2D* hist) {
 
 MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax,
 				 const bool &isshift,
-				 const bool &applynorm,
 				 const std::vector<float>& vPosShift)
-	: isShift(isshift), isPosShifted(false), isApplyNorm(applynorm) {
+	: isShift(isshift), isPosShifted(false) {
   //
   const int NBinsNHits = 1000;
   const float MinNHits = 0.f;
   const float MaxNHits = 1000.f;
-  const int NBinsCosT = 12;
-  const float MinCosT = 0.f;
+  const int NBinsCosT = 24;
+  const float MinCosT = -1.f;
   const float MaxCosT = 1.f;
   //
   hNHits = new TH1D("hNHits", "NHits per event ; NHits ; ",
@@ -74,7 +73,7 @@ void MakePDF::Do(void *Data) {
   }
   TVector3 Dir = wData->GetDirection();
   double T     = 0.f;       // Timestamp of the event
-  double TTrig = 0.f;       // Timestamp of the trigger
+  double TTrig = wData->GetTime();       // Timestamp of the trigger
   double dT    = TTrig - T; // dT: Time between the vertex and the trigger
   // In real data, all hits are recorded with respect to the trigger time
   // Therefore, the time residuals must be corrected from the time between the event and the trigger.
@@ -125,16 +124,14 @@ void MakePDF::Export(const char *filename) {
   hN400->Write();
   for(auto& vHPDF : vvHPDFs){
 	for(auto& hPDF : vHPDF){
-	  if(isApplyNorm)
-		hPDF->Scale(1./hPDF->Integral());
+	  hPDF->Scale(1./hPDF->Integral());
 	  if(isShift)
 		ShiftHistogram(hPDF);
 	  hPDF->Write();
 	}
   }
   for(auto& m : mPDFs){
-	if(isApplyNorm)
-	  m.second->Scale(1./m.second->Integral());
+	m.second->Scale(1./m.second->Integral());
 	if(isShift)
 	  ShiftHistogram(m.second);
 	m.second->Write();
