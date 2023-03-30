@@ -136,7 +136,7 @@ static double EvalNLL(double nObs, double nPred){
 	L=nObs*TMath::Log(nObs/nPred) + nPred-nObs;
   else
 	L=nPred;
-  return -L;
+  return L;
 }
 
 double GetNLL(const TH1D& hPDF,
@@ -148,8 +148,8 @@ double GetNLL(const TH1D& hPDF,
 	hExp.Fill(TRes);
   }
   for (int iBin=1; iBin<=hPDF.GetNbinsX(); iBin++){
-	double nObs = hPDF.GetBinContent(iBin);
-	double nPred = hExp.GetBinContent(iBin);
+	double nObs = hExp.GetBinContent(iBin);
+	double nPred = hPDF.GetBinContent(iBin);
 	NLL += EvalNLL(nObs, nPred);
   }
   return NLL;
