@@ -2,7 +2,120 @@
 // Created by Stephane Zsoldos on 2/23/23.
 //
 
+#include <future>
+#include <numeric>
+
 #include "Algo/WOpt.hh"
+
+void BaseFitStruct::FillSliceIterateData(std::vector<double> *vIterX, std::vector<double> *vIterY, std::vector<double> *vIterZ,
+										 std::vector<double> *vIterT,
+										 std::vector<double> *vf, int *nIter){
+  // Fill
+  const int num_rows = iterData.vx.size(); // Get the number of rows
+  const int num_cols = iterData.vx[0].size(); // Get the number of columns
+
+  std::vector<std::vector<double>> sliced_vec(num_cols); // Create a vector of vectors for the sliced vectors
+
+  for (int col = 0; col < num_cols; col++) {
+	sliced_vec[col].resize(num_rows); // Resize each inner vector to the number of rows
+
+	// Use std::transform to create the sliced vector
+	std::transform(iterData.vx.begin(), iterData.vx.end(), sliced_vec[col].begin(),
+				   [col](const std::vector<double>& inner_vec) { return inner_vec[col]; });
+  }
+
+  *vIterX = sliced_vec[0];
+  *vIterY = sliced_vec[1];
+  *vIterZ = sliced_vec[2];
+  *vIterT = sliced_vec[3];
+  *vf = iterData.vf;
+  *nIter = iterData.iter;
+}
+
+std::vector<std::vector<double>> CreateGridSamplePts(const double& scale){
+  // create the array of 4-D vectors
+  const int num_vectors = 81;
+  std::vector<std::vector<double>> vectors(num_vectors, std::vector<double>(4));
+
+  // fill the array with all possible combinations of 1, 0, and -1 for each coordinate
+  std::generate(vectors.begin(), vectors.end(), [scale]() {
+	static int n = 0;
+	std::vector<double> v(4);
+	int t = n++;
+	for (int i = 0; i < 4; i++) {
+	  v[i] = (t % 3) - 1;
+	  v[i] *= scale;
+	  t /= 3;
+	}
+	return v;
+  });
+
+  return vectors;
+};
+
+void Loop(const TH1D& hPDF,
+		  const std::vector<Hit>& vHits,
+		  const std::vector<TVector3>& vPts, const std::vector<double> &vT,
+		  std::vector<double>& vNLL,
+		  int startIndex, int endIndex){
+  //
+  for (int i = startIndex; i < endIndex; i++) {
+	vNLL[i] = GetUNLL(hPDF, vPts[i], vT[i], vHits);
+  }
+  //
+}
+
+double Walk(const std::vector<double> &x, std::vector<double> &grad, void *data){
+
+  // Unpack the data
+  auto *fs = static_cast<FitStruct*>(data);
+  TH1D hPDF = *fs->hPDF;
+  std::vector<Hit> vHits = fs->vHits;
+  const int nHits = static_cast<int>(vHits.size());
+  std::vector<std::vector<double>> vGridSamplePts = fs->vGridSamplePts;
+  const int nPts = static_cast<int>(vGridSamplePts.size());
+  //
+  Vector3<double> v(x[0], x[1], x[2], SpaceUnit::dm);
+  double TGuess = x[3];
+  // Create the vector of points
+  std::vector<TVector3> vPts(nPts);
+  std::vector<double> vT(nPts, 0.f);
+  for (int i = 0; i < nPts; i++) {
+	vPts[i] = v.GetTVector3() + TVector3(vGridSamplePts[i][0],
+										 vGridSamplePts[i][1],
+										 vGridSamplePts[i][2]);
+	vT[i] = TGuess + vGridSamplePts[i][3];
+  }
+  //
+  std::vector<double> vNLL(nPts, 0.f);
+
+  //
+  const int numThreads = 1;
+  // const int numThreads = static_cast<int>(std::thread::hardware_concurrency());
+  const int numElementsPerThread = nPts / numThreads;
+  //
+  std::vector<std::future<void>> futures(numThreads);
+  for (int i = 0; i < numThreads; i++) {
+	//
+	int startIndex = i * numElementsPerThread;
+	int endIndex = (i + 1) * numElementsPerThread;
+	//
+	futures[i] = std::async(
+		std::launch::async, Loop,
+		std::ref(hPDF),
+		std::cref(vHits),
+		std::cref(vPts), std::cref(vT),
+		std::ref(vNLL),
+		startIndex, endIndex
+	);
+  }
+  for (int i = 0; i < numThreads; i++) {
+	futures[i].wait();
+  }
+  // return the sum of the NLL
+  return std::accumulate(vNLL.begin(), vNLL.end(), 0.0) / nHits / nPts;
+
+}
 
 double fLS(const std::vector<double> &x, std::vector<double> &grad, void *data){
   // Cast to Vector of Hits
@@ -14,33 +127,48 @@ double fLS(const std::vector<double> &x, std::vector<double> &grad, void *data){
   return GetSum2Residuals(v.GetTVector3(), x[3], *d);
 }
 
+void FillIterData(IterationData &iterData, const std::vector<double> &x, double f){
+  iterData.iter++;
+  iterData.vx.push_back(x);
+  iterData.vf.push_back(f);
+}
+
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data){
   //
   auto d = static_cast<FitStruct*>(data);
+  auto norm = static_cast<double>(d->vHits.size());
+  auto hPDF = *d->hPDF;
+  if(d->isscaled)
+	hPDF.Scale(norm);
+  auto f = d->fNLL;
   // Create object to calculate TRes histogram
   Vector3<double> v(x[0], x[1], x[2], SpaceUnit::dm);
   double TGuess = x[3];
   // Calculate NLL
-  return GetNLL(*d->hPDF, v.GetTVector3(), TGuess, d->vHits);
-}
-
-double fPosTU(const std::vector<double> &x, std::vector<double> &grad, void *data){
-  //
-  auto d = static_cast<FitStruct*>(data);
-  // Create object to calculate TRes histogram
-  Vector3<double> v(x[0], x[1], x[2], SpaceUnit::dm);
-  double TGuess = x[3];
-  // Calculate NLL
-  return GetUNLL(*d->hPDF, v.GetTVector3(), TGuess, d->vHits);
+  double NLL = f(hPDF, v.GetTVector3(), TGuess, d->vHits) / norm;
+  if(d->filldata)
+	FillIterData(d->iterData, x, NLL);
+  return NLL;
 }
 
 double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void *data){
   //
   auto d = static_cast<FitMapStruct*>(data);
+  auto norm = static_cast<double>(d->vHits.size());
   // Create object to calculate TRes histogram
   Vector3<double> v(x[0], x[1], x[2], SpaceUnit::dm);
   double TGuess = x[3];
-  return GetUNLL(d->mPDF, v.GetTVector3(), TGuess, d->vHits);
+  // Calculate NLL
+  double NLL = 0.f;
+  // for(const auto& vgsmpl: d->vGridSamplePts){
+	// TVector3 Pos = v.GetTVector3() + TVector3(vgsmpl[0], vgsmpl[1], vgsmpl[2]);
+	// double T = TGuess + vgsmpl[3];
+	// NLL += GetMUNLL(d->mPDF, Pos, T, d->vHits) / norm / static_cast<double>(d->vGridSamplePts.size());
+  // }
+  NLL =  GetMUNLL(d->mPDF, v.GetTVector3(), TGuess, d->vHits) / norm;
+  if(d->filldata)
+	FillIterData(d->iterData, x, NLL);
+  return NLL;
 }
 
 double fLSC(const std::vector<double> &x, std::vector<double> &grad, void *data){
@@ -133,14 +261,14 @@ nlopt::algorithm GetAlgo(const int &a){
 	  return nlopt::LN_SBPLX;
 	  break;
 	default:
-	  return nlopt::LN_COBYLA;
+	  return nlopt::LN_SBPLX;
 	  break;
   }
 }
 
 RecT Recon(void* data,
 		   Bnd *c,
-		   std::vector<PosT> &vSeeds,
+		   const std::vector<PosT> &vSeeds,
 		   nlopt::algorithm alg,
 		   double(*fRec)(const std::vector<double> &x, std::vector<double> &grad, void *data),
 		   const std::vector<void (*)(nlopt::opt &opt, Bnd *c)>& vSetPars){
@@ -153,4 +281,18 @@ RecT Recon(void* data,
 	fSet(opt, c);
   //
   return DoRecon(opt, vSeeds).front();
+}
+
+double fSampleSpace(const std::vector<double> &x, std::vector<double> &grad, void *data){
+  auto samples = static_cast<std::vector<std::vector<double>>*>(data);
+  auto dim = samples->front().size();
+  double result = 0.0;
+  for (int i = 0; i < samples->size(); i++) {
+	double dist = 0.0;
+	for (int j = 0; j < x.size(); j++) {
+	  dist += pow((*samples)[i][j] - x[j], 2);
+	}
+	result += (*samples)[i][dim] * exp(-dist / 0.1);
+  }
+  return result;
 }

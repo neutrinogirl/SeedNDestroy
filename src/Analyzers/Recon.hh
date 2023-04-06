@@ -34,24 +34,38 @@ class ReconAnalysis : public TAnalysis {
 
   RecT RT;
 
+  bool istrack = false;
+  std::vector<double> vIterX;
+  std::vector<double> vIterY;
+  std::vector<double> vIterZ;
+  std::vector<double> vIterT;
+  std::vector<double> vf;
+  int nIter;
+
   int nMaxEvts;
   int algo;
   int max_seed;
   bool isverbose;
 
-  bool isbinned;
   bool isunbinned;
   bool isperpmt;
+
   bool isapplytrigger;
 
   bool isjustseed;
+
+  bool isDebug = false;
+
+  double(*fNLL)(const TH1D& hPDF,
+				const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
+
  public:
   ReconAnalysis() = default;
   ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname,
 				const double &R, const double &HH,
 				int me, int a, int ms,
 				bool iv,
-				bool ib, bool iu, bool ip,
+				bool iu, bool ip,
 				bool iat,
 				bool ijs,
 				const char *filename,
@@ -60,5 +74,7 @@ class ReconAnalysis : public TAnalysis {
   void Export() const;
   ~ReconAnalysis();
 };
+
+void Debug(void *Data, TH1D* hPDF);
 
 #endif //SND_SRC_SND_RECONANALYSIS_HH_

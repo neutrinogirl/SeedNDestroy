@@ -10,6 +10,7 @@
 // ####################################### //
 #include <iostream>
 #include <map>
+#include <unordered_map>
 
 // ####################################### //
 // #### #### ####   ROOT    #### #### #### //
@@ -87,8 +88,8 @@ double GetNLL(const TH1D& hPDF,
 			  const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
 double GetUNLL(const TH1D& hPDF,
 			   const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
-double GetUNLL(const std::map<int, TH1D*>& mPDF,
-			   const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
+double GetMUNLL(const std::map<int, TH1D*>& mPDF,
+				const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
 
 // ########################################## //
 // #### #### ####   TRIGGER    #### #### #### //
@@ -110,5 +111,33 @@ double GetMaxHitTime(const std::vector<Hit>& vHits);
 
 //
 std::vector<Hit> RandomSubset(const std::vector<Hit>& vHits, const int& k);
+//
+void SortHitsFromPos(std::vector<Hit>& vHits, const TVector3& Pos);
+// Create a std::vector<double> from a std::vector<Hit> and a lambda function defined by user
+template<typename T>
+std::vector<T> GetVector(const std::vector<Hit>& vHits, T (*f)(const Hit& h)) {
+  std::vector<T> v;
+  std::transform(
+	  vHits.begin(),
+	  vHits.end(),
+	  std::back_inserter(v),
+	  f
+  );
+  return v;
+}
+// Wrapper method for GetVector
+std::vector<double> GetTs(const std::vector<Hit>& vHits);
+std::vector<double> GetQs(const std::vector<Hit>& vHits);
+//
+std::vector<double> GetDs(const std::vector<Hit>& vHits, const TVector3& Pos);
+
+//
+TH1D GetHTres(TH1D* hPDF,
+			  const std::vector<Hit>& vHits, const TVector3& Pos, const double& TTrig,
+			  const double& SoL=Csts::GetSoL());
+
+//
+std::unordered_map<double, std::vector<Hit>> GetSubsets(const std::vector<Hit>& vHits, const TVector3& Pos,
+														const double& bin_size = 1.e1);
 
 #endif //SND_INCLUDE_SND_HIT_HH_

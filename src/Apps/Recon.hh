@@ -20,10 +20,9 @@ typedef struct ReconAppArgs : public Args {
 		new sArg("-pn",  "--pdf-name",     "hCTVSTResPDF_TTOF_QW0"),
 		new sArg("-ppn", "--pdf-pmt-name", "hCTVSTResPDF_TTOF_QW0_PMT"),
 		new iArg("-n",   "--n-evts",       -1),
-		new iArg("-a",   "--algo",          2),
+		new iArg("-a",   "--algo",          5),
 		new iArg("-ms",  "--max-seed",     -1),
 		new bArg("-vv",  "--vverbose"),
-		new bArg("-b",   "--binned"),
 		new bArg("-pp",  "--pperpmt"),
 		new bArg("-at",  "--applytrigger"),
 		new bArg("-js",  "--just-seed")
@@ -44,7 +43,6 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-h   (--help)        \tShow this help message\n"
 			  << "\t-v   (--verbose)     \tSet verbosity level true\n"
 			  << "\t-vv  (--vverbose)    \tSet MEGA verbosity\n"
-			  << "\t-b   (--binned)      \tSet binned TRes fit\n"
 			  << "\t-u   (--unbinned)    \tSet unbinned TRes fit\n"
 			  << "\t-pp  (--pperpmt)     \tSet PDF p PMT TRes fit (unbinned)\n"
 			  << "\t-pn  (--pdf-name)    \tSet PDF hist name\n"
@@ -53,7 +51,7 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-ms  (--max-seed)    \tSelect max seeds to try (default all)\n"
 			  << "\t-at  (--applytrigger)\tSet flag to applytrigger\n"
 			  << "\t-js  (--just-seed)   \tSet flag to just seed\n"
-			  << "\t-a   (--algo)        \tSelect algorithm (default 2):\n"
+			  << "\t-a   (--algo)        \tSelect algorithm (default 5):\n"
 			  << "\t                     \t [0]: nlopt::LN_NELDERMEAD\n"
 			  << "\t                     \t [1]: nlopt::LN_BOBYQA\n"
 			  << "\t                     \t [2]: nlopt::LN_COBYLA\n"
@@ -102,17 +100,14 @@ typedef struct ReconAppArgs : public Args {
   bool GetVVerbose() const {
 	return reinterpret_cast<bArg*>(v[12])->val;
   }
-  bool GetBinned() const {
+  bool GetPP() const {
 	return reinterpret_cast<bArg*>(v[13])->val;
   }
-  bool GetPP() const {
+  bool GetApplyTrigger() const {
 	return reinterpret_cast<bArg*>(v[14])->val;
   }
-  bool GetApplyTrigger() const {
-	return reinterpret_cast<bArg*>(v[15])->val;
-  }
   bool GetJustSeed() const {
-	return reinterpret_cast<bArg*>(v[16])->val;
+	return reinterpret_cast<bArg*>(v[15])->val;
   }
 } ReconAppArgs;
 

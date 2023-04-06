@@ -15,23 +15,21 @@ enum class SpaceUnit { mm, cm, dm, m };
 template<typename T>
 class Vector3 {
  public:
-  Vector3() : x_(0), y_(0), z_(0), unit_(SpaceUnit::mm) {}
-  Vector3(const T& x, const T& y, const T& z, const SpaceUnit& unit = SpaceUnit::mm) : x_(x), y_(y), z_(z), unit_(unit) {}
-  Vector3(const T& r, const T& phi, const T& z, const SpaceUnit& unit, bool is_cylindrical) : unit_(unit) {
-	if (is_cylindrical) {
-	  x_ = r * std::cos(phi);
-	  y_ = r * std::sin(phi);
-	  z_ = z;
-	}
-	else {
-	  x_ = r;
-	  y_ = phi;
-	  z_ = z;
-	}
+  Vector3()
+	  : x_(0), y_(0), z_(0), r_(0), phi_(0), theta_(0), unit_(SpaceUnit::mm) {}
+  Vector3(const T& x, const T& y, const T& z, const SpaceUnit& unit = SpaceUnit::mm)
+	  : x_(x), y_(y), z_(z), unit_(unit) {
+	// Set up all coordinates from cartesian to cylindrical and spherical
+	r_ = std::sqrt(x_ * x_ + y_ * y_ + z_ * z_);
+	phi_ = std::atan2(y_, x_);
+	theta_ = std::acos(z_ / r_);
   }
   T GetX() const { return x_; }
   T GetY() const { return y_; }
   T GetZ() const { return z_; }
+  T GetR() const { return r_; }
+  T GetPhi() const { return phi_; }
+  T GetTheta() const { return theta_; }
   SpaceUnit GetUnit() const { return unit_; }
   Vector3<T> ConvertTo(const SpaceUnit& other_unit) const {
 	if (unit_ == SpaceUnit::mm && other_unit == SpaceUnit::cm) {
@@ -95,20 +93,13 @@ class Vector3 {
 	  throw std::invalid_argument("Conversion not supported.");
 	}
   }
-  Vector3<T> ToCartesian() const {
-	T r = std::sqrt(x_ * x_ + y_ * y_);
-	T phi = std::atan2(y_, x_);
-	return Vector3<T>(r * std::cos(phi), r * std::sin(phi), z_, unit_);
-  }
-  Vector3<T> ToCylindrical() const {
-	T r = std::sqrt(x_ * x_ + y_ * y_);
-	T phi = std::atan2(y_, x_);
-	return Vector3<T>(r, phi, z_, unit_);
-  }
  private:
   T x_;
   T y_;
   T z_;
+  T r_;
+  T phi_;
+  T theta_;
   SpaceUnit unit_;
 };
 

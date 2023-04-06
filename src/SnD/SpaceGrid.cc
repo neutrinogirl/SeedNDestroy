@@ -39,7 +39,7 @@ void Loop(const TH1D& hPDF,
 // 		  int startIndex, int endIndex){
 //
 //   for (int i = startIndex; i < endIndex; i++) {
-// 	vNLL[i] = GetUNLL(mPDF, vPts[i], T, vHits);
+// 	vNLL[i] = GetMUNLL(mPDF, vPts[i], T, vHits);
 //   }
 // }
 

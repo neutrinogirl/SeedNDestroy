@@ -3,6 +3,9 @@
 //
 
 #include <csignal>
+#include <iomanip>
+#include <numeric>
+#include <algorithm>
 
 #include "Recon.hh"
 
@@ -15,14 +18,14 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
 							 const double &R, const double &HH,
 							 int me, int a, int ms,
 							 bool iv,
-							 bool ib, bool iu, bool ip,
+							 bool iu, bool ip,
 							 bool iat,
 							 bool ijs,
 							 const char *filename,
 							 const char *treename)
 	: nMaxEvts(me), algo(a), max_seed(ms),
 	  isverbose(iv),
-	  isbinned(ib), isunbinned(iu), isperpmt(ip),
+	  isunbinned(iu), isperpmt(ip),
 	  isapplytrigger(iat),
 	  isjustseed(ijs){
   //
@@ -43,11 +46,19 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
   Tree = new TTree(treename, treename);
   RT.SetTree(Tree);
   //
+  if(istrack){
+	Tree->Branch("IterX", &vIterX);
+	Tree->Branch("IterY", &vIterY);
+	Tree->Branch("IterZ", &vIterZ);
+	Tree->Branch("IterT", &vIterT);
+	Tree->Branch("Iterf", &vf);
+	Tree->Branch("nIter", &nIter, "nIter/I");
+  }
+  //
   max_seed = max_seed < 0 ? std::numeric_limits<int>::max() : max_seed;
   nMaxEvts = nMaxEvts < 0 ? std::numeric_limits<int>::max() : nMaxEvts;
   //
-  if(!isbinned && !isunbinned && !isperpmt)
-	isbinned = true;
+  fNLL = isunbinned ? GetUNLL : GetNLL;
 }
 ReconAnalysis::~ReconAnalysis(){
   delete OFile;
@@ -62,6 +73,8 @@ void ReconAnalysis::Do(void *Data) {
   // Get Data
   auto wData = static_cast<TData*>(Data);
   std::vector<Hit> vHits = wData->GetVHits();
+  if(vHits.empty())
+	return;
   //
   if(isapplytrigger){
 	double T = GetFirstHitTime(vHits, 1.f);
@@ -77,17 +90,29 @@ void ReconAnalysis::Do(void *Data) {
   //
   int iEvt = wData->GetEventID();
   //
-  if(iEvt > nMaxEvts)
+  if(iEvt == nMaxEvts)
 	raise(SIGINT);
 
   // Init vSeeds with Centroid
-  std::vector<PosT> vSeeds = {
-	  GetCentroidBasedSeed(vHits, Cyl)
-  };
+  std::vector<PosT> vSeeds = GetSeeds(vHits, Cyl);
 
-  // Get LS seed
-  vSeeds.emplace_back(GetLSBasedSeed(vHits, Cyl, vSeeds));
+  // Sort seeds from lowest to highest chi2
+  std::sort(vSeeds.begin(), vSeeds.end(),
+			[&](const PosT& a, const PosT& b){
+			  return
+				  fNLL(*hPDF, ConvertTVector3Unit<double>(a.GetTVector3(), SpaceUnit::dm, SpaceUnit::mm), a.T, vHits) <
+				  fNLL(*hPDF, ConvertTVector3Unit<double>(b.GetTVector3(), SpaceUnit::dm, SpaceUnit::mm), b.T, vHits);
+			}
+  );
 
+  //
+  if(isverbose){
+	auto PosSeed = ConvertTVector3Unit<double>(vSeeds.front().GetTVector3(), SpaceUnit::dm, SpaceUnit::mm);
+	PosSeed.Print();
+	std::cout << fNLL(*hPDF, PosSeed, vSeeds.front().T, vHits) << std::endl;
+  }
+
+  //
   auto ConvertAndFill = [&](const TVector3& p){
 	TVector3 v3mm = ConvertTVector3Unit<double>(p, SpaceUnit::dm, SpaceUnit::mm);
 	RT.X = v3mm.x();
@@ -96,12 +121,13 @@ void ReconAnalysis::Do(void *Data) {
 	Tree->Fill();
   };
 
+  //
   if(isjustseed){
 	ConvertAndFill(vSeeds.back().GetTVector3());
 	return;
   }
 
-
+  //
   std::vector<void (*)(nlopt::opt &opt, Bnd *c)> vfPars = {
 	  SetBounds,
 	  SetPars,
@@ -110,25 +136,17 @@ void ReconAnalysis::Do(void *Data) {
 	vfPars.emplace_back(SetInequalityConstraint);
 
   // Recon
-  if(isunbinned){
-	FitStruct FS = {vHits, hPDF};
-	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosTU, vfPars);
-	// Fill
-	// Convert back to mm
-	ConvertAndFill(RT.GetTVector3());
-  } else if(isperpmt) {
-	FitMapStruct FMS = {vHits, mPDF1D};
-	RT = Recon(&FMS, Cyl, vSeeds, GetAlgo(algo), fPosTPerPMT, vfPars);
-	// Fill
-	// Convert back to mm
-	ConvertAndFill(RT.GetTVector3());
-  } else {
-	FitStruct FS = {vHits, hPDF};
-	RT = Recon(&FS, Cyl, vSeeds, GetAlgo(algo), fPosT, vfPars);
-	// Fill
-	// Convert back to mm
-	ConvertAndFill(RT.GetTVector3());
+  FitStruct FS = {vHits, hPDF, !isunbinned, fNLL};
+  FS.filldata = istrack;
+  RT = Recon(&FS, Cyl, {vSeeds.front()}, GetAlgo(algo), Walk, {SetBounds, SetPars});
+  if(isperpmt) {
+	FitMapStruct FMS = {vHits, mPDF1D, GetMUNLL};
+	RT = Recon(&FMS, Cyl, {RT}, GetAlgo(algo), fPosTPerPMT, vfPars);
   }
+  // Fill
+  // FS.FillSliceIterateData(&vIterX, &vIterY, &vIterZ, &vIterT, &vf, &nIter);
+  // Convert back to mm
+  ConvertAndFill(RT.GetTVector3());
 
   // Verbose
   if(isverbose)
@@ -140,4 +158,46 @@ void ReconAnalysis::Export() const {
   OFile->cd();
   Tree->Write();
   OFile->Close();
+}
+
+void Debug(void* Data, TH1D* hPDF, const std::map<int, TH1D*>& mPDF1D){
+  // Get Data
+  auto wData = static_cast<TData*>(Data);
+  std::vector<Hit> vHits = wData->GetVHits();
+  const int nHits = static_cast<int>(vHits.size());
+  // Get true position of the event
+  auto Pos = wData->GetPosition();
+  auto T = wData->GetTime();
+  // Get NLL event
+  double TrueNLL   = GetNLL(*hPDF, Pos, T, vHits) / hPDF->GetNbinsX();
+  double TrueUNLL  = GetUNLL(*hPDF, Pos, T, vHits) / nHits;
+  double TrueMUNLL = GetMUNLL(mPDF1D, Pos, T, vHits) / nHits;
+  // Sort all hits from closest to farthest from true position
+  SortHitsFromPos(vHits, Pos);
+  // Print print print
+  std::cout << "EventID: " << wData->GetEventID() << " "
+			<< "vHits.size(): " << vHits.size() << std::endl;
+  std::cout << std::endl;
+  // Print NLLs
+  std::cout << std::setprecision(6) << "TrueNLL:" << TrueNLL << " "
+			<< std::setprecision(6) << "TrueUNLL:" << TrueUNLL << " "
+			<< std::setprecision(6) << "TrueMUNLL:" << TrueMUNLL << std::endl;
+  std::cout << std::endl;
+  // Print all hits using the sorted order, the distance from true position and hit.Print()
+  for(const auto& h : vHits){
+	std::cout << std::setprecision(4) << h.T << "ns "
+			  << std::setprecision(4) << h.Q << "Q "
+			  << std::round(h.GetD(Pos)) << "mm " << std::endl;
+  }
+
+  // Slice vHits
+  std::vector<double> vT = GetTs(vHits), vdT(vT.size()), vD = GetDs(vHits, Pos), vdD(vD.size());
+  // Differentiate to get dT and dD
+  std::adjacent_difference(vT.begin(), vT.end(), vdT.begin());
+  vdT[0] = 0;
+  std::adjacent_difference(vD.begin(), vD.end(), vdD.begin());
+  vdD[0] = 0;
+
+  //
+  std::cout << std::endl;
 }

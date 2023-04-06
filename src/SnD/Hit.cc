@@ -7,6 +7,7 @@
 #include "LinAlg/SVD.hh"
 
 #include <numeric>
+#include <algorithm>
 
 // Generate comparison between two hits based on T
 bool operator<(const Hit& h1, const Hit& h2){
@@ -125,7 +126,7 @@ TVector3 GetMLAT(const std::vector<Hit>& vHits){
 
   } catch ( const char* e) {
 	// handle the exception
-	throw; // rethrow the exception
+	throw std::exception(); // rethrow the exception
   }
 
 }
@@ -142,7 +143,9 @@ static double EvalNLL(double nObs, double nPred){
 double GetNLL(const TH1D& hPDF,
 			  const TVector3& Pos, const double& T, const std::vector<Hit>& vHits){
   double NLL = 0.f;
-  TH1D hExp("hExp", "hExp", hPDF.GetNbinsX(), hPDF.GetXaxis()->GetXmin(), hPDF.GetXaxis()->GetXmax());
+  // Generate a random name for the histogram
+  std::string hName = "hExp_" + std::to_string(rand());
+  TH1D hExp(hName.c_str(), "hExp", hPDF.GetNbinsX(), hPDF.GetXaxis()->GetXmin(), hPDF.GetXaxis()->GetXmax());
   for (const Hit& hit: vHits){
 	double TRes = hit.GetTRes(Pos, T);
 	hExp.Fill(TRes);
@@ -166,8 +169,8 @@ double GetUNLL(const TH1D& hPDF,
   return NLL;
 }
 
-double GetUNLL(const std::map<int, TH1D*>& mPDF,
-			   const TVector3& Pos, const double& T, const std::vector<Hit>& vHits){
+double GetMUNLL(const std::map<int, TH1D*>& mPDF,
+				const TVector3& Pos, const double& T, const std::vector<Hit>& vHits){
   double NLL = 0.f;
   for (const Hit& hit: vHits){
 	if(!mPDF.at(hit.ID))
@@ -233,4 +236,70 @@ std::vector<Hit> RandomSubset(const std::vector<Hit>& vHits, const int& k){
   std::random_shuffle(vHitsCopy.begin(), vHitsCopy.end());
   vHitsCopy.erase(vHitsCopy.begin()+k, vHitsCopy.end());
   return vHitsCopy;
+}
+
+void SortHitsFromPos(std::vector<Hit>& vHits, const TVector3& Pos){
+  std::sort(vHits.begin(), vHits.end(), [Pos](const Hit& h1, const Hit& h2){
+	return h1.GetD(Pos) < h2.GetD(Pos);
+  });
+}
+
+std::vector<double> GetTs(const std::vector<Hit>& vHits){
+  return GetVector<double>(vHits, [](const Hit& h){return h.T;});
+}
+
+std::vector<double> GetQs(const std::vector<Hit>& vHits){
+  return GetVector<double>(vHits, [](const Hit& h){return h.Q;});
+}
+
+std::vector<double> GetDs(const std::vector<Hit>& vHits, const TVector3& Pos){
+  std::vector<double> vD;
+  std::transform(
+	  vHits.begin(),
+	  vHits.end(),
+	  std::back_inserter(vD),
+	  [Pos](const Hit& h){
+		return h.GetD(Pos);
+	  }
+  );
+  return vD;
+}
+
+TH1D GetHTres(TH1D* hPDF,
+			  const std::vector<Hit>& vHits, const TVector3& Pos, const double& TTrig,
+			  const double& SoL){
+  TH1D hTRes("hTRes", "hTRes",
+			 hPDF->GetNbinsX(), hPDF->GetXaxis()->GetXmin(), hPDF->GetXaxis()->GetXmax());
+  for (const Hit& hit: vHits){
+	double TRes = hit.GetTRes(Pos, TTrig, SoL);
+	hTRes.Fill(TRes);
+  }
+  return hTRes;
+}
+
+std::unordered_map<double, std::vector<Hit>> GetSubsets(const std::vector<Hit>& vHits, const TVector3& Pos,
+														const double& bin_size){
+  std::unordered_map<double, std::vector<Hit>> mHits;
+  for (int i = 0; i < vHits.size(); i++) {
+	for (int j = i + 1; j < vHits.size(); j++) {
+	  double dx = vHits[j].T - vHits[i].T;
+	  if (std::abs(dx) > 1e-6) {  // avoid division by zero
+		double slope = (vHits[j].GetD(Pos) - vHits[i].GetD(Pos)) / dx;
+		double slope_bin = std::round(slope / bin_size) * bin_size;
+		if(slope_bin>0.f)
+		  mHits[slope_bin].push_back(vHits[i]);
+	  }
+	}
+  }
+
+  // remove mHits with less than 2 hits
+  for(auto it = mHits.begin(); it != mHits.end();){
+	if(it->second.size()<5){
+	  it = mHits.erase(it);
+	} else {
+	  ++it;
+	}
+  }
+
+  return mHits;
 }

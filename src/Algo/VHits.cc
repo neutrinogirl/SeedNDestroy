@@ -27,13 +27,46 @@ boost::optional<PosT> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b){
 	  return PosT(ConvertTVector3Unit<double>(MLAT, SpaceUnit::mm, SpaceUnit::dm), TSeed);
 	}
 
-  } catch (std::exception& e){
+  } catch (std::exception &e){
+
+	// std::cerr << "MLAT failed: " << e.what() << std::endl;
 
   }
+
+  return boost::none;
 
 }
 
 PosT GetLSBasedSeed(const std::vector<Hit>& vHits, Bnd *b, std::vector<PosT> vSeeds){
-  RecT RT = Recon((void*)&vHits, b, vSeeds, GetAlgo(2), fLS, {SetBounds, SetPars, SetInequalityConstraint});
+  RecT RT = Recon((void*)&vHits, b, vSeeds, nlopt::LN_SBPLX, fLS, {SetBounds, SetPars, SetInequalityConstraint});
   return RT.GetPosT();
+}
+
+std::vector<PosT> GetSeeds(std::vector<Hit> vHits, Bnd *b){
+  // Init vSeeds with Centroid
+  std::vector<PosT> vSeeds = {
+	  GetCentroidBasedSeed(vHits, b)
+  };
+
+  // Sort all hits from closest to farthest from Centroid position
+  auto Centroid = GetCentroid(vHits);
+  SortHitsFromPos(vHits, Centroid);
+
+  // Init vSeeds with MLAT
+  auto MLAT = GetMLATSeed(vHits, b);
+  if(MLAT.is_initialized())
+	vSeeds.emplace_back(*MLAT);
+
+  // Get subsets of seeds
+  auto mHits = GetSubsets(vHits, Centroid, 1e1);
+  for (auto it = mHits.begin(); it != mHits.end(); ++it){
+	vSeeds.emplace_back(GetCentroidBasedSeed(it->second, b));
+	SortHitsFromPos(it->second, GetCentroid(it->second));
+	auto MLAT = GetMLATSeed(it->second, b);
+	if(MLAT.is_initialized()){
+	  vSeeds.emplace_back(*MLAT);
+	}
+  }
+
+  return vSeeds;
 }

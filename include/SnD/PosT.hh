@@ -72,6 +72,10 @@ class RecT : public PosT {
   PosT GetPosT() const{
 	return PosT(X, Y, Z, T);
   }
+  void Print() const override{
+	PosT::Print();
+	std::cout << "NLL: " << NLL << std::endl;
+  }
 };
 
 #endif //SND_INCLUDE_SND_POST_HH_

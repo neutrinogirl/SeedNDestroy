@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 					Args.GetRadius(), Args.GetHHeight(),
 					Args.GetNEvts(), Args.GetAlgo(), Args.GetMaxSeed(),
 					Args.GetVVerbose(),
-					Args.GetBinned(), Args.GetUnbinned(), Args.GetPP(),
+					Args.GetUnbinned(), Args.GetPP(),
 					Args.GetApplyTrigger(),
 					Args.GetJustSeed(),
 					Args.GetOutput());
