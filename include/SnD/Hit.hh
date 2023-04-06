@@ -15,13 +15,13 @@
 // ####################################### //
 // #### #### ####   ROOT    #### #### #### //
 // ####################################### //
-#include <TVector3.h>
 #include <TH1D.h>
 
+#include "SnD/ZVector.hh"
 #include "SnD/Utils.hh"
 
 typedef struct Hit {
-  TVector3 PMTPos;
+  Vector3<double> PMTPos;
   double Q, T;
   int ID;
 
@@ -29,29 +29,18 @@ typedef struct Hit {
   // #### #### #### CONSTRUCTORS / DESTRUCTORS #### #### #### //
   // ######################################################## //
 
-  Hit(const TVector3& pos,
+  Hit(const Vector3<double>& pos,
 	  const double& q, const double& t, const int& id)
 	  : PMTPos(pos), Q(q), T(t), ID(id){ };
 
-  // ######################################################## //
-  // #### #### #### ####   OPERATORS  ## #### #### #### ####  //
-  // ######################################################## //
-
-  friend Hit operator+(const Hit& h1, const double& TT) {
-	return Hit(h1.PMTPos, h1.Q, h1.T+TT, h1.ID);
-  }
-  friend Hit operator-(const Hit& h1, const double& TT) {
-	return Hit(h1.PMTPos, h1.Q, h1.T-TT, h1.ID);
-  }
-
-  double GetD(const TVector3& OrigPos) const {
-	return (Hit::PMTPos - OrigPos).Mag();
+  double GetD(const Vector3<double>& pos) const {
+	return PMTPos.Distance(pos);
   };
-  double GetTRes(const TVector3& OrigPos, const double& TTrig, const double& SoL=Csts::GetSoL()) const {
-	return Hit::T+TTrig - GetD(OrigPos)/SoL;
+  double GetTRes(const Vector3<double>& pos, const double& ToF, const double& SoL=Csts::GetSoL()) const {
+	return Hit::T+ToF - GetD(pos)/SoL;
   };
-  double GetCosTheta(const TVector3& OrigPos, const TVector3& OrigDir) const {
-	return OrigDir.Dot(Hit::PMTPos-OrigPos) / (Hit::PMTPos-OrigPos).Mag();
+  double GetCosTheta(const Vector3<double>& pos, const Vector3<double>& dir) const {
+	return pos*(Hit::PMTPos-pos) / (Hit::PMTPos-pos).Distance();
   };
   void Print() const {
 	std::cout << T << "ns "
@@ -60,9 +49,6 @@ typedef struct Hit {
   }
 
 } Hit;
-
-bool operator<(const Hit& h1, const Hit& h2);
-bool operator==(const Hit& h1, const Hit& h2);
 
 double GetNPrompts(const std::vector<Hit>& vHits, const double& T);
 double fWeight(const Hit& h, const int& P);

@@ -7,13 +7,13 @@
 
 #include <boost/optional.hpp>
 
-#include "SnD/PosT.hh"
+#include "SnD/ZVector.hh"
 #include "SnD/Hit.hh"
 #include "SnD/Geom.hh"
 
-PosT GetCentroidBasedSeed(const std::vector<Hit>& vHits, Bnd *b);
-boost::optional<PosT> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b);
-PosT GetLSBasedSeed(const std::vector<Hit>& vHits, Bnd *b, std::vector<PosT> vSeeds);
-std::vector<PosT> GetSeeds(std::vector<Hit> vHits, Bnd *b);
+Coord GetCentroidBasedSeed(const std::vector<Hit>& vHits, Bnd *b);
+boost::optional<Coord> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b);
+Coord GetLSBasedSeed(const std::vector<Hit>& vHits, Bnd *b, std::vector<Coord> vSeeds);
+std::vector<Coord> GetSeeds(std::vector<Hit> vHits, Bnd *b);
 
 #endif //SND_INCLUDE_ALGO_VHITS_HH_

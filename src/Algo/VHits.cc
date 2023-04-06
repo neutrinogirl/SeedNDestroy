@@ -4,19 +4,18 @@
 
 #include "Algo/VHits.hh"
 #include "Algo/WOpt.hh"
-#include "SnD/ZVector.hh"
 
-PosT GetCentroidBasedSeed(const std::vector<Hit>& vHits, Bnd *b){
+Coord GetCentroidBasedSeed(const std::vector<Hit>& vHits, Bnd *b){
   // Get centroid seed
   TVector3 Centroid = GetCentroid(vHits);
   // Get time seed
   double TSeed = b->GetTWall(Centroid);
   //
-  return PosT(ConvertTVector3Unit<double>(Centroid, SpaceUnit::mm, SpaceUnit::dm), TSeed);
+  return Coord(ConvertTVector3Unit<double>(Centroid, SpaceUnit::mm, SpaceUnit::dm), TSeed);
 
 }
 
-boost::optional<PosT> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b){
+boost::optional<Coord> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b){
   try{
 
 	TVector3 MLAT = GetMLAT(vHits);
@@ -24,7 +23,7 @@ boost::optional<PosT> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b){
 	if(b->IsInside(MLAT)){
 	  // Get time seed
 	  double TSeed = b->GetTWall(MLAT);
-	  return PosT(ConvertTVector3Unit<double>(MLAT, SpaceUnit::mm, SpaceUnit::dm), TSeed);
+	  return Coord(ConvertTVector3Unit<double>(MLAT, SpaceUnit::mm, SpaceUnit::dm), TSeed);
 	}
 
   } catch (std::exception &e){
@@ -37,7 +36,7 @@ boost::optional<PosT> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b){
 
 }
 
-PosT GetLSBasedSeed(const std::vector<Hit>& vHits, Bnd *b, std::vector<PosT> vSeeds){
+Coord GetLSBasedSeed(const std::vector<Hit>& vHits, Bnd *b, std::vector<Coord> vSeeds){
   RecT RT = Recon((void*)&vHits, b, vSeeds, nlopt::LN_SBPLX, fLS, {SetBounds, SetPars, SetInequalityConstraint});
   return RT.GetPosT();
 }
