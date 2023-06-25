@@ -12,7 +12,7 @@
 #include "Templates/TAnalysis.hh"
 //
 #include "SnD/Geom.hh"
-#include "SnD/PosT.hh"
+#include "SnD/ZVector.hh"
 #include "SnD/Hit.hh"
 //
 #include <TH1D.h>
@@ -32,7 +32,7 @@ class ReconAnalysis : public TAnalysis {
   TFile* OFile;
   TTree* Tree;
 
-  RecT RT;
+  RecCoord ReconCoord;
 
   bool istrack = false;
   std::vector<double> vIterX;

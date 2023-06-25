@@ -44,7 +44,7 @@ ReconAnalysis::ReconAnalysis(const char *pdfname, const char *histname, const ch
   //
   OFile = new TFile(filename, "RECREATE");
   Tree = new TTree(treename, treename);
-  RT.SetTree(Tree);
+  ReconCoord.SetTree(Tree);
   //
   if(istrack){
 	Tree->Branch("IterX", &vIterX);
@@ -69,13 +69,15 @@ ReconAnalysis::~ReconAnalysis(){
 }
 
 void ReconAnalysis::Do(void *Data) {
-
+  //
   // Get Data
   auto wData = static_cast<TData*>(Data);
   std::vector<Hit> vHits = wData->GetVHits();
   if(vHits.empty())
 	return;
+
   //
+  // Apply trigger if necessary (files with True hit time for each PMTs)
   if(isapplytrigger){
 	double T = GetFirstHitTime(vHits, 1.f);
 	std::transform(
@@ -87,14 +89,18 @@ void ReconAnalysis::Do(void *Data) {
 		}
 	);
   }
+
   //
+  // Get Event ID
   int iEvt = wData->GetEventID();
   //
-  if(iEvt == nMaxEvts)
+  // Interrupt if user-defined max number of events reached
+  if(iEvt-1 == nMaxEvts)
 	raise(SIGINT);
 
-  // Init vSeeds with Centroid
-  std::vector<PosT> vSeeds = GetSeeds(vHits, Cyl);
+  //
+  //
+  std::vector<Coord> vSeeds = GetSeeds(vHits, Cyl);
 
   // Sort seeds from lowest to highest chi2
   std::sort(vSeeds.begin(), vSeeds.end(),
