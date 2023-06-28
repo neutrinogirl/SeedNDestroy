@@ -11,7 +11,8 @@
 
 #include <TH1D.h>
 #include <TH2D.h>
-#include <TVector3.h>
+
+#include "SnD/Vector3.hh"
 
 
 class MakePDF : public TAnalysis{
@@ -20,7 +21,7 @@ class MakePDF : public TAnalysis{
   TH1D* hN400;
   std::map<int, TH2D*> mPDFs;
   bool isShift;
-  TVector3 PosShift;
+  Vector3 PosShift;
   bool isPosShifted;
  public:
   MakePDF(const unsigned int& TResBins, const float& TResMin, const float& TResMax,

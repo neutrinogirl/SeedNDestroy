@@ -10,6 +10,7 @@
 #include "SnD/ZVector.hh"
 #include "SnD/Hit.hh"
 #include "SnD/Geom.hh"
+#include "SnD/Coord.hh"
 
 Coord GetCentroidBasedSeed(const std::vector<Hit>& vHits, Bnd *b);
 boost::optional<Coord> GetMLATSeed(const std::vector<Hit>& vHits, Bnd *b);

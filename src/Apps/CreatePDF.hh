@@ -18,7 +18,7 @@ typedef struct TAppArgs : public Args {
 		new vfArg("-ps", "--pos-shift", {0, 0, 0})
 	};
   }
-  TAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
+  explicit TAppArgs(const std::vector<BaseArg *> &v) : Args(v) {}
   void ShowUsage(const std::string &name) override {
 	std::cout << "Usage: " << name
 			  << " <option(s)>"
@@ -34,22 +34,22 @@ typedef struct TAppArgs : public Args {
 			  << "\t-ps (--pos-shift) x y z\tShift MC TRUE positions (default 0, 0, 0)\n"
 			  << std::endl;
   }
-  bool GetVerbose() const {
+  [[nodiscard]] bool GetVerbose() const {
 	return reinterpret_cast<bArg*>(v[0])->val;
   }
-  const char *GetInput() const {
+  [[nodiscard]] const char *GetInput() const {
 	return reinterpret_cast<sArg*>(v[1])->val.c_str();
   }
-  const char *GetOutput() const {
+  [[nodiscard]] const char *GetOutput() const {
 	return reinterpret_cast<sArg*>(v[2])->val.c_str();
   }
-  std::vector<float> GetTResBins() const {
+  [[nodiscard]] std::vector<float> GetTResBins() const {
 	return reinterpret_cast<vfArg*>(v[3])->val;
   }
-  bool GetShift() const {
+  [[nodiscard]] bool GetShift() const {
 	return reinterpret_cast<bArg*>(v[4])->val;
   }
-  std::vector<float> GetPosShift() const {
+  [[nodiscard]] std::vector<float> GetPosShift() const {
 	return reinterpret_cast<vfArg*>(v[5])->val;
   }
 

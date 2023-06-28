@@ -51,11 +51,11 @@ MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float
 		}
 	);
   }
-  // Check if vPosShift member are different from 0
-  if(vPosShift[0] != 0 || vPosShift[1] != 0 || vPosShift[2] != 0){
-	PosShift.SetXYZ(vPosShift[0], vPosShift[1], vPosShift[2]);
-	isPosShifted = true;
-  }
+  // // Check if vPosShift member are different from 0
+  // if(vPosShift[0] != 0 || vPosShift[1] != 0 || vPosShift[2] != 0){
+	// PosShift.SetXYZ(vPosShift[0], vPosShift[1], vPosShift[2]);
+	// isPosShifted = true;
+  // }
 }
 
 void MakePDF::Do(void *Data) {
@@ -64,14 +64,14 @@ void MakePDF::Do(void *Data) {
 
   auto vHits = wData->GetVHits();
 
-  TVector3 Pos = wData->GetPosition();
-  // Relative to ANNIE coordinate system
-  if(isPosShifted){
-	Pos.SetXYZ(wData->GetPosition().X(),
-			   -1*(wData->GetPosition().Z()-PosShift.Z()),
-			   wData->GetPosition().Y()-PosShift.Y());
-  }
-  TVector3 Dir = wData->GetDirection();
+  Vector3 Pos = wData->GetPosition();
+  // // Relative to ANNIE coordinate system
+  // if(isPosShifted){
+	// Pos.SetXYZ(wData->GetPosition().X(),
+	// 		   -1*(wData->GetPosition().Z()-PosShift.Z()),
+	// 		   wData->GetPosition().Y()-PosShift.Y());
+  // }
+  Vector3 Dir = wData->GetDirection();
   double T     = 0.f;       // Timestamp of the event
   double TTrig = wData->GetTime();       // Timestamp of the trigger
   double dT    = TTrig - T; // dT: Time between the vertex and the trigger

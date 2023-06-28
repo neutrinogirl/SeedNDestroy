@@ -9,11 +9,11 @@
 #include <Templates/TReader.hh>
 //
 #include <map>
+#include <any>
 //
 #include <TFile.h>
 #include <TTreeReader.h>
 //
-#include <boost/any.hpp>
 //
 #include "Templates/TData.hh"
 
@@ -27,13 +27,13 @@ enum ETreeReaders{
 class Flat : public TData {
  private:
   //
-  std::map<int, TVector3> mPMTPos;
+  std::map<int, Vector3> mPMTPos;
   //
-  std::vector<boost::any> many;
+  std::vector<std::any> many;
  public:
   explicit Flat(std::vector< TTreeReader* > &vTreeReaders);
-  TVector3 GetPosition() override;
-  TVector3 GetDirection() override;
+  Vector3 GetPosition() override;
+  Vector3 GetDirection() override;
   double GetEnergy() override;
   double GetTime() override;
   std::vector<Hit> GetVHits() override;

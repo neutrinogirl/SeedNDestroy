@@ -6,14 +6,11 @@
 	path = external/Argz
 	url = git@github.com:P3tru/Argz.git
     branch = main
-[submodule "external/spdlog"]
-	path = external/spdlog
-	url = https://github.com/gabime/spdlog
 [submodule "external/nlopt"]
 	path = external/nlopt
 	url = https://github.com/stevengj/nlopt.git
 	branch = tags/v2.7.1
-[submodule "external/boost"]
-	path = external/boost
-	url = https://github.com/boostorg/boost
-	branch = boost-1.77.0
+[submodule "external/range-v3"]
+	path = external/range-v3
+	url = https://github.com/ericniebler/range-v3.git
+	branch = tags/0.12.0
