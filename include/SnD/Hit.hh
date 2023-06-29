@@ -41,7 +41,7 @@ typedef struct Hit {
    * @param id The ID of the hit.
    */
   Hit(const Vector3& pos, const double& q, const double& t, const int& id)
-	  : PMTPos(pos), Q(q), T(t), ID(id) {}
+	  : PMTPos(pos.Get(SpaceUnit::mm)), Q(q), T(t), ID(id) {}
 
   /**
    * @brief Calculates the distance between the hit point and a specified position.
@@ -50,7 +50,7 @@ typedef struct Hit {
    * @return The distance between the hit point and the specified position.
    */
   [[nodiscard]] double GetD(const Vector3& pos) const {
-	return PMTPos.Distance(pos);
+	return PMTPos.Distance(pos.Get(SpaceUnit::mm));
   };
 
   /**
@@ -76,45 +76,71 @@ typedef struct Hit {
    * @return The cosine of the angle between the hit point, the specified position, and direction.
    */
   [[nodiscard]] double GetCosTheta(const Vector3& pos, const Vector3& dir) const {
-	return dir.GetUnitVector().Dot((PMTPos - pos).GetUnitVector());
+	return dir.GetUnitVector().Dot((PMTPos - pos.Get(SpaceUnit::mm)).GetUnitVector());
   };
 
   // Output stream operator for printing the hit
   friend std::ostream& operator<<(std::ostream& os, const Hit& hit) {
-	os << "Hit: " << hit.ID << " " << hit.PMTPos << " " << hit.Q << " " << hit.T;
+	os << "Hit: " << hit.ID << " " << hit.PMTPos << " " << hit.Q << "Q" << " " << hit.T << "ns";
 	return os;
   }
 
 
 } Hit;
 
+/**
+ * Calculates the number of prompt hits in the given vector of hits based on a specified time threshold.
+ *
+ * @param vHits The vector of hits to analyze.
+ * @param T The time threshold for a hit to be considered prompt.
+ * @return The number of prompt hits in the vector.
+ */
 double GetNPrompts(const std::vector<Hit>& vHits, const double& T);
+
+/**
+ * Calculates the weight of a hit based on a specified power P.
+ *
+ * @param h The hit for which to calculate the weight.
+ * @param P The power to raise the hit charge Q.
+ * @return The weight of the hit
+ */
 double fWeight(const Hit& h, const int& P);
 
-// // ########################################### //
-// // #### #### ####   PDF FREE    #### #### #### //
-// // ########################################### //
+/**
+ * Shifts the hits in the given vector by a specified position and time offset.
+ *
+ * @param vHits The vector of hits to be shifted.
+ * @param Pos The position vector used to shift the hits.
+ * @param T The time offset used to shift the hits.
+ * @return A new vector of hits where each hit has been shifted by the position vector and time offset.
+ */
+std::vector<Hit> ShiftHits(const std::vector<Hit>& vHits,
+						   const Vector3& Pos, const double& T);
+
+// ########################################### //
+// #### #### ####   PDF FREE    #### #### #### //
+// ########################################### //
+
 //
-// //
-// Vector3<double> GetCentroid(const std::vector<Hit>& vHits);
-// //
-// std::vector<double> GetResiduals(const Vector3<double>& Pos, const double& T, const std::vector<Hit>& vHits);
-// double GetSum2Residuals(const Vector3<double>& Pos, const double& T, const std::vector<Hit>& vHits);
-// //
-// Vector3<double> GetMLAT(std::vector<Hit> vHits);
+Vector3 GetCentroid(const std::vector<Hit>& vHits);
 //
-// // ########################################### //
-// // #### #### ####      PDF      #### #### #### //
-// // ########################################### //
+std::vector<double> GetResiduals(const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
+double GetSum2Residuals(const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
 //
-// //
-// double GetNLL(const TH1D& hPDF,
-// 			  const Vector3<double>& Pos, const double& T, const std::vector<Hit>& vHits);
-// double GetUNLL(const TH1D& hPDF,
-// 			   const Vector3<double>& Pos, const double& T, const std::vector<Hit>& vHits);
-// double GetMUNLL(const std::map<int, TH1D*>& mPDF,
-// 				const Vector3<double>& Pos, const double& T, const std::vector<Hit>& vHits);
+std::optional<Vector3> GetMLAT(const std::vector<Hit>& vHits);
+
+// ########################################### //
+// #### #### ####      PDF      #### #### #### //
+// ########################################### //
+
 //
+double GetNLL(const TH1D& hPDF,
+			  const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
+double GetUNLL(const TH1D& hPDF,
+			   const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
+double GetMUNLL(const std::map<int, TH1D*>& mPDF,
+				const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
+
 // // ########################################## //
 // // #### #### ####   TRIGGER    #### #### #### //
 // // ########################################## //

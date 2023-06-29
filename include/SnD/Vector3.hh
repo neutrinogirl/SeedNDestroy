@@ -5,6 +5,7 @@
 #ifndef SND_INCLUDE_SND_VECTOR3_HH_
 #define SND_INCLUDE_SND_VECTOR3_HH_
 
+#include <iostream>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -34,6 +35,7 @@ class Vector3 {
    * and spherical coordinate values (r, theta, phi) set to zero.
    */
   Vector3() : x_(0), y_(0), z_(0), unit_(SpaceUnit::mm), r_(0.f), theta_(0.f), phi_(0.f) { }
+
   /**
    * @brief Parameterized constructor.
    *
@@ -49,36 +51,86 @@ class Vector3 {
 	theta_ = std::acos(z / r_);
 	phi_ = std::atan2(y, x);
   }
+
   /**
    * @brief Retrieves the x-component of the vector.
    *
    * @return The x-component of the vector.
    */
   [[nodiscard]] double GetX() const { return x_; }
+ protected:
+  /**
+   * @brief Retrieves a reference to the x-component of the vector.
+   *
+   * This function returns a reference to the x-component of the vector. Modifying the returned
+   * reference will directly affect the x-component of the vector.
+   *
+   * @return A reference to the x-component of the vector.
+   */
+  double& GetXRef() { return x_; }
+ public:
+
   /**
    * @brief Retrieves the y-component of the vector.
    *
    * @return The y-component of the vector.
    */
   [[nodiscard]] double GetY() const { return y_; }
+ protected:
+  /**
+   * @brief Retrieves a reference to the y-component of the vector.
+   *
+   * This function returns a reference to the y-component of the vector. Modifying the returned
+   * reference will directly affect the y-component of the vector.
+   *
+   * @return A reference to the y-component of the vector.
+   */
+  double& GetYRef() { return y_; }
+ public:
+
   /**
    * @brief Retrieves the z-component of the vector.
    *
    * @return The z-component of the vector.
    */
   [[nodiscard]] double GetZ() const { return z_; }
+ protected:
+  /**
+   * @brief Retrieves a reference to the z-component of the vector.
+   *
+   * This function returns a reference to the z-component of the vector. Modifying the returned
+   * reference will directly affect the z-component of the vector.
+   *
+   * @return A reference to the z-component of the vector.
+   */
+  double& GetZRef() { return z_; }
+  public:
+
   /**
    * @brief Retrieves the unit of measurement for the vector components.
    *
    * @return The unit of measurement for the vector components.
    */
   [[nodiscard]] SpaceUnit GetUnit() const { return unit_; }
+
   /**
    * @brief Retrieves the radial distance (magnitude) of the vector.
    *
    * @return The radial distance (magnitude) of the vector.
    */
   [[nodiscard]] double GetR() const { return r_; }
+
+  /**
+   * @brief Retrieves the radial distance (magnitude) squared of the vector.
+   *
+   * @return The radial distance (magnitude) of the vector.
+   */
+  [[nodiscard]] double GetR2() const { return r_*r_; }
+
+  // Define Perp x**2+ y**2
+  [[nodiscard]] double GetPerp2() const { return x_*x_ + y_*y_; }
+  [[nodiscard]] double GetPerp() const { return std::sqrt(GetPerp2()); }
+
   /**
    * @brief Retrieves the polar angle (theta) of the vector in radians.
    *
@@ -88,6 +140,7 @@ class Vector3 {
    * @return The polar angle (theta) of the vector in radians.
    */
   [[nodiscard]] double GetTheta() const { return theta_; }
+
   /**
    * @brief Retrieves the azimuthal angle (phi) of the vector in radians.
    *

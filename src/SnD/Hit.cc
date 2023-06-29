@@ -9,6 +9,7 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <optional>
 
 /**
  * @brief Compare two Hit objects based on their T values.
@@ -78,173 +79,200 @@ double fWeight(const Hit& h, const int& P){
   return std::pow(h.Q, P);
 }
 
-// // Calculate centroid of a vector of hits
-// vec3 GetCentroid(const std::vector<Hit>& vHits){
-//   vec3 centroid(0., 0., 0.);
-//   const auto NHits = static_cast<double>(vHits.size());
-//   for(const auto& hit: vHits){
-// 	centroid += hit.PMTPos * (1./NHits);
-//   }
-//   return centroid;
-// }
+// Calculate centroid of a vector of hits
+Vector3 GetCentroid(const std::vector<Hit>& vHits){
+  Vector3 centroid(0., 0., 0., SpaceUnit::mm);
+  const auto NHits = static_cast<double>(vHits.size());
+  for(const auto& hit: vHits){
+	centroid += hit.PMTPos * (1./NHits);
+  }
+  return centroid;
+}
+
+std::vector<double> GetResiduals(const Vector3& Pos, const double& T, const std::vector<Hit>& vHits){
+  std::vector<double> vRes;
+  std::transform(
+	  vHits.begin(),
+	  vHits.end(),
+	  std::back_inserter(vRes),
+	  [&Pos, &T](const Hit& h) {
+		return h.GetTRes(Pos, T);
+	  }
+  );
+  return vRes;
+}
+
+double GetSum2Residuals(const Vector3& Pos, const double& T, const std::vector<Hit>& vHits){
+  std::vector<double> vRes = GetResiduals(Pos, T, vHits);
+  return std::accumulate(
+	  vRes.begin(),
+	  vRes.end(),
+	  0.0,
+	  [](double a, double b) {
+		return a + std::pow(b, 2);
+	  }
+  );
+}
+
+std::vector<Hit> ShiftHits(const std::vector<Hit>& vHits, const Vector3& Pos, const double& T){
+  std::vector<Hit> vShiftedHits;
+  std::transform(
+	  vHits.begin(),
+	  vHits.end(),
+	  std::back_inserter(vShiftedHits),
+	  [&Pos, &T](const Hit& h) {
+		Hit hShifted = h;
+		hShifted.PMTPos -= Pos.Get(SpaceUnit::mm);
+		hShifted.T -= T;
+		return hShifted;
+	  }
+  );
+  return vShiftedHits;
+}
+
+std::optional<Vector3> GetMLAT(const std::vector<Hit>& vHits){
+
+  const int nEq  = static_cast<int>(vHits.size())-2;
+  // throw exception if nEq < 0
+  if(nEq<0){
+	throw std::invalid_argument("Number of equations must be positive (event with less than 3 hits.");
+  }
+
+  // Shift all hits by first hit position
+  std::vector<Hit> vShiftedHits = ShiftHits(vHits,
+											vHits[0].PMTPos, vHits[0].T);
+
+  // Remove negative time hits
+  vShiftedHits.erase(
+	  std::remove_if(
+		  vShiftedHits.begin(),
+		  vShiftedHits.end(),
+		  [](const Hit& h) {
+			return h.T < 0;
+		  }
+	  ),
+	  vShiftedHits.end()
+  );
+
+  // Remove every shifted hits with a time inferior to tolerance 1e-6
+  vShiftedHits.erase(
+	  std::remove_if(
+		  vShiftedHits.begin(),
+		  vShiftedHits.end(),
+		  [](const Hit& h) {
+			return std::abs(h.T) < 1e-6;
+		  }
+	  ),
+	  vShiftedHits.end()
+  );
+
+  std::sort(vShiftedHits.begin(), vShiftedHits.end());
+
+  // Get first non-0 tau hit
+  Hit H1 = *(vShiftedHits.begin()+1);
+
+  auto GetCoeff = [&H1](const Hit& h, const int& iDim){
+	return 2 * h.PMTPos[iDim] / (Csts::GetSoL()*h.T) - 2 * H1.PMTPos[iDim] / (Csts::GetSoL()*H1.T);
+  };
+
+  auto GetD = [&H1](const Hit& h) {
+	return Csts::GetSoL() * (h.T - H1.T)
+		- (h.PMTPos.GetR2()/(Csts::GetSoL()*h.T))
+		- (H1.PMTPos.GetR2()/(Csts::GetSoL()*H1.T));
+  };
+
+  std::size_t nDim = 3;
+
+  Matrix A(nEq, nDim);
+  DiagMatrix B(nEq);
+  DiagMatrix X(nDim);
+
+  for(auto itH = vShiftedHits.begin()+2; itH != vShiftedHits.end(); itH++){
+
+	auto iHit = std::distance(vShiftedHits.begin()+2, itH);
+
+	for(auto iDim=0;iDim<nDim;iDim++){
+	  A[iHit][iDim] = GetCoeff(*itH, iDim);
+	}
+
+	B[iHit]= -GetD(*itH);
+
+	std::cout << *itH << std::endl;
+
+
+  }
+
+  try {
+
+	SVD svd(A);
+
+	svd.solve(B, X);
+
+	Vector3 solution(X[0], X[1], X[2], SpaceUnit::mm);
+	solution += vShiftedHits[0].PMTPos;
+	return solution.Get(SpaceUnit::mm);
+
+  } catch ( const char* e) {
+	// handle the exception
+	throw e; // rethrow exception
+  }
+
+}
+
+static double EvalNLL(double nObs, double nPred){
+  double L;
+  if(nObs>0 && nPred>0)
+	L=nObs*log(nObs/nPred) + nPred-nObs;
+  else
+	L=nPred;
+  return L;
+}
+
 //
-// std::vector<double> GetResiduals(const vec3& Pos, const double& T, const std::vector<Hit>& vHits){
-//   std::vector<double> vRes;
-//   std::transform(
-// 	  vHits.begin(),
-// 	  vHits.end(),
-// 	  std::back_inserter(vRes),
-// 	  [&Pos, &T](const Hit& h) {
-// 		return h.GetTRes(Pos, T);
-// 	  }
-//   );
-//   return vRes;
-// }
+double GetNLL(const TH1D& hPDF,
+			  const Vector3& Pos, const double& T, const std::vector<Hit>& vHits){
+  double NLL = 0.f;
+  // Generate a random name for the histogram
+  std::string hName = "hExp_" + std::to_string(rand());
+  TH1D hExp(hName.c_str(), "hExp",
+			hPDF.GetNbinsX(), hPDF.GetXaxis()->GetXmin(), hPDF.GetXaxis()->GetXmax());
+  for (const Hit& hit: vHits){
+	double TRes = hit.GetTRes(Pos, T);
+	hExp.Fill(TRes);
+  }
+  for (int iBin=1; iBin<=hPDF.GetNbinsX(); iBin++){
+	double nObs = hExp.GetBinContent(iBin);
+	double nPred = hPDF.GetBinContent(iBin);
+	NLL += EvalNLL(nObs, nPred);
+  }
+  return NLL;
+}
 //
-// double GetSum2Residuals(const vec3& Pos, const double& T, const std::vector<Hit>& vHits){
-//   std::vector<double> vRes = GetResiduals(Pos, T, vHits);
-//   return std::accumulate(
-// 	  vRes.begin(),
-// 	  vRes.end(),
-// 	  0.0,
-// 	  [](double a, double b) {
-// 		return a + std::pow(b, 2);
-// 	  }
-//   );
-// }
+double GetUNLL(const TH1D& hPDF,
+			   const Vector3& Pos, const double& T, const std::vector<Hit>& vHits){
+  double NLL = 0.f;
+  for (const Hit& hit: vHits){
+	double TRes = hit.GetTRes(Pos, T);
+	double P_TRes = hPDF.Interpolate(TRes);
+	NLL += P_TRes <= 0.f ? static_cast<double>(vHits.size()) : -log(P_TRes/hPDF.Integral());
+  }
+  return NLL;
+}
 //
-// vec3 GetMLAT(std::vector<Hit> vHits){
-//
-//   std::size_t nDim = 3;
-//   std::size_t nEq  = vHits.size()-2;
-//
-//   // Get first and second hit from vHits
-//   Hit H0 = vHits[0];
-//   Hit H1 = vHits[1];
-//
-//   // Shift all hits by H0 position
-//   std::transform(
-// 	  vHits.begin(),
-// 	  vHits.end(),
-// 	  vHits.begin(),
-// 	  [&H0](Hit& h){
-// 		h.PMTPos -= H0.PMTPos;
-// 		return h;
-// 	  }
-//   );
-//
-//   // Define lambdas
-//   auto GetDT = [](const Hit& h0, const Hit& h1){
-// 	return h1.T - h0.T;
-//   };
-//
-//   auto GetTau = [&H0, &GetDT](const Hit& h){
-// 	return GetDT(H0, h);
-//   };
-//
-//   auto GetACoeff = [&GetTau, &H1](const Hit& h, const int& iDim){
-// 	return (2*h.PMTPos[iDim] / (Csts::GetSoL()*GetTau(h)))
-// 		- (2 * H1.PMTPos[iDim] / (Csts::GetSoL()*GetTau(H1)));
-//   };
-//
-//   auto GetBCoeff = [&GetTau, &H1](const Hit& h){
-// 	return Csts::GetSoL()*(GetTau(h) - GetTau(H1))
-// 		- h.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(h))
-// 		+ H1.PMTPos.Mag2()/(Csts::GetSoL()*GetTau(H1));
-//   };
-//
-//   Matrix A(nEq, nDim);
-//   DiagMatrix B(nEq);
-//   DiagMatrix X(nDim);
-//
-//   double QCut = 1e-3;
-//
-//   for(auto itH = vHits.begin()+2; itH != vHits.end(); itH++){
-//
-// 	auto iHit = std::distance(vHits.begin()+2, itH);
-// 	auto QWeight = itH->Q;
-//
-// 	for(auto iDim=0;iDim<nDim;iDim++){
-// 	  if(QWeight > QCut)
-// 		A[iHit][iDim] = GetACoeff(*itH, iDim);
-// 	  else
-// 		A[iHit][iDim] = 0;
-// 	}
-//
-// 	if(QWeight > QCut)
-// 	  B[iHit]= -GetBCoeff(*itH);
-// 	else
-// 	  B[iHit]= 0;
-//
-//   }
-//
-//   try {
-//
-// 	SVD svd(A);
-//
-// 	svd.solve(B, X);
-//
-// 	return vec3(X[0], X[1], X[2]);
-//
-//   } catch ( const char* e) {
-// 	// handle the exception
-// 	throw std::exception(); // rethrow the exception
-//   }
-//
-// }
-//
-// static double EvalNLL(double nObs, double nPred){
-//   double L;
-//   if(nObs>0 && nPred>0)
-// 	L=nObs*log(nObs/nPred) + nPred-nObs;
-//   else
-// 	L=nPred;
-//   return L;
-// }
-//
-// double GetNLL(const TH1D& hPDF,
-// 			  const vec3& Pos, const double& T, const std::vector<Hit>& vHits){
-//   double NLL = 0.f;
-//   // Generate a random name for the histogram
-//   std::string hName = "hExp_" + std::to_string(rand());
-//   TH1D hExp(hName.c_str(), "hExp", hPDF.GetNbinsX(), hPDF.GetXaxis()->GetXmin(), hPDF.GetXaxis()->GetXmax());
-//   for (const Hit& hit: vHits){
-// 	double TRes = hit.GetTRes(Pos, T);
-// 	hExp.Fill(TRes);
-//   }
-//   for (int iBin=1; iBin<=hPDF.GetNbinsX(); iBin++){
-// 	double nObs = hExp.GetBinContent(iBin);
-// 	double nPred = hPDF.GetBinContent(iBin);
-// 	NLL += EvalNLL(nObs, nPred);
-//   }
-//   return NLL;
-//
-// }
-// double GetUNLL(const TH1D& hPDF,
-// 			   const vec3& Pos, const double& T, const std::vector<Hit>& vHits){
-//   double NLL = 0.f;
-//   for (const Hit& hit: vHits){
-// 	double TRes = hit.GetTRes(Pos, T);
-// 	double P_TRes = hPDF.Interpolate(TRes);
-// 	NLL += P_TRes <= 0.f ? static_cast<double>(vHits.size()) : -log(P_TRes/hPDF.Integral());
-//   }
-//   return NLL;
-// }
-//
-// double GetMUNLL(const std::map<int, TH1D*>& mPDF,
-// 				const vec3& Pos, const double& T, const std::vector<Hit>& vHits){
-//   double NLL = 0.f;
-//   for (const Hit& hit: vHits){
-// 	if(!mPDF.at(hit.ID))
-// 	  continue;
-// 	double TRes = hit.GetTRes(Pos, T);
-// 	double P_TRes = mPDF.at(hit.ID)->Interpolate(TRes);
-// 	NLL += P_TRes <= 0.f ? static_cast<double>(vHits.size()) : -log(P_TRes/mPDF.at(hit.ID)->Integral());
-//   }
-//   return NLL;
-//
-// }
-//
+double GetMUNLL(const std::map<int, TH1D*>& mPDF,
+				const Vector3& Pos, const double& T, const std::vector<Hit>& vHits){
+  double NLL = 0.f;
+  for (const Hit& hit: vHits){
+	if(!mPDF.at(hit.ID))
+	  continue;
+	double TRes = hit.GetTRes(Pos, T);
+	double P_TRes = mPDF.at(hit.ID)->Interpolate(TRes);
+	NLL += P_TRes <= 0.f ? static_cast<double>(vHits.size()) : -log(P_TRes/mPDF.at(hit.ID)->Integral());
+  }
+  return NLL;
+
+}
+
 // double GetFirstHitTime(const std::vector<Hit>& vHits, const double& threshold){
 //   double T = 0.;
 //   for(const auto& hit: vHits){
