@@ -76,7 +76,7 @@ typedef struct Hit {
    * @return The cosine of the angle between the hit point, the specified position, and direction.
    */
   [[nodiscard]] double GetCosTheta(const Vector3& pos, const Vector3& dir) const {
-	return dir.GetUnitVector().Dot((PMTPos - pos.Get(SpaceUnit::mm)).GetUnitVector());
+	return dir.GetUnitVector().Dot( (PMTPos - pos).GetUnitVector() );
   };
 
   // Output stream operator for printing the hit
@@ -124,10 +124,12 @@ std::vector<Hit> ShiftHits(const std::vector<Hit>& vHits,
 //
 Vector3 GetCentroid(const std::vector<Hit>& vHits);
 //
+std::optional<Vector3> GetMLAT(const std::vector<Hit>& vHits);
+//
+std::vector< std::vector<Hit> > GetHitClusters(const std::vector<Hit>& vHits);
+//
 std::vector<double> GetResiduals(const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
 double GetSum2Residuals(const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
-//
-std::optional<Vector3> GetMLAT(const std::vector<Hit>& vHits);
 
 // ########################################### //
 // #### #### ####      PDF      #### #### #### //

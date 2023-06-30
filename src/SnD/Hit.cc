@@ -197,9 +197,6 @@ std::optional<Vector3> GetMLAT(const std::vector<Hit>& vHits){
 
 	B[iHit]= -GetD(*itH);
 
-	std::cout << *itH << std::endl;
-
-
   }
 
   try {
@@ -216,6 +213,10 @@ std::optional<Vector3> GetMLAT(const std::vector<Hit>& vHits){
 	// handle the exception
 	throw e; // rethrow exception
   }
+
+}
+
+std::vector< std::vector<Hit> > GetHitClusters(const std::vector<Hit>& vHits){
 
 }
 

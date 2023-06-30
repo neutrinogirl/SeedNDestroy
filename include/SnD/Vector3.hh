@@ -160,7 +160,7 @@ class Vector3 {
    * @return A new Vector3 object with the specified unit.
    */
   [[nodiscard]] Vector3 Get(SpaceUnit unit = SpaceUnit::mm) const {
-	double factor = GetConversionFactor(unit_) / GetConversionFactor(unit);
+	double factor = unit == SpaceUnit::u ? 1/r_ : GetConversionFactor(unit_) / GetConversionFactor(unit);
 	return {x_ * factor, y_ * factor, z_ * factor, unit};
   }
 
@@ -420,7 +420,6 @@ class Vector3 {
 		{SpaceUnit::cm, 10.f},
 		{SpaceUnit::dm, 100.f},
 		{SpaceUnit::m,  1000.f},
-		{SpaceUnit::u, 1.f}
 	};
 
 	auto iter = conversionFactors.find(unit);
