@@ -14,3 +14,6 @@
 	path = external/range-v3
 	url = https://github.com/ericniebler/range-v3.git
 	branch = tags/0.12.0
+[submodule "external/googletest"]
+	path = external/googletest
+	url = https://github.com/google/googletest.git
