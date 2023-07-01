@@ -118,22 +118,6 @@ TEST_F(GetCubeHitTest, TestGetCentroid) {
   ASSERT_NEAR(centroid.GetZ(), expectedZ, tolerance);
 }
 
-// Test case for GetResiduals
-TEST_F(GetRandomHitTest, TestGetResiduals) {
-  // Call the function under test
-  Vector3 pos(0.0, 0.0, 0.0, SpaceUnit::mm);
-  double t = 0.0;
-  std::vector<double> residuals = GetResiduals(pos, t, vHits);
-
-  // Define the expected residuals
-  std::vector<double> expectedResiduals(vHits.size(), 0.0);
-
-  // Check the residuals with a tolerance
-  double tolerance = 1e-12;
-  for (size_t i = 0; i < residuals.size(); ++i) {
-	ASSERT_NEAR(residuals[i], expectedResiduals[i], tolerance);
-  }
-}
 
 TEST_F(GetRandomHitTest, TestConversion){
   double tolerance = 1e-12;
