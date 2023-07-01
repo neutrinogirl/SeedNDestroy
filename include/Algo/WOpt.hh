@@ -9,26 +9,22 @@
 #include <map>
 
 #include <TH1D.h>
-#include <TVector3.h>
 
 #include "nlopt.hpp"
 
 #include "SnD/Hit.hh"
 #include "SnD/Geom.hh"
-#include "SnD/ZVector.hh"
-#include "SnD/PosT.hh"
+#include "SnD/Coord.hh"
 
 std::vector<std::vector<double>> CreateGridSamplePts(const double& scale = 0.1f);
 
 void Loop(const TH1D& hPDF,
 		  const std::vector<Hit>& vHits,
-		  const std::vector<TVector3>& vPts, const std::vector<double> &vT,
+		  const std::vector<Vector3>& vPts, const std::vector<double> &vT,
 		  std::vector<double>& vNLL,
 		  int startIndex, int endIndex);
 
 double Walk(const std::vector<double> &x, std::vector<double> &grad, void *data);
-
-double fLS(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
 typedef struct IterationData{
   int iter=0;
@@ -57,44 +53,47 @@ typedef struct FitStruct : public BaseFitStruct{
   bool isscaled = false;
   //
   double(*fNLL)(const TH1D& hPDF,
-				const TVector3& Pos, const double& T, const std::vector<Hit>& vHits) = GetNLL;
+				const Vector3& Pos, const double& T, const std::vector<Hit>& vHits) = GetNLL;
   //
   FitStruct() = default;
   FitStruct(const std::vector<Hit> &vHits, TH1D *hPDF, bool scaled,
 			double(*f)(const TH1D& hPDF,
-					   const TVector3& Pos, const double& T, const std::vector<Hit>& vHits))
+					   const Vector3& Pos, const double& T, const std::vector<Hit>& vHits))
 	  : BaseFitStruct{vHits}, hPDF{hPDF}, isscaled(scaled) , fNLL(f) {}
 } FitStruct;
 
 typedef struct FitMapStruct : public BaseFitStruct{
   std::map<int, TH1D*> mPDF;
   double(*fNLL)(const std::map<int, TH1D*>& mPDF,
-				const TVector3& Pos, const double& T, const std::vector<Hit>& vHits) = GetMUNLL;
+				const Vector3& Pos, const double& T, const std::vector<Hit>& vHits) = GetMUNLL;
   FitMapStruct() = default;
   FitMapStruct(const std::vector<Hit> &vHits, std::map<int, TH1D*> mPDF,
 			   double(*f)(const std::map<int, TH1D*>& mPDF,
-							 const TVector3& Pos, const double& T, const std::vector<Hit>& vHits))
+						  const Vector3& Pos, const double& T, const std::vector<Hit>& vHits))
 	  : BaseFitStruct{vHits}, mPDF{std::move(mPDF)}, fNLL(f) {}
 } FitMapStruct;
 
 double fPosT(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
 double fPosTPerPMT(const std::vector<double> &x, std::vector<double> &grad, void *data);
+
 double fLSC(const std::vector<double> &x, std::vector<double> &grad, void *data);
 
-void SetBounds(nlopt::opt &opt, Bnd *c);
+void SetBounds(nlopt::opt &opt, CylEdges *c);
 
-void SetPars(nlopt::opt &opt, Bnd *c);
+void SetPars(nlopt::opt &opt, CylEdges *c);
 
-void SetInequalityConstraint(nlopt::opt &opt, Bnd *c);
+void SetInequalityConstraint(nlopt::opt &opt, CylEdges *c);
 
-std::vector< RecT > DoRecon(nlopt::opt &opt, const std::vector< PosT > &vSeeds);
+std::vector< RecCoord > DoRecon(nlopt::opt &opt, const std::vector< Coord > &vSeeds);
+
 nlopt::algorithm GetAlgo(const int &a);
-RecT Recon(void* data,
-		   Bnd *c,
-		   const std::vector<PosT> &vSeeds,
-		   nlopt::algorithm alg,
-		   double(*fRec)(const std::vector<double> &x, std::vector<double> &grad, void *data),
-		   const std::vector<void (*)(nlopt::opt &opt, Bnd *c)>& vSetPars);
+
+RecCoord Recon(void* data,
+			   CylEdges *c,
+			   const std::vector<Coord> &vSeeds,
+			   nlopt::algorithm alg,
+			   double(*fRec)(const std::vector<double> &x, std::vector<double> &grad, void *data),
+			   const std::vector<void (*)(nlopt::opt &opt, CylEdges *c)>& vSetPars);
 
 #endif //SND_INCLUDE_SND_WOPT_HH_

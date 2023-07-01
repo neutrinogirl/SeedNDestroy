@@ -7,13 +7,11 @@
 
 #include <map>
 //
-#include <boost/optional.hpp>
-//
 #include "Templates/TAnalysis.hh"
 //
 #include "SnD/Geom.hh"
-#include "SnD/ZVector.hh"
 #include "SnD/Hit.hh"
+#include "SnD/Coord.hh"
 //
 #include <TH1D.h>
 #include <TH2D.h>
@@ -27,49 +25,36 @@ class ReconAnalysis : public TAnalysis {
   std::map<int, TH2D*> mPDF2D;
   std::map<int, TH1D*> mPDF1D;
 
-  Cylinder* Cyl;
-
   TFile* OFile;
   TTree* Tree;
 
   RecCoord ReconCoord;
 
-  bool istrack = false;
-  std::vector<double> vIterX;
-  std::vector<double> vIterY;
-  std::vector<double> vIterZ;
-  std::vector<double> vIterT;
-  std::vector<double> vf;
-  int nIter;
+  CylEdges *DetEdges;
 
-  int nMaxEvts;
-  int algo;
-  int max_seed;
-  bool isverbose;
+  int NMaxEvts_;
+  int Algo_;
+  int NMaxSeeds_;
 
-  bool isunbinned;
-  bool isperpmt;
+  bool IsVerbose_;
 
-  bool isapplytrigger;
-
-  bool isjustseed;
+  bool IsUnbinned_;
+  bool IsPerPMT_;
 
   bool isDebug = false;
 
   double(*fNLL)(const TH1D& hPDF,
-				const TVector3& Pos, const double& T, const std::vector<Hit>& vHits);
+				const Vector3& Pos, const double& T, const std::vector<Hit>& vHits);
 
  public:
   ReconAnalysis() = default;
-  ReconAnalysis(const char *pdfname, const char *histname, const char* perpmthistname,
-				const double &R, const double &HH,
+  ReconAnalysis(const char *pdf_name, const char *hist_name, const char* per_pmt_hist_name,
+				float R, float HH,
 				int me, int a, int ms,
 				bool iv,
 				bool iu, bool ip,
-				bool iat,
-				bool ijs,
-				const char *filename,
-				const char *treename = "T");
+				const char *file_name,
+				const char *tree_name = "T");
   void Do(void *Data) override;
   void Export() const;
   ~ReconAnalysis();

@@ -46,12 +46,39 @@ class Vector3 {
    * @param y The y-component of the vector.
    * @param z The z-component of the vector.
    * @param unit The unit of measurement for the vector components.
-   */  Vector3(double x, double y, double z, SpaceUnit unit) : x_(x), y_(y), z_(z), unit_(unit) {
+   */
+  Vector3(double x, double y, double z, SpaceUnit unit) : x_(x), y_(y), z_(z), unit_(unit) {
 	r_ = std::sqrt(x * x + y * y + z * z);
 	theta_ = std::acos(z / r_);
 	phi_ = std::atan2(y, x);
   }
 
+  /**
+	* @brief Get the conversion factor from the given unit to millimeters.
+	*
+	* Retrieves the conversion factor from the given SpaceUnit enum value to millimeters.
+	* The conversion factors for supported units are pre-defined in an internal unordered map.
+	* If the provided unit is not supported, an invalid_argument exception is thrown.
+	*
+	* @param unit The SpaceUnit enum value for which to obtain the conversion factor.
+	* @return The conversion factor from the given unit to millimeters.
+	* @throw std::invalid_argument If the provided unit is not supported.
+	*/
+  [[nodiscard]] static double GetConversionFactor(SpaceUnit unit) {
+	static const std::unordered_map<SpaceUnit, double> conversionFactors = {
+		{SpaceUnit::mm, 1.f},
+		{SpaceUnit::cm, 10.f},
+		{SpaceUnit::dm, 100.f},
+		{SpaceUnit::m,  1000.f},
+	};
+
+	auto iter = conversionFactors.find(unit);
+	if (iter != conversionFactors.end())
+	  return iter->second;
+	throw std::invalid_argument("Unsupported unit");
+  }
+
+ public:
   /**
    * @brief Retrieves the x-component of the vector.
    *
@@ -68,8 +95,8 @@ class Vector3 {
    * @return A reference to the x-component of the vector.
    */
   double& GetXRef() { return x_; }
- public:
 
+ public:
   /**
    * @brief Retrieves the y-component of the vector.
    *
@@ -86,8 +113,8 @@ class Vector3 {
    * @return A reference to the y-component of the vector.
    */
   double& GetYRef() { return y_; }
- public:
 
+ public:
   /**
    * @brief Retrieves the z-component of the vector.
    *
@@ -104,8 +131,8 @@ class Vector3 {
    * @return A reference to the z-component of the vector.
    */
   double& GetZRef() { return z_; }
-  public:
 
+ public:
   /**
    * @brief Retrieves the unit of measurement for the vector components.
    *
@@ -127,8 +154,18 @@ class Vector3 {
    */
   [[nodiscard]] double GetR2() const { return r_*r_; }
 
-  // Define Perp x**2+ y**2
+  /**
+   * @brief Calculates the squared perpendicular distance from the origin to the vector.
+   *
+   * @return The squared perpendicular distance from the origin to the vector.
+   */
   [[nodiscard]] double GetPerp2() const { return x_*x_ + y_*y_; }
+
+  /**
+   * @brief Calculates the perpendicular distance from the origin to the vector.
+   *
+   * @return The perpendicular distance from the origin to the vector.
+   */
   [[nodiscard]] double GetPerp() const { return std::sqrt(GetPerp2()); }
 
   /**
@@ -162,6 +199,15 @@ class Vector3 {
   [[nodiscard]] Vector3 Get(SpaceUnit unit = SpaceUnit::mm) const {
 	double factor = unit == SpaceUnit::u ? 1/r_ : GetConversionFactor(unit_) / GetConversionFactor(unit);
 	return {x_ * factor, y_ * factor, z_ * factor, unit};
+  }
+  // Internal conversion to SpaceUnit unit
+  void ConvertTo(SpaceUnit unit) {
+	double factor = unit == SpaceUnit::u ? 1/r_ : GetConversionFactor(unit_) / GetConversionFactor(unit);
+	x_ *= factor;
+	y_ *= factor;
+	z_ *= factor;
+	unit_ = unit;
+	r_ *= factor;
   }
 
   /**
@@ -404,29 +450,6 @@ class Vector3 {
   double theta_;     /**< The polar angle (theta) of the vector in radians. */
   double phi_;       /**< The azimuthal angle (phi) of the vector in radians. */
 
-  /**
-   * @brief Get the conversion factor from the given unit to millimeters.
-   *
-   * Retrieves the conversion factor from the given SpaceUnit enum value to millimeters.
-   * The conversion factors for supported units are pre-defined in an internal unordered map.
-   * If the provided unit is not supported, an invalid_argument exception is thrown.
-   *
-   * @param unit The SpaceUnit enum value for which to obtain the conversion factor.
-   * @return The conversion factor from the given unit to millimeters.
-   * @throw std::invalid_argument If the provided unit is not supported.
-   */  [[nodiscard]] static double GetConversionFactor(SpaceUnit unit) {
-	static const std::unordered_map<SpaceUnit, double> conversionFactors = {
-		{SpaceUnit::mm, 1.f},
-		{SpaceUnit::cm, 10.f},
-		{SpaceUnit::dm, 100.f},
-		{SpaceUnit::m,  1000.f},
-	};
-
-	auto iter = conversionFactors.find(unit);
-	if (iter != conversionFactors.end())
-	  return iter->second;
-	throw std::invalid_argument("Unsupported unit");
-  }
 };
 
 #endif //SND_INCLUDE_SND_VECTOR3_HH_

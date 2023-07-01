@@ -5,39 +5,33 @@
 #ifndef SND_INCLUDE_SND_GEOM_HH_
 #define SND_INCLUDE_SND_GEOM_HH_
 
-#include <TVector3.h>
-
+#include "SnD/Vector3.hh"
 #include "SnD/Utils.hh"
 
-class Bnd {
- public:
-  virtual double GetDWall(const TVector3& pos) = 0;
-  virtual double GetTWall(const TVector3& pos) = 0;
-  virtual bool IsInside(const TVector3& pos) = 0;
-  virtual TVector3 GetEdge() = 0;
-  virtual double GetTEdge() = 0;
+struct Edges {
+  virtual double GetDWall(const Vector3& pos) = 0;
+  virtual double GetTWall(const Vector3& pos) = 0;
+  virtual bool   IsInside(const Vector3& pos) = 0;
 };
 
-class Cylinder : public Bnd {
- private:
-  double R, HH;
+struct CylEdges : public Edges {
+  double radius;
+  double halfheight;
   double T;
- public:
-  Cylinder(double r, double hh) : R(r), HH(hh) { T = Cylinder::GetTWall(TVector3(0, 0, 0)); }
-  double GetDWall(const TVector3& pos) override {
-	return std::min(R - pos.Perp(), HH - std::abs(pos.z()));
+  SpaceUnit unit;
+  CylEdges(double r, double hh, SpaceUnit u)
+	  : radius(r), halfheight(hh), unit(u) {
+	T = GetTWall(Vector3(0, 0, 0, unit));
   };
-  double GetTWall(const TVector3& pos) override {
+  [[nodiscard]] double GetDWall(const Vector3& pos) override {
+	return std::min(radius - pos.Get(unit).GetPerp(),
+					halfheight - std::abs(pos.Get(unit).GetZ()));
+  };
+  [[nodiscard]] double GetTWall(const Vector3& pos) override {
 	return GetDWall(pos) / Csts::GetSoL();
   }
-  bool IsInside(const TVector3& pos) override {
-	return pos.Perp() < R && std::abs(pos.z()) < HH;
-  }
-  TVector3 GetEdge() override {
-	return {R, R, HH};
-  }
-  double GetTEdge() override {
-	return T;
+  [[nodiscard]] bool IsInside(const Vector3& pos) override {
+	return GetDWall(pos) > 0;
   }
 };
 

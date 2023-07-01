@@ -25,8 +25,8 @@ int main(int argc, char **argv) {
 					Args.GetNEvts(), Args.GetAlgo(), Args.GetMaxSeed(),
 					Args.GetVVerbose(),
 					Args.GetUnbinned(), Args.GetPP(),
-					Args.GetApplyTrigger(),
-					Args.GetJustSeed(),
+					// Args.GetApplyTrigger(),
+					// Args.GetJustSeed(),
 					Args.GetOutput());
   // ######################################## //
   // Run analysis

@@ -20,7 +20,7 @@ typedef struct ReconAppArgs : public Args {
 		new sArg("-pn",  "--pdf-name",     "hCTVSTResPDF_TTOF_QW0"),
 		new sArg("-ppn", "--pdf-pmt-name", "hCTVSTResPDF_TTOF_QW0_PMT"),
 		new iArg("-n",   "--n-evts",       -1),
-		new iArg("-a",   "--algo",          5),
+		new iArg("-a",   "--Algo_",          5),
 		new iArg("-ms",  "--max-seed",     -1),
 		new bArg("-vv",  "--vverbose"),
 		new bArg("-pp",  "--pperpmt"),
@@ -51,7 +51,7 @@ typedef struct ReconAppArgs : public Args {
 			  << "\t-ms  (--max-seed)    \tSelect max seeds to try (default all)\n"
 			  << "\t-at  (--applytrigger)\tSet flag to applytrigger\n"
 			  << "\t-js  (--just-seed)   \tSet flag to just seed\n"
-			  << "\t-a   (--algo)        \tSelect algorithm (default 5):\n"
+			  << "\t-a   (--Algo_)        \tSelect algorithm (default 5):\n"
 			  << "\t                     \t [0]: nlopt::LN_NELDERMEAD\n"
 			  << "\t                     \t [1]: nlopt::LN_BOBYQA\n"
 			  << "\t                     \t [2]: nlopt::LN_COBYLA\n"

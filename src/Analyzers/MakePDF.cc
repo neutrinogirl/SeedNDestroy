@@ -45,7 +45,8 @@ MakePDF::MakePDF(const unsigned int& TResBins, const float& TResMin, const float
   for(const auto& wP : vPower){
 	vvHPDFs.push_back(
 		{
-			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d", wP), "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
+			new TH2D(Form("hCTVSTResPDF_TTOF_QW%d", wP),
+					 "T_{Res} VS Cos(#theta) ; T_{Res} [ns] ; Cos(#theta)",
 					 TResBins, TResMin, TResMax,
 					 NBinsCosT, MinCosT, MaxCosT)
 		}
