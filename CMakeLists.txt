@@ -44,6 +44,9 @@ add_library(TReader src/Templates/TReader.cc)
 
 add_library(NTuple src/Readers/NTuple.cc)
 target_link_libraries(NTuple TReader Hit ROOT::RIO ROOT::Tree ROOT::TreePlayer)
+
+add_library(ANNIE src/Readers/ANNIE.cc)
+target_link_libraries(ANNIE TReader Hit ROOT::RIO ROOT::Tree ROOT::TreePlayer)
 #
 #add_library(Rat src/Readers/Rat.cc)
 #target_link_libraries(Rat Hit wRATter)
@@ -60,6 +63,9 @@ target_link_libraries(CreatePDF Argz NTuple)
 
 add_executable(Recon src/Apps/Recon.cc src/Analyzers/Recon.cc src/Algo/VHits.cc src/Algo/WOpt.cc)
 target_link_libraries(Recon Argz NTuple nlopt)
+
+add_executable(ANNIERecon src/Apps/ANNIERecon.cc src/Analyzers/Recon.cc src/Algo/VHits.cc src/Algo/WOpt.cc)
+target_link_libraries(ANNIERecon Argz ANNIE nlopt)
 
 #add_executable(Map src/Apps/Map.cc src/Analyzers/Map.cc
 #        src/Algo/VHits.cc
