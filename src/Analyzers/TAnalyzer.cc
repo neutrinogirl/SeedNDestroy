@@ -14,11 +14,11 @@ void TAnalyzer::Do(void *Data) {
   //
   auto fData = static_cast<TData*>(Data);
   //
-  fData->GetPosition().Print();
-  fData->GetDirection().Print();
+  //  fData->GetPosition().Print();
+  //fData->GetDirection().Print();
   std::cout << fData->GetEnergy() << std::endl;
   auto vHits = fData->GetVHits();
-  vHits[0].Print();
+  // vHits[0].Print();
 
 }
 

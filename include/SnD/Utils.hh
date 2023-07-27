@@ -4,7 +4,7 @@
 
 #ifndef SND_INCLUDE_SND_UTILS_HH_
 #define SND_INCLUDE_SND_UTILS_HH_
-
+#include <vector>
 class Csts {
  public:
   Csts(const Csts&) = delete;
