@@ -4,7 +4,7 @@
 
 #ifndef SND_INCLUDE_SND_VECTOR3_HH_
 #define SND_INCLUDE_SND_VECTOR3_HH_
-
+#include <cmath>
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
