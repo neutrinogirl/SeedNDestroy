@@ -23,8 +23,7 @@ ReconAnalysis::ReconAnalysis(const char *pdf_name, const char *hist_name, const 
 							 const char *tree_name)
 	: NMaxEvts_(me), Algo_(a), NMaxSeeds_(ms),
 	  IsVerbose_(iv),
-	  IsUnbinned_(iu), IsPerPMT_(ip)
-	  {
+	  IsUnbinned_(iu), IsPerPMT_(ip){
   //
   hPDF = GetROOTObj<TH2D>(pdf_name, hist_name)->ProjectionX("hPDF");
   std::cout << "Load PDF: " << hPDF->GetName() << std::endl;
@@ -44,9 +43,10 @@ ReconAnalysis::ReconAnalysis(const char *pdf_name, const char *hist_name, const 
   DetEdges = new CylEdges(R, HH, SpaceUnit::mm);
   //
   NMaxSeeds_ = NMaxSeeds_ < 0 ? std::numeric_limits<int>::max() : NMaxSeeds_;
-		NMaxEvts_ = NMaxEvts_ < 0 ? std::numeric_limits<int>::max() : NMaxEvts_;
+  NMaxEvts_ = NMaxEvts_ < 0 ? std::numeric_limits<int>::max() : NMaxEvts_;
   //
   fNLL = IsUnbinned_ ? GetUNLL : GetNLL;
+  fNLL = GetUNLL;
 }
 ReconAnalysis::~ReconAnalysis(){
   delete OFile;
@@ -80,20 +80,23 @@ void ReconAnalysis::Do(void *Data) {
   if(Algo_ == 2)
 	vfPars.emplace_back(SetInequalityConstraint);
 
-  if (IsPerPMT_) {
-	FitMapStruct FMS = {vHits, mPDF1D, GetMUNLL};
-	ReconCoord = Recon(&FMS, DetEdges, vSeeds, GetAlgo(Algo_), fPosTPerPMT, vfPars);
-  } else {
-	FitStruct FS = {vHits, hPDF, !IsUnbinned_, fNLL};
-	ReconCoord = Recon(&FS, DetEdges, vSeeds, GetAlgo(Algo_), fPosT, vfPars);
-  }
+  FitStruct FS = {vHits, hPDF, false, fNLL};
+  ReconCoord = Recon(&FS, DetEdges, vSeeds, GetAlgo(Algo_), fPosT, vfPars);
+
+  FitMapStruct FMS = {vHits, mPDF1D, GetMUNLL};
+  ReconCoord = Recon(&FMS, DetEdges, {ReconCoord}, GetAlgo(Algo_), fPosTPerPMT, vfPars);
+
+  //
+  // Save true position
+  ReconCoord.SetMC(wData->GetPosition().Get(SpaceUnit::mm));
+
 
   //
   // Convert
   ReconCoord.ConvertTo(SpaceUnit::mm);
   Tree->Fill();
 
-  //
+
   // Verbose
   if(IsVerbose_)
 	std::cout << ReconCoord << std::endl;
@@ -101,6 +104,7 @@ void ReconAnalysis::Do(void *Data) {
   //
   // Get Event ID
   int iEvt = wData->GetEventID();
+
   //
   // Raise sigint if max number of events is reached
   if(iEvt >= NMaxEvts_)
