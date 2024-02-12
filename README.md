@@ -54,9 +54,8 @@ There is no specific dependencies to derive the templates and implement your own
 However, the current apps implemented uses the following libraries:
 ```bash
 ROOT  6.24.26
-BOOST 1.70.00
 ```
-If you are using the [RAT]() package, `SnD` is compatible with the tag version `theia/v1.0`.
+If you are using the [RAT]() package, `SnD` is compatible with the ratpac-two.
 
 ## Environment
 Is you want to use `RAT` with `SnD`:
@@ -71,7 +70,7 @@ For `RAT`, add when you do cmake:
 
 ## Build
 ```bash
-$> git clone --recurse-submodules git@github.com:P3tru/SeedNDestroy.git
+$> git clone --recurse-submodules git@github.com:neutrinogirl/SeedNDestroy.git
 $> cd SeedNDestroy
 $> mkdir -p build
 $> cd build
@@ -84,10 +83,10 @@ Verbosity level is controlled with flag -v
 
 ### Create PDF
 ```bash
-$> ./TApp -v -i IN.root -o PDF.root
+$> ./CreatePDF -v -i IN.root -o PDF.root
 ```
 
 ### Recon
 ```bash
-$> ./ReconApp -v -r <R> -hh <HH> -p PDF.root -i IN.root -o OUT.root
+$> ./Recon -v -r <R> -hh <HH> -u -pp -p PDF.root -i IN.root -o OUT.root
 ```
