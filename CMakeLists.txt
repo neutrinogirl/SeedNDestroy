@@ -56,7 +56,7 @@ target_link_libraries(ANNIE TReader Hit ROOT::RIO ROOT::Tree ROOT::TreePlayer)
 # EXECUTABLES
 #
 add_executable(TApp src/Apps/TApp.cc src/Analyzers/TAnalyzer.cc)
-target_link_libraries(TApp Argz NTuple)
+target_link_libraries(TApp Argz ANNIE)
 
 add_executable(CreatePDF src/Apps/CreatePDF.cc src/Analyzers/MakePDF.cc)
 target_link_libraries(CreatePDF Argz NTuple)

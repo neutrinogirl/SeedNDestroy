@@ -34,6 +34,7 @@ class Coord : public Vector3 {
 class RecCoord : public Coord {
  protected:
   double NLL{};
+  double mcx{}, mcy{}, mcz{};
  public:
   RecCoord() = default;
   RecCoord(double x, double y, double z, SpaceUnit unit, double t, double nll)
@@ -41,6 +42,14 @@ class RecCoord : public Coord {
   void SetTree(TTree* Tree) override {
 	Coord::SetTree(Tree);  // Call the base class implementation
 	Tree->Branch("NLL", &this->NLL, "NLL/D");
+	Tree->Branch("mcx", &this->mcx, "mcx/D");
+	Tree->Branch("mcy", &this->mcy, "mcy/D");
+	Tree->Branch("mcz", &this->mcz, "mcz/D");
+  }
+  void SetMC(const Vector3& v){
+	mcx = v.GetX();
+	mcy = v.GetY();
+	mcz = v.GetZ();
   }
   friend std::ostream& operator<<(std::ostream& os, const RecCoord& reccoord) {
 	os << static_cast<const Coord&>(reccoord);

@@ -14,11 +14,15 @@ void TAnalyzer::Do(void *Data) {
   //
   auto fData = static_cast<TData*>(Data);
   //
-  //  fData->GetPosition().Print();
-  //fData->GetDirection().Print();
-  std::cout << fData->GetEnergy() << std::endl;
+  std::cout << "E:" << fData->GetEnergy() << std::endl;
   auto vHits = fData->GetVHits();
-  // vHits[0].Print();
+  // Print hits
+  for(auto& h : vHits)
+	std::cout << h << std::endl;
+  // Ask user to hit a key to continue
+  std::cout << "Press any key to continue..." << std::endl;
+  std::cin.ignore();
+  //
 
 }
 

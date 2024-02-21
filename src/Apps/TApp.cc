@@ -7,7 +7,7 @@
 //
 #include "../Analyzers/TAnalyzer.hh"
 //
-#include "../Readers/NTuple.hh"
+#include "../Readers/ANNIE.hh"
 
 volatile sig_atomic_t TReader::gSignalStatus = 0;
 
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
   // ######################################## //
   // Run analysis
-  FlatReader R(Args.GetInput(), "output", "meta", Args.GetVerbose());
+  ANNIEReader R(Args.GetInput(), "phaseIITankClusterTree", Args.GetVerbose());
   R.Read(&Ana);
 
   // ######################################## //
